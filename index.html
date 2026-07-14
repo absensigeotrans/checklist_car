@@ -348,13 +348,7 @@
       </div>
       <div style="margin-top: 2rem; display: flex; justify-content: flex-end; gap: 0.75rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
         <button class="btn btn-primary" id="btnExportPDF" onclick="exportRecordToPDF()">
-          <span>📄</span> Export ke PDF (Print)
-        </button>
-        <button class="btn btn-success" id="btnExportExcel" onclick="exportRecordToExcel()">
-          <span>📊</span> Export ke Excel
-        </button>
-        <button class="btn btn-secondary" id="btnExportWord" onclick="exportRecordToWord()">
-          <span>📝</span> Export ke Word
+          <span>📄</span> Cetak PDF
         </button>
         <button class="btn btn-secondary" onclick="closeDetailModal()">Tutup</button>
       </div>
@@ -1085,9 +1079,8 @@
           <td style="${statusStyle}">${issueText}</td>
           <td style="text-align: center;">
             <div style="display: flex; gap: 0.25rem; justify-content: center;">
-              <button class="btn btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;" onclick="viewDetails('${rec.inspectionId}')">Detail</button>
-              <button class="btn btn-success" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;" onclick="exportSingleExcel('${rec.inspectionId}')">Excel</button>
-              <button class="btn btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;" onclick="exportSingleWord('${rec.inspectionId}')">Word</button>
+              <button class="btn btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.8rem; background-color: var(--primary-blue);" onclick="exportRecordToPDFDirect('${rec.inspectionId}')">Cetak PDF</button>
+              <button class="btn btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;" onclick="viewDetails('${rec.inspectionId}')">Detail</button>
               <button class="btn btn-danger" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;" onclick="deleteRecord('${rec.inspectionId}')">Hapus</button>
             </div>
           </td>
@@ -1460,6 +1453,14 @@
 
     function exportRecordToWord() {
       if (selectedRecord) exportSingleWord(selectedRecord.inspectionId);
+    }
+
+    // Direct PDF print from admin log list
+    function exportRecordToPDFDirect(id) {
+      const rec = db.find(r => r.inspectionId === id);
+      if (!rec) return;
+      selectedRecord = rec;
+      exportRecordToPDF();
     }
 
     // EXPORT TO PDF (Native window.print with highly accurate layout)
