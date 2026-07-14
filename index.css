@@ -640,6 +640,12 @@ input:focus, select:focus, textarea:focus {
 
 /* Print Form layout (For official PDF Generation / print view) */
 @media print {
+  @page {
+    margin: 0; /* Menghilangkan header & footer bawaan browser (seperti URL file:///) */
+  }
+  body {
+    margin: 0;
+  }
   body * {
     visibility: hidden;
   }
@@ -653,6 +659,8 @@ input:focus, select:focus, textarea:focus {
     left: 0;
     top: 0;
     width: 100%;
+    padding: 12mm; /* Memberikan batas kertas aman agar tidak terlalu mepet ke tepi */
+    box-sizing: border-box;
   }
 }
 
