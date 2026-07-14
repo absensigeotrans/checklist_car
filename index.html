@@ -493,7 +493,7 @@
     }
 
     // Authentication & Tab Switching
-    let isAdminAuthenticated = false;
+    let isAdminAuthenticated = (sessionStorage.getItem("ptk_admin_auth") === "true");
     const ADMIN_PIN = "1234"; // Default PIN
 
     function trySwitchView(viewId) {
@@ -525,6 +525,7 @@
       
       if (input.value === ADMIN_PIN) {
         isAdminAuthenticated = true;
+        sessionStorage.setItem("ptk_admin_auth", "true");
         closePinModal();
         switchView('admin-dashboard');
       } else {
@@ -536,11 +537,14 @@
 
     function logoutAdmin() {
       isAdminAuthenticated = false;
+      sessionStorage.removeItem("ptk_admin_auth");
+      sessionStorage.removeItem("ptk_active_view");
       switchView('driver-form');
     }
 
     // Page Tab Switcher
     function switchView(viewId) {
+      sessionStorage.setItem("ptk_active_view", viewId);
       document.querySelectorAll(".view-section").forEach(sec => sec.classList.remove("active"));
       document.querySelectorAll(".nav-tab").forEach(tab => tab.classList.remove("active"));
       
@@ -1742,6 +1746,14 @@
       renderChecklistRows();
       initSignaturePad();
       resetForm();
+
+      // Restore active view if authenticated
+      const savedView = sessionStorage.getItem("ptk_active_view") || 'driver-form';
+      if (savedView === 'admin-dashboard' && isAdminAuthenticated) {
+        switchView('admin-dashboard');
+      } else {
+        switchView('driver-form');
+      }
     };
   </script>
 </body>
