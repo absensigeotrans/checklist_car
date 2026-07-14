@@ -410,9 +410,33 @@
     let db = [];
     let selectedRecord = null;
 
-    // Supabase Configuration - Membaca dari config.js jika tersedia
-    const SUPABASE_URL = (typeof SUPABASE_CONFIG !== 'undefined') ? SUPABASE_CONFIG.URL : "YOUR_SUPABASE_PROJECT_URL";
-    const SUPABASE_KEY = (typeof SUPABASE_CONFIG !== 'undefined') ? SUPABASE_CONFIG.KEY : "YOUR_SUPABASE_ANON_KEY";
+    // Supabase Configuration
+    let SUPABASE_URL = "";
+    let SUPABASE_KEY = "";
+
+    // Load config asynchronously from Vercel env or config.js fallback
+    async function loadSupabaseConfig() {
+      // 1. Coba ambil dari Vercel Serverless Function (/api/config)
+      try {
+        const response = await fetch('/api/config');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.URL && data.KEY) {
+            SUPABASE_URL = data.URL;
+            SUPABASE_KEY = data.KEY;
+            return;
+          }
+        }
+      } catch (err) {
+        // Gagal mengambil (mungkin dijalankan lokal tanpa server Vercel)
+      }
+
+      // 2. Fallback ke config.js lokal
+      if (typeof SUPABASE_CONFIG !== 'undefined') {
+        SUPABASE_URL = SUPABASE_CONFIG.URL;
+        SUPABASE_KEY = SUPABASE_CONFIG.KEY;
+      }
+    }
 
     // Load DB from Supabase (with LocalStorage cache fallback)
     async function initDb() {
@@ -1720,7 +1744,8 @@
     }
 
     // App Initialization
-    window.onload = function() {
+    window.onload = async function() {
+      await loadSupabaseConfig();
       initDb();
       renderChecklistRows();
       initSignaturePad();
