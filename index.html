@@ -1,0 +1,1731 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PTK Inspection Check List</title>
+  <link rel="stylesheet" href="index.css">
+  <!-- SheetJS Library for Excel Export -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <!-- Supabase External Config -->
+  <script src="config.js"></script>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="logo-container">
+      <!-- Pertamina Logo SVG -->
+      <svg viewBox="0 0 200 60" width="180" height="50">
+        <g transform="translate(10, 5)">
+          <polygon points="11,5 31,5 25,17 5,17" fill="#e6172c" />
+          <polygon points="8,23 23,23 17,35 2,35" fill="#005caa" />
+          <polygon points="22,14 32,9 22,30 12,35" fill="#3fa63c" />
+        </g>
+        <text x="55" y="28" font-family="'Outfit', sans-serif" font-weight="900" font-size="16" fill="#111">PERTAMINA</text>
+        <text x="55" y="42" font-family="'Outfit', sans-serif" font-weight="600" font-size="8" fill="#e6172c" letter-spacing="1">TRANS KONTINENTAL</text>
+      </svg>
+      <div class="logo-text">
+        <h1>Inspection Checklist</h1>
+        <span>Berita Acara Checklist Kendaraan</span>
+      </div>
+    </div>
+    <div class="nav-tabs">
+      <button class="nav-tab active" onclick="trySwitchView('driver-form')">Isi Checklist</button>
+      <button class="nav-tab" onclick="trySwitchView('admin-dashboard')">Panel Admin</button>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main>
+    
+    <!-- 1. DRIVER FORM VIEW -->
+    <section id="driver-form" class="view-section active">
+      <form id="checklistForm" onsubmit="handleFormSubmit(event)">
+        
+        <!-- Section A: Driver & Vehicle Info -->
+        <div class="card">
+          <div class="card-title">
+            <span>📝</span> Data Driver & Kendaraan
+          </div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="driverName">Nama Driver *</label>
+              <input type="text" id="driverName" required placeholder="Masukkan nama lengkap">
+            </div>
+            <div class="form-group">
+              <label for="vehicleType">Jenis Kendaraan / Model</label>
+              <input type="text" id="vehicleType" placeholder="Contoh: Toyota Innova Reborn">
+            </div>
+            <div class="form-group">
+              <label for="licensePlate">Nomor Polisi (Nopol)</label>
+              <input type="text" id="licensePlate" placeholder="Contoh: B 1234 PTK">
+            </div>
+            <div class="form-group">
+              <label for="mileageStart">Kilometer Awal (KM) *</label>
+              <input type="number" id="mileageStart" required placeholder="KM awal jalan">
+            </div>
+            <div class="form-group">
+              <label for="mileageEnd">Kilometer Akhir (KM) *</label>
+              <input type="number" id="mileageEnd" required placeholder="KM selesai jalan">
+            </div>
+          </div>
+        </div>
+
+        <!-- Section B: Perlengkapan Kendaraan -->
+        <div class="card">
+          <div class="card-title">
+            <span>⚙️</span> Perlengkapan Kendaraan
+          </div>
+          <div class="checklist-container">
+            <table class="checklist-table">
+              <thead>
+                <tr>
+                  <th style="width: 50px;">No</th>
+                  <th>Nama Perlengkapan</th>
+                  <th style="width: 180px; text-align: center;">Status</th>
+                  <th>Keterangan (Catatan)</th>
+                </tr>
+              </thead>
+              <tbody id="checklistItemsBody">
+                <!-- Dynamically generated rows -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Section C: Kondisi Kendaraan & Fuel -->
+        <div class="card">
+          <div class="card-title">
+            <span>🚗</span> Kondisi Fisik & Bahan Bakar
+          </div>
+          <div class="condition-grid">
+            
+            <!-- Left: Damage Plotter -->
+            <div>
+              <label style="margin-bottom: 0.5rem; display: block;">Plot Kerusakan (Ketuk pada gambar untuk menandai)</label>
+              
+              <!-- Mobile Tab Switcher for Vehicle Perspectives -->
+              <div class="vehicle-tabs-mobile">
+                <button type="button" class="vehicle-tab active" onclick="switchVehiclePerspective('body_depan')">Depan</button>
+                <button type="button" class="vehicle-tab" onclick="switchVehiclePerspective('body_samping_kiri')">Kiri</button>
+                <button type="button" class="vehicle-tab" onclick="switchVehiclePerspective('body_samping_kanan')">Kanan</button>
+                <button type="button" class="vehicle-tab" onclick="switchVehiclePerspective('body_belakang')">Belakang</button>
+              </div>
+
+              <div class="vehicle-visual-selector">
+                
+                <div class="vehicle-perspective active-perspective" data-part="body_depan">
+                  <h4>Body Depan</h4>
+                  <div class="vehicle-svg-container" onclick="addDamagePin(event, 'body_depan')">
+                    <!-- Front View Image -->
+                    <img src="car_front.png" alt="Body Depan" style="width: 100%; height: 100%; object-fit: contain;">
+                  </div>
+                </div>
+
+                <div class="vehicle-perspective" data-part="body_samping_kiri">
+                  <h4>Samping Kiri</h4>
+                  <div class="vehicle-svg-container" onclick="addDamagePin(event, 'body_samping_kiri')">
+                    <!-- Left Side Image -->
+                    <img src="car_left.png" alt="Body Samping Kiri" style="width: 100%; height: 100%; object-fit: contain;">
+                  </div>
+                </div>
+
+                <div class="vehicle-perspective" data-part="body_samping_kanan">
+                  <h4>Samping Kanan</h4>
+                  <div class="vehicle-svg-container" onclick="addDamagePin(event, 'body_samping_kanan')">
+                    <!-- Right Side Image -->
+                    <img src="car_right.png" alt="Body Samping Kanan" style="width: 100%; height: 100%; object-fit: contain;">
+                  </div>
+                </div>
+
+                <div class="vehicle-perspective" data-part="body_belakang">
+                  <h4>Body Belakang</h4>
+                  <div class="vehicle-svg-container" onclick="addDamagePin(event, 'body_belakang')">
+                    <!-- Rear View Image -->
+                    <img src="car_rear.png" alt="Body Belakang" style="width: 100%; height: 100%; object-fit: contain;">
+                  </div>
+                </div>
+
+              </div>
+              <div class="damage-list" id="damageList">
+                <!-- Recorded damage items will appear here -->
+              </div>
+            </div>
+
+            <!-- Right: Fuel & Notes -->
+            <div>
+              <label>Kapasitas Bahan Bakar (Fuel Gauge)</label>
+              <div class="fuel-gauge-container">
+                <div class="fuel-gauge-visual">
+                  <div class="fuel-gauge-track"></div>
+                  <div class="fuel-gauge-needle" id="fuelNeedle"></div>
+                  <div class="fuel-gauge-ticks">
+                    <span>E</span>
+                    <span>1/4</span>
+                    <span>1/2</span>
+                    <span>3/4</span>
+                    <span>F</span>
+                  </div>
+                </div>
+                <input type="range" id="fuelSlider" min="0" max="100" value="50" class="fuel-slider" oninput="updateFuelGauge(this.value)">
+                <span id="fuelLabel" style="font-weight: bold; color: var(--primary-blue);">Status: 1/2 (50%)</span>
+              </div>
+
+              <!-- Catatan Teknis -->
+              <div style="margin-top: 2rem; display: flex; flex-direction: column; gap: 1rem;">
+                <label>Catatan Tambahan</label>
+                <input type="text" id="note1" placeholder="Catatan 1 (Keadaan Khusus/Penting)">
+                <input type="text" id="note2" placeholder="Catatan 2 (Pembersihan/Kebersihan)">
+                <input type="text" id="note3" placeholder="Catatan 3 (Lain-lain)">
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Section D: Signature & Submit -->
+        <div class="card">
+          <div class="card-title">
+            <span>✍️</span> Tanggal & Tanda Tangan Driver
+          </div>
+          <div class="signature-grid">
+            <div class="form-group">
+              <label>Tanggal Pemeriksaan</label>
+              <input type="text" id="inspectionDateStr" readonly style="background-color: var(--bg-sidebar);">
+            </div>
+            <div class="form-group">
+              <label>Tanda Tangan Driver *</label>
+              <div class="signature-box">
+                <canvas id="sigCanvas" class="signature-canvas"></canvas>
+                <button type="button" class="clear-signature" onclick="clearSignatureCanvas()">Hapus</button>
+              </div>
+            </div>
+          </div>
+          <div style="margin-top: 2rem; text-align: right;">
+            <button type="submit" class="btn btn-success" style="font-size: 1.1rem; padding: 0.85rem 2.5rem;">
+              <span>💾</span> Simpan & Kirim Checklist
+            </button>
+          </div>
+        </div>
+
+      </form>
+    </section>
+
+    <!-- 2. ADMIN DASHBOARD VIEW -->
+    <section id="admin-dashboard" class="view-section">
+      
+      <!-- Metrics Overview -->
+      <div class="admin-metrics">
+        <div class="metric-card">
+          <h3>Total Pemeriksaan</h3>
+          <div class="value" id="metricTotal">0</div>
+        </div>
+        <div class="metric-card">
+          <h3>Kendaraan Aktif</h3>
+          <div class="value" id="metricVehicles" style="color: var(--primary-green);">0</div>
+        </div>
+        <div class="metric-card">
+          <h3>Butuh Perhatian</h3>
+          <div class="value" id="metricDefective" style="color: var(--primary-red);">0</div>
+        </div>
+      </div>
+
+      <!-- Filters & Global Actions -->
+      <div class="card" style="padding: 1.5rem;">
+        <div class="filter-bar">
+          <div class="form-group">
+            <label for="filterDriver">Cari Driver</label>
+            <input type="text" id="filterDriver" placeholder="Nama driver" oninput="applyFilters()">
+          </div>
+          <div class="form-group">
+            <label for="filterPlate">Cari Nopol</label>
+            <input type="text" id="filterPlate" placeholder="Contoh: B 1234 PTK" oninput="applyFilters()">
+          </div>
+          <div class="form-group">
+            <label for="filterStatus">Status</label>
+            <select id="filterStatus" onchange="applyFilters()">
+              <option value="all">Semua Status</option>
+              <option value="normal">Normal (Semua Ada)</option>
+              <option value="attention">Butuh Perhatian</option>
+            </select>
+          </div>
+          <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+            <button class="btn btn-primary" onclick="exportAllToExcel()">
+              <span>📊</span> Ekspor Semua Excel
+            </button>
+            <button class="btn btn-secondary" onclick="clearAllData()">
+              <span>🗑️</span> Hapus Semua Data
+            </button>
+            <button class="btn btn-danger" onclick="logoutAdmin()">
+              <span>🔒</span> Keluar Admin
+            </button>
+          </div>
+        </div>
+
+        <!-- Logs Table -->
+        <div class="checklist-container">
+          <table class="checklist-table">
+            <thead>
+              <tr>
+                <th>Tanggal</th>
+                <th>Nama Driver</th>
+                <th>Nopol</th>
+                <th>KM</th>
+                <th>BBM</th>
+                <th>Masalah</th>
+                <th style="width: 250px; text-align: center;">Tindakan</th>
+              </tr>
+            </thead>
+            <tbody id="adminLogsBody">
+              <!-- Submissions list -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Admin PIN Modal -->
+  <div class="modal-backdrop" id="adminPinModal">
+    <div class="modal-content" style="max-width: 380px; text-align: center;">
+      <div class="modal-header">
+        <h2 style="font-size: 1.25rem;">Verifikasi Admin</h2>
+        <button class="close-modal" onclick="closePinModal()">&times;</button>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 1rem; padding: 1rem 0;">
+        <p style="font-size: 0.95rem; color: var(--text-muted);">Masukkan PIN untuk mengakses Panel Admin.</p>
+        <input type="password" id="adminPinInput" placeholder="PIN Admin" style="text-align: center; font-size: 1.25rem; letter-spacing: 5px; font-weight: bold; width: 100%;" onkeydown="if(event.key==='Enter') submitAdminPin()">
+        <div id="pinErrorMsg" style="color: var(--primary-red); font-size: 0.85rem; font-weight: bold; display: none;">PIN Salah! Silakan coba lagi.</div>
+      </div>
+      <div style="display: flex; justify-content: center; gap: 0.75rem; margin-top: 1rem;">
+        <button class="btn btn-primary" onclick="submitAdminPin()">Masuk</button>
+        <button class="btn btn-secondary" onclick="closePinModal()">Batal</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Damage Description Dialog -->
+  <div class="modal-backdrop" id="damageDialog">
+    <div class="modal-content" style="max-width: 420px;">
+      <div class="modal-header">
+        <h2 style="font-size: 1.25rem;">Detail Kerusakan</h2>
+        <button class="close-modal" onclick="closeDamageDialog()">&times;</button>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 1rem; padding: 0.5rem 0;">
+        <label style="font-size: 0.85rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Pilih Jenis Kerusakan:</label>
+        <div class="damage-presets">
+          <button type="button" class="preset-btn" onclick="selectDamagePreset('Baret')">Baret (Scratch)</button>
+          <button type="button" class="preset-btn" onclick="selectDamagePreset('Penyok')">Penyok (Dent)</button>
+          <button type="button" class="preset-btn" onclick="selectDamagePreset('Pecah')">Pecah (Broken)</button>
+          <button type="button" class="preset-btn" onclick="selectDamagePreset('Retak')">Retak (Cracked)</button>
+          <button type="button" class="preset-btn" onclick="selectDamagePreset('Bocor')">Bocor (Flat/Leak)</button>
+          <button type="button" class="preset-btn" onclick="selectDamagePreset('Lampu Mati')">Lampu Mati (Bulb Out)</button>
+        </div>
+        
+        <div class="form-group" style="margin-top: 0.5rem;">
+          <label for="damageDescInput">Keterangan Tambahan / Detail:</label>
+          <input type="text" id="damageDescInput" placeholder="Contoh: Baret panjang di pintu depan">
+        </div>
+
+        <div class="form-group" style="margin-top: 0.5rem;">
+          <label style="font-size: 0.85rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase;">Tingkat Kerusakan (%):</label>
+          <div style="display: flex; align-items: center; gap: 1rem; margin-top: 0.25rem;">
+            <input type="range" id="damagePercentInput" min="5" max="100" step="5" value="10" class="fuel-slider" style="flex: 1; margin: 0;" oninput="updateDamagePercentLabel(this.value)">
+            <span id="damagePercentLabel" style="font-weight: 700; color: var(--primary-red); min-width: 110px; text-align: right; font-size: 0.95rem;">10% (Ringan)</span>
+          </div>
+        </div>
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+        <button type="button" class="btn btn-primary" onclick="submitDamagePin()">Simpan</button>
+        <button type="button" class="btn btn-secondary" onclick="closeDamageDialog()">Batal</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. DETAIL & EXPORT MODAL -->
+  <div class="modal-backdrop" id="detailModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalTitle">Detail Checklist</h2>
+        <button class="close-modal" onclick="closeDetailModal()">&times;</button>
+      </div>
+      <div id="modalBody" style="display: flex; flex-direction: column; gap: 1.5rem;">
+        <!-- Modal body will be injected by JavaScript -->
+      </div>
+      <div style="margin-top: 2rem; display: flex; justify-content: flex-end; gap: 0.75rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+        <button class="btn btn-primary" id="btnExportPDF" onclick="exportRecordToPDF()">
+          <span>📄</span> Export ke PDF (Print)
+        </button>
+        <button class="btn btn-success" id="btnExportExcel" onclick="exportRecordToExcel()">
+          <span>📊</span> Export ke Excel
+        </button>
+        <button class="btn btn-secondary" id="btnExportWord" onclick="exportRecordToWord()">
+          <span>📝</span> Export ke Word
+        </button>
+        <button class="btn btn-secondary" onclick="closeDetailModal()">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. PRINT AREA (HIDDEN FROM WEB VIEW, ONLY VISIBLE IN PRINT MODE) -->
+  <div id="print-area" style="display: none;"></div>
+
+  <!-- JavaScript App Logic -->
+  <script>
+    // 27 Checklist items
+    const CHECKLIST_ITEMS = [
+      "AC",
+      "ASBAK",
+      "JAM TERPASANG",
+      "KACA SPION DALAM",
+      "KARPET DEPAN",
+      "KARPET BELAKANG",
+      "LIGHTER/ PEMANTIK API",
+      "KLAKSON",
+      "P3K",
+      "PENAHAN SINAR MATAHARI",
+      "RADIO/TAPE/CD",
+      "SANDARAN KEPALA",
+      "ANTENA",
+      "WHELL DOP/DOP RODA",
+      "KACA SPION LUAR",
+      "PENAHAN LUMPUR",
+      "SEGITIGA PENGAMAN",
+      "TALANG AIR",
+      "BAN SEREP",
+      "DONGKRAK STANG",
+      "TOOLS SHEET",
+      "KACA FILM",
+      "PERALATAN CUCI KENDARAAN",
+      "KUNCI KONTAK/REMOTE KONTAK",
+      "STNK",
+      "ALAT PEMADAM/APAR",
+      "LAMPU BEMPER"
+    ];
+
+    let currentDamagePins = [];
+    let tempPinData = null;
+    let db = [];
+    let selectedRecord = null;
+
+    // Supabase Configuration - Membaca dari config.js jika tersedia
+    const SUPABASE_URL = (typeof SUPABASE_CONFIG !== 'undefined') ? SUPABASE_CONFIG.URL : "YOUR_SUPABASE_PROJECT_URL";
+    const SUPABASE_KEY = (typeof SUPABASE_CONFIG !== 'undefined') ? SUPABASE_CONFIG.KEY : "YOUR_SUPABASE_ANON_KEY";
+
+    // Load DB from Supabase (with LocalStorage cache fallback)
+    async function initDb() {
+      // 1. Load dari local storage cache terlebih dahulu untuk render instan
+      const stored = localStorage.getItem("ptk_inspections");
+      if (stored) {
+        db = JSON.parse(stored);
+        updateMetrics();
+        applyFilters();
+      } else {
+        db = [];
+      }
+
+      // 2. Tarik data terbaru dari Supabase jika dikonfigurasi
+      if (SUPABASE_URL && SUPABASE_KEY && !SUPABASE_URL.includes("YOUR_SUPABASE")) {
+        try {
+          const response = await fetch(`${SUPABASE_URL}/rest/v1/inspections?order=inspection_date.desc`, {
+            method: 'GET',
+            headers: {
+              'apikey': SUPABASE_KEY,
+              'Authorization': `Bearer ${SUPABASE_KEY}`,
+              'Content-Type': 'application/json'
+            }
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            // Petakan kolom Supabase ke struktur DB aplikasi saat ini
+            db = data.map(row => ({
+              inspectionId: row.id,
+              inspectionDate: row.inspection_date,
+              driver: {
+                name: row.driver_name
+              },
+              vehicle: {
+                type: row.vehicle_type,
+                licensePlate: row.license_plate,
+                mileageStart: row.mileage_start,
+                mileageEnd: row.mileage_end
+              },
+              checklist: row.checklist,
+              condition: {
+                damages: row.damages || [],
+                fuelLevel: row.fuel_level,
+                notes: row.notes || ["", "", ""]
+              },
+              signature: row.signature,
+              attentionNeeded: row.attention_needed
+            }));
+            
+            // Simpan ke localStorage cache
+            localStorage.setItem("ptk_inspections", JSON.stringify(db));
+            updateMetrics();
+            applyFilters();
+          } else {
+            console.error("Gagal menarik data Supabase. Status:", response.status);
+          }
+        } catch (err) {
+          console.error("Gagal terhubung ke Supabase (menggunakan cache offline):", err);
+        }
+      }
+    }
+
+    function saveDb() {
+      localStorage.setItem("ptk_inspections", JSON.stringify(db));
+      updateMetrics();
+      applyFilters();
+    }
+
+    // Authentication & Tab Switching
+    let isAdminAuthenticated = false;
+    const ADMIN_PIN = "1234"; // Default PIN
+
+    function trySwitchView(viewId) {
+      if (viewId === 'admin-dashboard' && !isAdminAuthenticated) {
+        openPinModal();
+      } else {
+        switchView(viewId);
+      }
+    }
+
+    function openPinModal() {
+      const modal = document.getElementById("adminPinModal");
+      const input = document.getElementById("adminPinInput");
+      const errMsg = document.getElementById("pinErrorMsg");
+      
+      input.value = "";
+      errMsg.style.display = "none";
+      modal.classList.add("active");
+      setTimeout(() => input.focus(), 150);
+    }
+
+    function closePinModal() {
+      document.getElementById("adminPinModal").classList.remove("active");
+    }
+
+    function submitAdminPin() {
+      const input = document.getElementById("adminPinInput");
+      const errMsg = document.getElementById("pinErrorMsg");
+      
+      if (input.value === ADMIN_PIN) {
+        isAdminAuthenticated = true;
+        closePinModal();
+        switchView('admin-dashboard');
+      } else {
+        errMsg.style.display = "block";
+        input.focus();
+        input.select();
+      }
+    }
+
+    function logoutAdmin() {
+      isAdminAuthenticated = false;
+      switchView('driver-form');
+    }
+
+    // Page Tab Switcher
+    function switchView(viewId) {
+      document.querySelectorAll(".view-section").forEach(sec => sec.classList.remove("active"));
+      document.querySelectorAll(".nav-tab").forEach(tab => tab.classList.remove("active"));
+      
+      document.getElementById(viewId).classList.add("active");
+      const activeTabBtn = Array.from(document.querySelectorAll(".nav-tab")).find(btn => 
+        (viewId === 'driver-form' && btn.textContent === 'Isi Checklist') ||
+        (viewId === 'admin-dashboard' && btn.textContent === 'Panel Admin')
+      );
+      if (activeTabBtn) activeTabBtn.classList.add("active");
+
+      if (viewId === 'admin-dashboard') {
+        applyFilters();
+      } else if (viewId === 'driver-form') {
+        resetForm();
+      }
+    }
+
+    // Generate Checklist Rows dynamically
+    function renderChecklistRows() {
+      const container = document.getElementById("checklistItemsBody");
+      container.innerHTML = "";
+      
+      CHECKLIST_ITEMS.forEach((item, index) => {
+        const idNum = index + 1;
+        const tr = document.createElement("tr");
+        
+        tr.innerHTML = `
+          <td>${idNum}</td>
+          <td style="font-weight: 500;">${item}</td>
+          <td style="text-align: center;">
+            <div class="status-toggle">
+              <button type="button" class="toggle-btn ada active" onclick="setRowStatus(${idNum}, 'ADA', this)">ADA</button>
+              <button type="button" class="toggle-btn tdk-ada" onclick="setRowStatus(${idNum}, 'TDK ADA', this)">TDK ADA</button>
+            </div>
+          </td>
+          <td>
+            <input type="text" id="chkNote_${idNum}" placeholder="Catatan tambahan..." style="width: 100%; padding: 0.4rem 0.75rem; font-size: 0.9rem;">
+          </td>
+        `;
+        container.appendChild(tr);
+      });
+    }
+
+    // Set toggle value
+    function setRowStatus(idNum, status, btnElement) {
+      const parent = btnElement.parentElement;
+      parent.querySelectorAll(".toggle-btn").forEach(btn => btn.classList.remove("active"));
+      btnElement.classList.add("active");
+    }
+
+    // Switch active vehicle perspective on mobile tabs
+    function switchVehiclePerspective(partName) {
+      // Update tab buttons
+      document.querySelectorAll(".vehicle-tab").forEach(tab => {
+        const onclickAttr = tab.getAttribute("onclick");
+        if (onclickAttr && onclickAttr.includes(partName)) {
+          tab.classList.add("active");
+        } else {
+          tab.classList.remove("active");
+        }
+      });
+
+      // Update perspective visibility
+      document.querySelectorAll(".vehicle-perspective").forEach(persp => {
+        if (persp.getAttribute("data-part") === partName) {
+          persp.classList.add("active-perspective");
+        } else {
+          persp.classList.remove("active-perspective");
+        }
+      });
+    }
+
+    // Damage Pinning Logic via Custom Dialog
+    function addDamagePin(event, partName) {
+      const container = event.currentTarget;
+      const rect = container.getBoundingClientRect();
+      const x = ((event.clientX - rect.left) / rect.width) * 100;
+      const y = ((event.clientY - rect.top) / rect.height) * 100;
+
+      // Store coordinates temporarily
+      tempPinData = {
+        partName: partName,
+        x: parseFloat(x.toFixed(1)),
+        y: parseFloat(y.toFixed(1))
+      };
+
+      openDamageDialog();
+    }
+
+    function openDamageDialog() {
+      const modal = document.getElementById("damageDialog");
+      const input = document.getElementById("damageDescInput");
+      const percentInput = document.getElementById("damagePercentInput");
+      input.value = "";
+      percentInput.value = 10;
+      updateDamagePercentLabel(10);
+      modal.classList.add("active");
+      setTimeout(() => input.focus(), 150);
+    }
+
+    // Update damage percentage display label
+    function updateDamagePercentLabel(value) {
+      const label = document.getElementById("damagePercentLabel");
+      let category = "Ringan";
+      if (value > 30 && value <= 70) {
+        category = "Sedang";
+      } else if (value > 70) {
+        category = "Berat";
+      }
+      label.textContent = `${value}% (${category})`;
+    }
+
+    // Close Damage Dialog
+    function closeDamageDialog() {
+      document.getElementById("damageDialog").classList.remove("active");
+      tempPinData = null;
+    }
+
+    // Select preset damage description
+    function selectDamagePreset(value) {
+      const input = document.getElementById("damageDescInput");
+      input.value = value;
+      input.focus();
+    }
+
+    // Submit custom damage pin
+    function submitDamagePin() {
+      if (!tempPinData) return;
+
+      const input = document.getElementById("damageDescInput");
+      const percentValue = document.getElementById("damagePercentInput").value;
+      let category = "Ringan";
+      if (percentValue > 30 && percentValue <= 70) {
+        category = "Sedang";
+      } else if (percentValue > 70) {
+        category = "Berat";
+      }
+
+      const descText = input.value.trim() || "Kerusakan";
+      const fullDesc = `${descText} (${percentValue}% - ${category})`;
+
+      const pinId = Date.now() + "_" + Math.random().toString(36).substr(2, 4);
+      const newPin = {
+        id: pinId,
+        part: tempPinData.partName,
+        x: tempPinData.x,
+        y: tempPinData.y,
+        description: fullDesc
+      };
+
+      currentDamagePins.push(newPin);
+      drawPinsOnSelector();
+      renderDamageList();
+      closeDamageDialog();
+    }
+
+    function drawPinsOnSelector() {
+      // Clear old pins
+      document.querySelectorAll(".damage-pin").forEach(pin => pin.remove());
+
+      currentDamagePins.forEach(pin => {
+        const perspectiveBox = document.querySelector(`.vehicle-perspective[data-part="${pin.part}"] .vehicle-svg-container`);
+        if (perspectiveBox) {
+          const pinDiv = document.createElement("div");
+          pinDiv.className = "damage-pin";
+          pinDiv.style.left = pin.x + "%";
+          pinDiv.style.top = pin.y + "%";
+          pinDiv.title = pin.description;
+          pinDiv.onclick = (e) => {
+            e.stopPropagation();
+            if (confirm(`Hapus tanda kerusakan: "${pin.description}"?`)) {
+              removeDamagePin(pin.id);
+            }
+          };
+          perspectiveBox.appendChild(pinDiv);
+        }
+      });
+    }
+
+    function removeDamagePin(pinId) {
+      currentDamagePins = currentDamagePins.filter(p => p.id !== pinId);
+      drawPinsOnSelector();
+      renderDamageList();
+    }
+
+    function renderDamageList() {
+      const container = document.getElementById("damageList");
+      container.innerHTML = "";
+
+      if (currentDamagePins.length === 0) {
+        container.innerHTML = `<span style="font-size: 0.85rem; color: var(--text-muted);">Tidak ada kerusakan yang ditandai.</span>`;
+        return;
+      }
+
+      currentDamagePins.forEach(pin => {
+        const item = document.createElement("div");
+        item.className = "damage-item";
+        
+        let labelPart = "";
+        if (pin.part === "body_depan") labelPart = "Depan";
+        else if (pin.part === "body_samping_kiri") labelPart = "Samping Kiri";
+        else if (pin.part === "body_samping_kanan") labelPart = "Samping Kanan";
+        else if (pin.part === "body_belakang") labelPart = "Belakang";
+
+        item.innerHTML = `
+          <span><strong>[${labelPart}]</strong> ${pin.description} (${pin.x}%, ${pin.y}%)</span>
+          <button type="button" class="remove-damage" onclick="removeDamagePin('${pin.id}')">&times;</button>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    // Fuel Gauge needle rotation
+    function updateFuelGauge(value) {
+      const needle = document.getElementById("fuelNeedle");
+      const label = document.getElementById("fuelLabel");
+      
+      // Map slider value 0-100 to degrees: -90deg to 90deg
+      const deg = -90 + (value / 100) * 180;
+      needle.style.transform = `rotate(${deg}deg)`;
+
+      let statusText = "1/2";
+      if (value <= 5) statusText = "E (Empty)";
+      else if (value > 5 && value <= 35) statusText = "1/4";
+      else if (value > 35 && value <= 65) statusText = "1/2";
+      else if (value > 65 && value <= 90) statusText = "3/4";
+      else statusText = "F (Full)";
+
+      label.textContent = `Status: ${statusText} (${value}%)`;
+    }
+
+    // Signature Canvas setup
+    let canvas, ctx;
+    let drawing = false;
+
+    function initSignaturePad() {
+      canvas = document.getElementById("sigCanvas");
+      ctx = canvas.getContext("2d");
+      
+      // Set actual canvas size (internal resolution) matching display size
+      resizeCanvas();
+      window.addEventListener('resize', resizeCanvas);
+
+      // Mouse drawing
+      canvas.addEventListener("mousedown", startDrawing);
+      canvas.addEventListener("mousemove", draw);
+      canvas.addEventListener("mouseup", stopDrawing);
+      canvas.addEventListener("mouseout", stopDrawing);
+
+      // Touch drawing
+      canvas.addEventListener("touchstart", (e) => {
+        const touch = e.touches[0];
+        const rect = canvas.getBoundingClientRect();
+        startDrawing({
+          clientX: touch.clientX,
+          clientY: touch.clientY
+        });
+        e.preventDefault();
+      });
+      
+      canvas.addEventListener("touchmove", (e) => {
+        const touch = e.touches[0];
+        draw({
+          clientX: touch.clientX,
+          clientY: touch.clientY
+        });
+        e.preventDefault();
+      });
+
+      canvas.addEventListener("touchend", stopDrawing);
+    }
+
+    function resizeCanvas() {
+      const rect = canvas.getBoundingClientRect();
+      
+      // Only resize if dimensions actually changed (prevent scroll clears on mobile)
+      if (canvas.width === rect.width && canvas.height === rect.height) {
+        return;
+      }
+      
+      const isCurrentlyEmpty = isSignatureEmpty();
+      let tempCanvas = null;
+      if (!isCurrentlyEmpty) {
+        // Save current signature image content
+        tempCanvas = document.createElement('canvas');
+        tempCanvas.width = canvas.width;
+        tempCanvas.height = canvas.height;
+        const tempCtx = tempCanvas.getContext('2d');
+        tempCtx.drawImage(canvas, 0, 0);
+      }
+      
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+      
+      // Restore standard context styles (resizing clears state)
+      ctx.lineWidth = 3;
+      ctx.lineCap = "round";
+      ctx.strokeStyle = "#005caa";
+      
+      if (!isCurrentlyEmpty && tempCanvas) {
+        // Draw the saved signature back, scaling it to fit the new size
+        ctx.drawImage(tempCanvas, 0, 0, tempCanvas.width, tempCanvas.height, 0, 0, canvas.width, canvas.height);
+      }
+    }
+
+    function startDrawing(e) {
+      drawing = true;
+      ctx.beginPath();
+      const rect = canvas.getBoundingClientRect();
+      ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+    }
+
+    function draw(e) {
+      if (!drawing) return;
+      const rect = canvas.getBoundingClientRect();
+      ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+      ctx.stroke();
+    }
+
+    function stopDrawing() {
+      drawing = false;
+    }
+
+    function clearSignatureCanvas() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function isSignatureEmpty() {
+      const blank = document.createElement('canvas');
+      blank.width = canvas.width;
+      blank.height = canvas.height;
+      return canvas.toDataURL() === blank.toDataURL();
+    }
+
+    // Form Submission Handling
+    async function handleFormSubmit(event) {
+      event.preventDefault();
+
+      const kmStart = parseInt(document.getElementById("mileageStart").value) || 0;
+      const kmEnd = parseInt(document.getElementById("mileageEnd").value) || 0;
+
+      if (kmEnd < kmStart) {
+        alert("Kilometer Akhir tidak boleh lebih kecil dari Kilometer Awal!");
+        document.getElementById("mileageEnd").focus();
+        return;
+      }
+
+      if (isSignatureEmpty()) {
+        alert("Harap isi tanda tangan driver terlebih dahulu!");
+        return;
+      }
+
+      // Collect checklist data
+      const checklistData = {};
+      let attentionNeeded = false;
+
+      CHECKLIST_ITEMS.forEach((item, index) => {
+        const idNum = index + 1;
+        const row = document.getElementById("checklistItemsBody").children[index];
+        const hasAda = row.querySelector(".toggle-btn.ada").classList.contains("active");
+        const status = hasAda ? "ADA" : "TDK ADA";
+        const note = document.getElementById(`chkNote_${idNum}`).value;
+
+        if (status === "TDK ADA") {
+          attentionNeeded = true;
+        }
+
+        checklistData[idNum] = { item, status, note };
+      });
+
+      if (currentDamagePins.length > 0) {
+        attentionNeeded = true;
+      }
+
+      const inspectionId = "insp_" + Date.now() + "_" + Math.random().toString(36).substr(2, 6);
+      const inspectionDate = new Date().toISOString();
+      const driverName = document.getElementById("driverName").value;
+      const vehicleType = document.getElementById("vehicleType").value;
+      const licensePlate = document.getElementById("licensePlate").value.toUpperCase();
+      const fuelLevel = parseInt(document.getElementById("fuelSlider").value) || 50;
+      const signatureBase64 = canvas.toDataURL();
+      const notesArray = [
+        document.getElementById("note1").value,
+        document.getElementById("note2").value,
+        document.getElementById("note3").value
+      ];
+
+      const record = {
+        inspectionId: inspectionId,
+        inspectionDate: inspectionDate,
+        driver: { name: driverName },
+        vehicle: {
+          type: vehicleType,
+          licensePlate: licensePlate,
+          mileageStart: kmStart,
+          mileageEnd: kmEnd
+        },
+        checklist: checklistData,
+        condition: {
+          damages: currentDamagePins,
+          fuelLevel: fuelLevel,
+          notes: notesArray
+        },
+        signature: signatureBase64,
+        attentionNeeded: attentionNeeded
+      };
+
+      // 1. Simpan di cache lokal terlebih dahulu (optimistic render)
+      db.unshift(record);
+      localStorage.setItem("ptk_inspections", JSON.stringify(db));
+      updateMetrics();
+      applyFilters();
+
+      // 2. Kirim ke Supabase jika dikonfigurasi
+      if (SUPABASE_URL && SUPABASE_KEY && !SUPABASE_URL.includes("YOUR_SUPABASE")) {
+        try {
+          const response = await fetch(`${SUPABASE_URL}/rest/v1/inspections`, {
+            method: 'POST',
+            headers: {
+              'apikey': SUPABASE_KEY,
+              'Authorization': `Bearer ${SUPABASE_KEY}`,
+              'Content-Type': 'application/json',
+              'Prefer': 'return=minimal'
+            },
+            body: JSON.stringify({
+              id: inspectionId,
+              inspection_date: inspectionDate,
+              driver_name: driverName,
+              vehicle_type: vehicleType,
+              license_plate: licensePlate,
+              mileage_start: kmStart,
+              mileage_end: kmEnd,
+              fuel_level: fuelLevel,
+              notes: notesArray,
+              checklist: checklistData,
+              damages: currentDamagePins,
+              signature: signatureBase64,
+              attention_needed: attentionNeeded
+            })
+          });
+
+          if (!response.ok) {
+            console.error("Gagal sinkronisasi data ke Supabase. Status:", response.status);
+            alert("Checklist disimpan secara lokal (gagal sinkronisasi ke cloud).");
+          }
+        } catch (err) {
+          console.error("Kesalahan jaringan saat sinkronisasi Supabase:", err);
+          alert("Checklist disimpan secara lokal (offline).");
+        }
+      }
+
+      alert("Checklist Berhasil Disimpan!");
+      resetForm();
+      switchView("admin-dashboard");
+    }
+
+    function resetForm() {
+      document.getElementById("checklistForm").reset();
+      currentDamagePins = [];
+      drawPinsOnSelector();
+      renderDamageList();
+      updateFuelGauge(50);
+      document.getElementById("fuelSlider").value = 50;
+      clearSignatureCanvas();
+      
+      // Reset vehicle perspective tab to front
+      switchVehiclePerspective('body_depan');
+      
+      // Auto set date string
+      const now = new Date();
+      document.getElementById("inspectionDateStr").value = now.toLocaleDateString("id-ID") + " " + now.toLocaleTimeString("id-ID");
+    }
+
+    // Admin Dashboard List & Filtering
+    function applyFilters() {
+      const driverQuery = document.getElementById("filterDriver").value.toLowerCase();
+      const plateQuery = document.getElementById("filterPlate").value.toLowerCase();
+      const statusFilter = document.getElementById("filterStatus").value;
+
+      const filtered = db.filter(rec => {
+        const matchesDriver = rec.driver.name.toLowerCase().includes(driverQuery);
+        const matchesPlate = (rec.vehicle.licensePlate || "").toLowerCase().includes(plateQuery);
+        
+        let matchesStatus = true;
+        if (statusFilter === "normal") {
+          matchesStatus = !rec.attentionNeeded;
+        } else if (statusFilter === "attention") {
+          matchesStatus = rec.attentionNeeded;
+        }
+
+        return matchesDriver && matchesPlate && matchesStatus;
+      });
+
+      renderLogsTable(filtered);
+    }
+
+    function renderLogsTable(records) {
+      const body = document.getElementById("adminLogsBody");
+      body.innerHTML = "";
+
+      if (records.length === 0) {
+        body.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted);">Tidak ada data checklist ditemukan.</td></tr>`;
+        return;
+      }
+
+      records.forEach(rec => {
+        const dateObj = new Date(rec.inspectionDate);
+        const dateFormatted = dateObj.toLocaleDateString("id-ID") + " " + dateObj.toLocaleTimeString("id-ID", {hour: '2-digit', minute:'2-digit'});
+        
+        const tr = document.createElement("tr");
+        
+        // Count TDK ADA items
+        let missingCount = 0;
+        Object.values(rec.checklist).forEach(i => {
+          if (i.status === "TDK ADA") missingCount++;
+        });
+
+        const damagesCount = rec.condition.damages.length;
+        let issueText = "Normal";
+        let statusStyle = "color: var(--primary-green); font-weight: bold;";
+        
+        if (rec.attentionNeeded) {
+          statusStyle = "color: var(--primary-red); font-weight: bold;";
+          const parts = [];
+          if (missingCount > 0) parts.push(`${missingCount} Alat Absen`);
+          if (damagesCount > 0) parts.push(`${damagesCount} Kerusakan`);
+          issueText = parts.join(", ") || "Butuh Perhatian";
+        }
+
+        tr.innerHTML = `
+          <td>${dateFormatted}</td>
+          <td><strong>${rec.driver.name}</strong></td>
+          <td>${rec.vehicle.licensePlate || "-"}</td>
+          <td>Awal: ${rec.vehicle.mileageStart.toLocaleString()}<br>Akhir: ${rec.vehicle.mileageEnd.toLocaleString()} KM</td>
+          <td>${rec.condition.fuelLevel}%</td>
+          <td style="${statusStyle}">${issueText}</td>
+          <td style="text-align: center;">
+            <div style="display: flex; gap: 0.25rem; justify-content: center;">
+              <button class="btn btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;" onclick="viewDetails('${rec.inspectionId}')">Detail</button>
+              <button class="btn btn-success" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;" onclick="exportSingleExcel('${rec.inspectionId}')">Excel</button>
+              <button class="btn btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;" onclick="exportSingleWord('${rec.inspectionId}')">Word</button>
+              <button class="btn btn-danger" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;" onclick="deleteRecord('${rec.inspectionId}')">Hapus</button>
+            </div>
+          </td>
+        `;
+        body.appendChild(tr);
+      });
+    }
+
+    function updateMetrics() {
+      document.getElementById("metricTotal").textContent = db.length;
+      
+      const plates = db.map(r => r.vehicle.licensePlate).filter(Boolean);
+      const uniquePlates = new Set(plates);
+      document.getElementById("metricVehicles").textContent = uniquePlates.size;
+
+      const defective = db.filter(r => r.attentionNeeded).length;
+      document.getElementById("metricDefective").textContent = defective;
+    }
+
+    async function deleteRecord(id) {
+      if (!confirm("Apakah Anda yakin ingin menghapus data pemeriksaan ini?")) {
+        return;
+      }
+
+      // Update secara lokal
+      db = db.filter(rec => rec.inspectionId !== id);
+      localStorage.setItem("ptk_inspections", JSON.stringify(db));
+      updateMetrics();
+      applyFilters();
+
+      // Hapus dari Supabase jika dikonfigurasi
+      if (SUPABASE_URL && SUPABASE_KEY && !SUPABASE_URL.includes("YOUR_SUPABASE")) {
+        try {
+          const response = await fetch(`${SUPABASE_URL}/rest/v1/inspections?id=eq.${id}`, {
+            method: 'DELETE',
+            headers: {
+              'apikey': SUPABASE_KEY,
+              'Authorization': `Bearer ${SUPABASE_KEY}`
+            }
+          });
+
+          if (!response.ok) {
+            console.error("Gagal menghapus data dari Supabase. Status:", response.status);
+          }
+        } catch (err) {
+          console.error("Kesalahan jaringan saat menghapus data Supabase:", err);
+        }
+      }
+    }
+
+    async function clearAllData() {
+      if (!confirm("⚠️ Peringatan: Anda akan menghapus SELURUH data pemeriksaan dari cloud dan lokal. Tindakan ini tidak dapat dibatalkan! Lanjutkan?")) {
+        return;
+      }
+
+      db = [];
+      localStorage.setItem("ptk_inspections", JSON.stringify(db));
+      updateMetrics();
+      applyFilters();
+
+      if (SUPABASE_URL && SUPABASE_KEY && !SUPABASE_URL.includes("YOUR_SUPABASE")) {
+        try {
+          const response = await fetch(`${SUPABASE_URL}/rest/v1/inspections?id=not.is.null`, {
+            method: 'DELETE',
+            headers: {
+              'apikey': SUPABASE_KEY,
+              'Authorization': `Bearer ${SUPABASE_KEY}`
+            }
+          });
+
+          if (!response.ok) {
+            console.error("Gagal mengosongkan database Supabase. Status:", response.status);
+          }
+        } catch (err) {
+          console.error("Kesalahan jaringan saat mengosongkan Supabase:", err);
+        }
+      }
+    }
+
+    // Modal Views for Details
+    function viewDetails(id) {
+      selectedRecord = db.find(r => r.inspectionId === id);
+      if (!selectedRecord) return;
+
+      const modal = document.getElementById("detailModal");
+      const title = document.getElementById("modalTitle");
+      const body = document.getElementById("modalBody");
+
+      title.innerHTML = `Detail Checklist - <strong>${selectedRecord.driver.name}</strong> (${selectedRecord.vehicle.licensePlate || "No Plat"})`;
+      
+      const dateObj = new Date(selectedRecord.inspectionDate);
+      const dateFormatted = dateObj.toLocaleDateString("id-ID") + " " + dateObj.toLocaleTimeString("id-ID");
+
+      // Count missing items
+      const missingList = [];
+      Object.entries(selectedRecord.checklist).forEach(([num, item]) => {
+        if (item.status === "TDK ADA") {
+          missingList.push(`${num}. ${item.item} (${item.note || 'tanpa catatan'})`);
+        }
+      });
+
+      body.innerHTML = `
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; background: var(--bg-sidebar); padding: 1rem; border-radius: var(--radius-md);">
+          <div>
+            <strong>Nama Driver:</strong> ${selectedRecord.driver.name}<br>
+            <strong>Kendaraan:</strong> ${selectedRecord.vehicle.type || "-"}<br>
+            <strong>Pelat Nomor:</strong> ${selectedRecord.vehicle.licensePlate || "-"}<br>
+            <strong>KM Awal:</strong> ${selectedRecord.vehicle.mileageStart.toLocaleString()} KM<br>
+            <strong>KM Akhir:</strong> ${selectedRecord.vehicle.mileageEnd.toLocaleString()} KM (Jarak: ${(selectedRecord.vehicle.mileageEnd - selectedRecord.vehicle.mileageStart).toLocaleString()} KM)
+          </div>
+          <div>
+            <strong>Tanggal:</strong> ${dateFormatted}<br>
+            <strong>Status BBM:</strong> ${selectedRecord.condition.fuelLevel}%<br>
+            <strong>Catatan Tambahan:</strong><br>
+            1. ${selectedRecord.condition.notes[0] || "-"}<br>
+            2. ${selectedRecord.condition.notes[1] || "-"}<br>
+            3. ${selectedRecord.condition.notes[2] || "-"}
+          </div>
+        </div>
+
+        <div>
+          <h3 style="margin-bottom: 0.5rem; font-size: 1.1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.25rem;">Kerusakan Body</h3>
+          ${selectedRecord.condition.damages.length === 0 
+            ? '<span style="color: var(--primary-green); font-weight: 500;">✓ Tidak ada laporan kerusakan fisik (Normal).</span>' 
+            : `<ul style="padding-left: 1.25rem; color: var(--primary-red); font-weight: 500;">
+                ${selectedRecord.condition.damages.map(d => `<li>[Body ${d.part.replace('body_', '').replace('_', ' ').toUpperCase()}] ${d.description} (Koordinat: x=${d.x}%, y=${d.y}%)</li>`).join('')}
+               </ul>`
+          }
+        </div>
+
+        <div>
+          <h3 style="margin-bottom: 0.5rem; font-size: 1.1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.25rem;">Perlengkapan yang TIDAK ADA (${missingList.length})</h3>
+          ${missingList.length === 0 
+            ? '<span style="color: var(--primary-green); font-weight: 500;">✓ Semua perlengkapan lengkap (ADA).</span>' 
+            : `<ul style="padding-left: 1.25rem; color: var(--primary-red); font-weight: 500;">
+                ${missingList.map(m => `<li>${m}</li>`).join('')}
+               </ul>`
+          }
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 1rem;">
+          <div>
+            <h3 style="margin-bottom: 0.5rem; font-size: 1.1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.25rem;">Tanda Tangan Driver</h3>
+            <img src="${selectedRecord.signature}" alt="Tanda Tangan" style="max-height: 100px; border: 1px solid var(--border-color); background: white; padding: 5px; border-radius: var(--radius-sm);">
+          </div>
+        </div>
+      `;
+
+      modal.classList.add("active");
+    }
+
+    function closeDetailModal() {
+      document.getElementById("detailModal").classList.remove("active");
+    }
+
+    // EXPORT ALL TO EXCEL (SheetJS)
+    function exportAllToExcel() {
+      if (db.length === 0) {
+        alert("Tidak ada data untuk diekspor.");
+        return;
+      }
+
+      const rows = [];
+      db.forEach(rec => {
+        const itemAnswers = {};
+        Object.entries(rec.checklist).forEach(([num, data]) => {
+          itemAnswers[`Item ${num} (${data.item})`] = data.status;
+          itemAnswers[`Ket Item ${num}`] = data.note;
+        });
+
+        const damagesText = rec.condition.damages.map(d => `${d.part}: ${d.description}`).join("; ");
+
+        rows.push({
+          "Tanggal Inspeksi": new Date(rec.inspectionDate).toLocaleString("id-ID"),
+          "Nama Driver": rec.driver.name,
+          "Jenis Kendaraan": rec.vehicle.type,
+          "No Polisi": rec.vehicle.licensePlate,
+          "KM Awal": rec.vehicle.mileageStart,
+          "KM Akhir": rec.vehicle.mileageEnd,
+          "Total Jarak (KM)": rec.vehicle.mileageEnd - rec.vehicle.mileageStart,
+          "Level Bahan Bakar (%)": rec.condition.fuelLevel,
+          "Catatan 1": rec.condition.notes[0],
+          "Catatan 2": rec.condition.notes[1],
+          "Catatan 3": rec.condition.notes[2],
+          "Daftar Kerusakan": damagesText,
+          "Butuh Perhatian (Defective)": rec.attentionNeeded ? "YA" : "TIDAK",
+          ...itemAnswers
+        });
+      });
+
+      const worksheet = XLSX.utils.json_to_sheet(rows);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Inspections");
+      XLSX.writeFile(workbook, "PTK_Checklist_Laporan_Semua.xlsx");
+    }
+
+    // EXPORT SINGLE RECORD TO EXCEL (SheetJS)
+    function exportSingleExcel(id) {
+      const rec = db.find(r => r.inspectionId === id);
+      if (!rec) return;
+
+      const rows = [
+        { "Parameter": "ID Inspeksi", "Nilai": rec.inspectionId },
+        { "Parameter": "Tanggal Inspeksi", "Nilai": new Date(rec.inspectionDate).toLocaleString("id-ID") },
+        { "Parameter": "Nama Driver", "Nilai": rec.driver.name },
+        { "Parameter": "Jenis Kendaraan", "Nilai": rec.vehicle.type },
+        { "Parameter": "No Polisi", "Nilai": rec.vehicle.licensePlate },
+        { "Parameter": "KM Awal Kendaraan", "Nilai": rec.vehicle.mileageStart },
+        { "Parameter": "KM Akhir Kendaraan", "Nilai": rec.vehicle.mileageEnd },
+        { "Parameter": "Total Jarak Tempuh (KM)", "Nilai": rec.vehicle.mileageEnd - rec.vehicle.mileageStart },
+        { "Parameter": "Level Bahan Bakar (%)", "Nilai": rec.condition.fuelLevel },
+        { "Parameter": "Catatan 1", "Nilai": rec.condition.notes[0] },
+        { "Parameter": "Catatan 2", "Nilai": rec.condition.notes[1] },
+        { "Parameter": "Catatan 3", "Nilai": rec.condition.notes[2] },
+        { "Parameter": "Butuh Perhatian", "Nilai": rec.attentionNeeded ? "YA" : "TIDAK" },
+        { "Parameter": "", "Nilai": "" },
+        { "Parameter": "DAFTAR PERLENGKAPAN KENDARAAN", "Nilai": "" }
+      ];
+
+      Object.entries(rec.checklist).forEach(([num, data]) => {
+        rows.push({
+          "Parameter": `${num}. ${data.item}`,
+          "Nilai": `${data.status} ${data.note ? '(' + data.note + ')' : ''}`
+        });
+      });
+
+      if (rec.condition.damages.length > 0) {
+        rows.push({ "Parameter": "", "Nilai": "" });
+        rows.push({ "Parameter": "LAPORAN KERUSAKAN FISIK", "Nilai": "" });
+        rec.condition.damages.forEach(d => {
+          rows.push({
+            "Parameter": `Body: ${d.part.replace('body_', '').toUpperCase()}`,
+            "Nilai": d.description
+          });
+        });
+      }
+
+      const worksheet = XLSX.utils.json_to_sheet(rows);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, `Checklist_${rec.driver.name}`);
+      XLSX.writeFile(workbook, `Checklist_${rec.driver.name.replace(/\s+/g, '_')}_${rec.vehicle.licensePlate}.xlsx`);
+    }
+
+    function exportRecordToExcel() {
+      if (selectedRecord) exportSingleExcel(selectedRecord.inspectionId);
+    }
+
+    // EXPORT SINGLE RECORD TO WORD (.docx using HTML-to-Word trick)
+    function exportSingleWord(id) {
+      const rec = db.find(r => r.inspectionId === id);
+      if (!rec) return;
+
+      const dateObj = new Date(rec.inspectionDate);
+      const dateFormatted = dateObj.toLocaleDateString("id-ID") + " " + dateObj.toLocaleTimeString("id-ID");
+
+      let checklistRowsHtml = "";
+      Object.entries(rec.checklist).forEach(([num, data]) => {
+        checklistRowsHtml += `
+          <tr>
+            <td style="border: 1px solid black; padding: 6px; text-align: center;">${num}</td>
+            <td style="border: 1px solid black; padding: 6px;">${data.item}</td>
+            <td style="border: 1px solid black; padding: 6px; text-align: center; font-weight: bold; color: ${data.status === 'ADA' ? 'green' : 'red'};">${data.status}</td>
+            <td style="border: 1px solid black; padding: 6px;">${data.note || '-'}</td>
+          </tr>
+        `;
+      });
+
+      let damagesHtml = "";
+      if (rec.condition.damages.length === 0) {
+        damagesHtml = "<p style='color: green;'>✓ Tidak ada kerusakan body (Kondisi Normal).</p>";
+      } else {
+        damagesHtml = "<ol>";
+        rec.condition.damages.forEach(d => {
+          damagesHtml += `<li><strong>Body ${d.part.replace('body_', '').replace('_', ' ').toUpperCase()}:</strong> ${d.description}</li>`;
+        });
+        damagesHtml += "</ol>";
+      }
+
+      const content = `
+        <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+        <head>
+          <title>Checklist Kendaraan - ${rec.driver.name}</title>
+          <style>
+            body { font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.5; color: black; }
+            h2 { text-align: center; text-transform: uppercase; margin-bottom: 20px; font-size: 14pt; }
+            table { width: 100%; border-collapse: collapse; margin-top: 15px; margin-bottom: 15px; }
+            th { background-color: #f0f0f0; font-weight: bold; border: 1px solid black; padding: 8px; font-size: 10pt; }
+          </style>
+        </head>
+        <body>
+          <h2>BERITA ACARA CHECK LIST KENDARAAN</h2>
+          <hr/>
+          
+          <table style="width: 100%; border: none; margin-bottom: 20px;">
+            <tr>
+              <td style="width: 50%;"><strong>Nama Driver:</strong> ${rec.driver.name}</td>
+              <td style="width: 50%;"><strong>Tanggal Pemeriksaan:</strong> ${dateFormatted}</td>
+            </tr>
+            <tr>
+              <td style="width: 50%;"><strong>Jenis Kendaraan:</strong> ${rec.vehicle.type || '-'}</td>
+              <td style="width: 50%;"><strong>Kilometer Awal / Akhir:</strong> ${rec.vehicle.mileageStart.toLocaleString()} / ${rec.vehicle.mileageEnd.toLocaleString()} KM</td>
+            </tr>
+            <tr>
+              <td style="width: 50%;"><strong>No. Polisi Kendaraan:</strong> ${rec.vehicle.licensePlate || '-'}</td>
+              <td style="width: 50%;"><strong>Kapasitas Bahan Bakar:</strong> ${rec.condition.fuelLevel}%</td>
+            </tr>
+          </table>
+
+          <h3>I. PERLENGKAPAN KENDARAAN</h3>
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 5%;">No</th>
+                <th style="width: 45%;">Perlengkapan</th>
+                <th style="width: 15%;">Status</th>
+                <th style="width: 35%;">Keterangan</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${checklistRowsHtml}
+            </tbody>
+          </table>
+
+          <h3>II. KONDISI FISIK KENDARAAN (BODY)</h3>
+          ${damagesHtml}
+
+          <h3>III. CATATAN KENDARAAN</h3>
+          <p>1. ${rec.condition.notes[0] || '-'}</p>
+          <p>2. ${rec.condition.notes[1] || '-'}</p>
+          <p>3. ${rec.condition.notes[2] || '-'}</p>
+
+          <br/><br/>
+          <table style="width: 100%; border: none; margin-top: 30px;">
+            <tr>
+              <td style="text-align: center; width: 33%;">
+                <p>Driver,</p>
+                <br/><br/>
+                <img src="${rec.signature}" style="max-height: 60px; max-width: 150px;"/><br/>
+                <p><strong>( ${rec.driver.name} )</strong></p>
+              </td>
+              <td style="text-align: center; width: 33%;">
+                <p>Koordinator Kendaraan,</p>
+                <br/><br/><br/><br/>
+                <p><strong>( _________________ )</strong></p>
+              </td>
+              <td style="text-align: center; width: 33%;">
+                <p>Asset Management,</p>
+                <br/><br/><br/><br/>
+                <p><strong>( _________________ )</strong></p>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
+      `;
+
+      const blob = new Blob(['\ufeff' + content], {
+        type: 'application/msword'
+      });
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Checklist_${rec.driver.name.replace(/\s+/g, '_')}_${rec.vehicle.licensePlate}.doc`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function exportRecordToWord() {
+      if (selectedRecord) exportSingleWord(selectedRecord.inspectionId);
+    }
+
+    // EXPORT TO PDF (Native window.print with highly accurate layout)
+    function exportRecordToPDF() {
+      if (!selectedRecord) return;
+
+      const printArea = document.getElementById("print-area");
+      printArea.style.display = "block";
+
+      const dateObj = new Date(selectedRecord.inspectionDate);
+      const dateFormatted = dateObj.toLocaleDateString("id-ID") + " " + dateObj.toLocaleTimeString("id-ID");
+
+      // Construct columns
+      const leftColItems = [];
+      const rightColItems = [];
+
+      // Split 27 items to match double column layout of the original paper form
+      // Left side holds items 1-14
+      // Right side holds items 15-27, drawing views, and fuel gauge
+      let leftTableHtml = "";
+      let rightTableHtml = "";
+
+      for (let i = 1; i <= 27; i++) {
+        const item = selectedRecord.checklist[i];
+        const statusAda = item.status === "ADA" ? "✓" : "";
+        const statusTdk = item.status === "TDK ADA" ? "✓" : "";
+        const note = item.note || "";
+
+        const rowHtml = `
+          <tr>
+            <td style="text-align: center; font-size: 0.75rem;">${i}</td>
+            <td style="font-size: 0.75rem;">${item.item}</td>
+            <td style="text-align: center; font-weight: bold; font-size: 0.8rem;">${statusAda}</td>
+            <td style="text-align: center; font-weight: bold; font-size: 0.8rem;">${statusTdk}</td>
+            <td style="font-size: 0.7rem;">${note}</td>
+          </tr>
+        `;
+
+        if (i <= 14) {
+          leftTableHtml += rowHtml;
+        } else {
+          rightTableHtml += rowHtml;
+        }
+      }
+
+      // Draw SVG damage visual pointers (guaranteed to render on print)
+      const getPointersHtml = (part) => {
+        return selectedRecord.condition.damages
+          .filter(d => d.part === part)
+          .map(d => `
+            <svg style="position: absolute; left: ${d.x}%; top: ${d.y}%; width: 12px; height: 12px; transform: translate(-50%,-50%); z-index: 100;" viewBox="0 0 10 10">
+              <circle cx="5" cy="5" r="4.5" fill="red" stroke="white" stroke-width="1.5" />
+            </svg>
+          `)
+          .join('');
+      };
+
+      // Get damage description points text formatted like the paper form (1. Body Depan a. b. etc.)
+      const getDamageDesc = (part, index) => {
+        const list = selectedRecord.condition.damages.filter(d => d.part === part);
+        if (list[index]) {
+          return list[index].description;
+        }
+        return "..................................................";
+      };
+
+      // Construct PDF form markup
+      printArea.innerHTML = `
+        <div class="official-form-print">
+          
+          <!-- Header Logo & Title -->
+          <div class="print-header">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <svg viewBox="0 0 200 60" width="130" height="40">
+                <g transform="translate(10, 5)">
+                  <polygon points="11,5 31,5 25,17 5,17" fill="#e6172c" />
+                  <polygon points="8,23 23,23 17,35 2,35" fill="#005caa" />
+                  <polygon points="22,14 32,9 22,30 12,35" fill="#3fa63c" />
+                </g>
+                <text x="55" y="28" font-family="Outfit, sans-serif" font-weight="900" font-size="16" fill="#111">PERTAMINA</text>
+                <text x="55" y="42" font-family="Outfit, sans-serif" font-weight="600" font-size="8" fill="#e6172c" letter-spacing="0.5">TRANS KONTINENTAL</text>
+              </svg>
+            </div>
+            <div class="print-header-text">
+              <h2>PERTAMINA TRANS KONTINENTAL<br>INSPECTION CHECK LIST</h2>
+              <h3>Berita Acara Check List Kendaraan</h3>
+            </div>
+            <div style="width: 130px;"></div> <!-- spacer -->
+          </div>
+
+          <!-- Driver & Vehicle Details -->
+          <table class="print-meta-table">
+            <thead>
+              <tr>
+                <th>Nama Driver</th>
+                <th>Jenis Kendaraan / Nopol Kendaraan</th>
+                <th>Kilometer Kendaraan (Awal / Akhir)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="text-align: center; font-weight: bold; font-size: 0.9rem; padding: 10px;">${selectedRecord.driver.name}</td>
+                <td style="text-align: center; font-weight: bold; font-size: 0.9rem; padding: 10px;">${selectedRecord.vehicle.type || "-"} / ${selectedRecord.vehicle.licensePlate || "-"}</td>
+                <td style="text-align: center; font-weight: bold; font-size: 0.9rem; padding: 10px; line-height: 1.3;">Awal: ${selectedRecord.vehicle.mileageStart.toLocaleString()}<br>Akhir: ${selectedRecord.vehicle.mileageEnd.toLocaleString()} KM</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <!-- Checklist & Condition Split Columns -->
+          <div class="print-layout-columns">
+            
+            <!-- Left Side: Items 1 to 14 -->
+            <div>
+              <div style="font-weight: 700; border: 1px solid black; padding: 5px; text-align: center; text-transform: uppercase; background: #e0e0e0; font-size: 0.8rem; margin-bottom: 5px;">
+                PERLENGKAPAN KENDARAAN (1-14)
+              </div>
+              <table class="print-checklist-table">
+                <thead>
+                  <tr>
+                    <th style="width: 5%;">NO</th>
+                    <th style="width: 45%;">PERLENGKAPAN</th>
+                    <th style="width: 10%; text-align: center;">ADA</th>
+                    <th style="width: 10%; text-align: center;">TDK ADA</th>
+                    <th style="width: 30%;">KET</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${leftTableHtml}
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Right Side: Items 15 to 27 & Car damage layout & fuel gauge -->
+            <div>
+              <div style="font-weight: 700; border: 1px solid black; padding: 5px; text-align: center; text-transform: uppercase; background: #e0e0e0; font-size: 0.8rem; margin-bottom: 5px;">
+                PERLENGKAPAN (15-27) & KONDISI FISIK
+              </div>
+              <table class="print-checklist-table" style="margin-bottom: 10px;">
+                <thead>
+                  <tr>
+                    <th style="width: 5%;">NO</th>
+                    <th style="width: 45%;">PERLENGKAPAN</th>
+                    <th style="width: 10%; text-align: center;">ADA</th>
+                    <th style="width: 10%; text-align: center;">TDK ADA</th>
+                    <th style="width: 30%;">KET</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${rightTableHtml}
+                </tbody>
+              </table>
+
+              <!-- Car Damage Plotter Map (Print Version) -->
+              <div class="print-condition-container">
+                <div class="print-condition-title">Kondisi Kendaraan (Fisik)</div>
+                <div class="print-vehicle-view" style="display: grid; grid-template-columns: 1fr; gap: 8px;">
+                  
+                  <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed #ccc; padding: 4px 0;">
+                    <div style="font-size: 0.75rem; line-height: 1.4; flex: 1;">
+                      <strong>1. Body Depan</strong><br>
+                      a. ${getDamageDesc('body_depan', 0)}<br>
+                      b. ${getDamageDesc('body_depan', 1)}
+                    </div>
+                    <div style="position: relative; width: 70px; height: 70px;">
+                      <img src="car_front.png" alt="Body Depan" style="width: 100%; height: 100%; object-fit: contain;">
+                      ${getPointersHtml('body_depan')}
+                    </div>
+                  </div>
+
+                  <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed #ccc; padding: 4px 0;">
+                    <div style="font-size: 0.75rem; line-height: 1.4; flex: 1;">
+                      <strong>2. Body Samping Kiri</strong><br>
+                      a. ${getDamageDesc('body_samping_kiri', 0)}<br>
+                      b. ${getDamageDesc('body_samping_kiri', 1)}
+                    </div>
+                    <div style="position: relative; width: 85px; height: 50px;">
+                      <img src="car_left.png" alt="Body Samping Kiri" style="width: 100%; height: 100%; object-fit: contain;">
+                      ${getPointersHtml('body_samping_kiri')}
+                    </div>
+                  </div>
+
+                  <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed #ccc; padding: 4px 0;">
+                    <div style="font-size: 0.75rem; line-height: 1.4; flex: 1;">
+                      <strong>3. Body Samping Kanan</strong><br>
+                      a. ${getDamageDesc('body_samping_kanan', 0)}<br>
+                      b. ${getDamageDesc('body_samping_kanan', 1)}
+                    </div>
+                    <div style="position: relative; width: 85px; height: 50px;">
+                      <img src="car_right.png" alt="Body Samping Kanan" style="width: 100%; height: 100%; object-fit: contain;">
+                      ${getPointersHtml('body_samping_kanan')}
+                    </div>
+                  </div>
+
+                  <div style="display: flex; justify-content: space-between; align-items: center; padding: 4px 0;">
+                    <div style="font-size: 0.75rem; line-height: 1.4; flex: 1;">
+                      <strong>4. Body Belakang</strong><br>
+                      a. ${getDamageDesc('body_belakang', 0)}<br>
+                      b. ${getDamageDesc('body_belakang', 1)}
+                    </div>
+                    <div style="position: relative; width: 70px; height: 70px;">
+                      <img src="car_rear.png" alt="Body Belakang" style="width: 100%; height: 100%; object-fit: contain;">
+                      ${getPointersHtml('body_belakang')}
+                    </div>
+                  </div>
+
+                </div>
+
+                <!-- Fuel Gauge Print representation -->
+                <div class="print-fuel-gauge">
+                  <strong>Level Bahan Bakar:</strong> ${selectedRecord.condition.fuelLevel}%
+                  <div style="display: flex; gap: 8px; font-weight: bold; font-size: 0.75rem; margin-top: 4px;">
+                    <span style="${selectedRecord.condition.fuelLevel <= 10 ? 'text-decoration: underline; color: red;' : ''}">E</span>
+                    <span style="${selectedRecord.condition.fuelLevel > 10 && selectedRecord.condition.fuelLevel <= 35 ? 'text-decoration: underline; color: red;' : ''}">1/4</span>
+                    <span style="${selectedRecord.condition.fuelLevel > 35 && selectedRecord.condition.fuelLevel <= 65 ? 'text-decoration: underline; color: red;' : ''}">1/2</span>
+                    <span style="${selectedRecord.condition.fuelLevel > 65 && selectedRecord.condition.fuelLevel <= 90 ? 'text-decoration: underline; color: red;' : ''}">3/4</span>
+                    <span style="${selectedRecord.condition.fuelLevel > 90 ? 'text-decoration: underline; color: red;' : ''}">F</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+
+          <!-- Attention details -->
+          <div class="print-attention">
+            <strong>Perhatian !</strong><br>
+            1. Perlengkapan/kondisi mobil harus jelas perinciannya.<br>
+            2. Driver bertanggung jawab atas kelengkapan dan alat-alat kendaraan yang ada.<br>
+            3. Driver bertanggung jawab atas KEBERSIHAN kendaraan Setiap harinya.
+          </div>
+
+          <!-- Catatan -->
+          <div class="print-notes">
+            <strong>Catatan :</strong><br>
+            1. ${selectedRecord.condition.notes[0] || ""}<br>
+            2. ${selectedRecord.condition.notes[1] || ""}<br>
+            3. ${selectedRecord.condition.notes[2] || ""}
+          </div>
+
+          <!-- Signatures Table -->
+          <table class="print-footer-table">
+            <tbody>
+              <tr>
+                <td>
+                  <span class="sig-label">Tanggal Pemeriksaan Kendaraan:</span><br>
+                  <span style="font-size: 0.85rem; font-weight: bold; display: block; margin-top: 10px;">${dateFormatted}</span>
+                </td>
+                <td>
+                  <span class="sig-label">Nama & Tanda Tangan Driver:</span><br>
+                  <img src="${selectedRecord.signature}" alt="Ttd Driver"/>
+                  <span style="position: absolute; bottom: 5px; left: 10px; font-weight: bold;">( ${selectedRecord.driver.name} )</span>
+                </td>
+                <td>
+                  <span class="sig-label">Mengetahui Koordinator Kendaraan:</span>
+                  <span style="position: absolute; bottom: 5px; left: 10px; font-weight: bold;">( ___________________ )</span>
+                </td>
+                <td>
+                  <span class="sig-label">Mengetahui Asset Management:</span>
+                  <span style="position: absolute; bottom: 5px; left: 10px; font-weight: bold;">( ___________________ )</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+        </div>
+      `;
+
+      // Trigger Print dialogue
+      window.print();
+      
+      // Cleanup print area display
+      printArea.style.display = "none";
+    }
+
+    // App Initialization
+    window.onload = function() {
+      initDb();
+      renderChecklistRows();
+      initSignaturePad();
+      resetForm();
+    };
+  </script>
+</body>
+</html>
