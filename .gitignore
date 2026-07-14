@@ -1,5 +1,6 @@
 # Database & API Configuration (Mencegah kebocoran kunci akses Supabase)
 /config.js
+.env
 
 # OS generated files
 .DS_Store
