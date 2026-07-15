@@ -1579,14 +1579,12 @@
         }
       }
 
-      // Draw SVG damage visual pointers
+      // Draw damage visual pointers using standard div for html2canvas compatibility
       const getPointersHtml = (part) => {
         return rec.condition.damages
           .filter(d => d.part === part)
           .map(d => `
-            <svg style="position: absolute; left: ${d.x}%; top: ${d.y}%; width: 12px; height: 12px; transform: translate(-50%,-50%); z-index: 100;" viewBox="0 0 10 10">
-              <circle cx="5" cy="5" r="4.5" fill="red" stroke="white" stroke-width="1.5" />
-            </svg>
+            <div style="position: absolute; left: calc(${d.x}% - 5px); top: calc(${d.y}% - 5px); width: 10px; height: 10px; background-color: red; border: 1px solid white; border-radius: 50%; z-index: 100; box-shadow: 0 0 2px rgba(0,0,0,0.5);"></div>
           `)
           .join('');
       };
