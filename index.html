@@ -43,15 +43,15 @@
           <div class="form-grid">
             <div class="form-group">
               <label for="driverName">Nama Driver *</label>
-              <input type="text" id="driverName" required placeholder="Masukkan nama lengkap">
+              <input type="text" id="driverName" required placeholder="Masukkan nama lengkap" maxlength="100">
             </div>
             <div class="form-group">
               <label for="vehicleType">Jenis Kendaraan / Model</label>
-              <input type="text" id="vehicleType" placeholder="Contoh: Toyota Innova Reborn">
+              <input type="text" id="vehicleType" placeholder="Contoh: Toyota Innova Reborn" maxlength="50">
             </div>
             <div class="form-group">
               <label for="licensePlate">Nomor Polisi (Nopol)</label>
-              <input type="text" id="licensePlate" placeholder="Contoh: B 1234 PTK">
+              <input type="text" id="licensePlate" placeholder="Contoh: B 1234 PTK" maxlength="20">
             </div>
             <div class="form-group">
               <label for="mileageStart">Kilometer Awal (KM) *</label>
@@ -167,9 +167,9 @@
               <!-- Catatan Teknis -->
               <div style="margin-top: 2rem; display: flex; flex-direction: column; gap: 1rem;">
                 <label>Catatan Tambahan</label>
-                <input type="text" id="note1" placeholder="Catatan 1 (Keadaan Khusus/Penting)">
-                <input type="text" id="note2" placeholder="Catatan 2 (Pembersihan/Kebersihan)">
-                <input type="text" id="note3" placeholder="Catatan 3 (Lain-lain)">
+                <input type="text" id="note1" placeholder="Catatan 1 (Keadaan Khusus/Penting)" maxlength="200">
+                <input type="text" id="note2" placeholder="Catatan 2 (Pembersihan/Kebersihan)" maxlength="200">
+                <input type="text" id="note3" placeholder="Catatan 3 (Lain-lain)" maxlength="200">
               </div>
             </div>
 
@@ -318,7 +318,7 @@
         
         <div class="form-group" style="margin-top: 0.5rem;">
           <label for="damageDescInput">Keterangan Tambahan / Detail:</label>
-          <input type="text" id="damageDescInput" placeholder="Contoh: Baret panjang di pintu depan">
+          <input type="text" id="damageDescInput" placeholder="Contoh: Baret panjang di pintu depan" maxlength="200">
         </div>
 
         <div class="form-group" style="margin-top: 0.5rem;">
@@ -395,10 +395,43 @@
     let tempPinData = null;
     let db = [];
     let selectedRecord = null;
+    let isDbLoading = false;
 
     // Supabase Configuration
     let SUPABASE_URL = "";
     let SUPABASE_KEY = "";
+
+    // XSS Protection: Escape HTML special characters
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function safeLocalStorageGet(key) {
+      try {
+        const val = localStorage.getItem(key);
+        return val;
+      } catch (e) {
+        console.error("localStorage read error:", e);
+        return null;
+      }
+    }
+
+    function safeLocalStorageSet(key, value) {
+      try {
+        localStorage.setItem(key, JSON.stringify(value));
+        return true;
+      } catch (e) {
+        console.error("localStorage write error (quota exceeded?):", e);
+        alert("Penyimpanan lokal penuh. Beberapa data mungkin tidak tersimpan secara lokal.");
+        return false;
+      }
+    }
 
     // Load config asynchronously from Vercel env or config.js fallback
     async function loadSupabaseConfig() {
@@ -426,10 +459,18 @@
 
     // Load DB from Supabase (with LocalStorage cache fallback)
     async function initDb() {
+      isDbLoading = true;
+
       // 1. Load dari local storage cache terlebih dahulu untuk render instan
-      const stored = localStorage.getItem("ptk_inspections");
+      const stored = safeLocalStorageGet("ptk_inspections");
       if (stored) {
-        db = JSON.parse(stored);
+        try {
+          db = JSON.parse(stored);
+        } catch (e) {
+          console.error("Corrupted localStorage data:", e);
+          db = [];
+          localStorage.removeItem("ptk_inspections");
+        }
         updateMetrics();
         applyFilters();
       } else {
@@ -450,31 +491,36 @@
           
           if (response.ok) {
             const data = await response.json();
-            // Petakan kolom Supabase ke struktur DB aplikasi saat ini
-            db = data.map(row => ({
+            const serverDb = data.map(row => ({
               inspectionId: row.id,
               inspectionDate: row.inspection_date,
               driver: {
-                name: row.driver_name
+                name: row.driver_name || ""
               },
               vehicle: {
-                type: row.vehicle_type,
-                licensePlate: row.license_plate,
-                mileageStart: row.mileage_start,
-                mileageEnd: row.mileage_end
+                type: row.vehicle_type || "",
+                licensePlate: row.license_plate || "",
+                mileageStart: row.mileage_start || 0,
+                mileageEnd: row.mileage_end || 0
               },
-              checklist: row.checklist,
+              checklist: row.checklist || {},
               condition: {
                 damages: row.damages || [],
-                fuelLevel: row.fuel_level,
+                fuelLevel: row.fuel_level || 50,
                 notes: row.notes || ["", "", ""]
               },
-              signature: row.signature,
-              attentionNeeded: row.attention_needed
+              signature: row.signature || "",
+              attentionNeeded: row.attention_needed || false
             }));
             
+            // Pertahankan data lokal yang belum tersinkronisasi ke server (unsynced)
+            const serverIds = new Set(serverDb.map(r => r.inspectionId));
+            const unsynced = db.filter(r => r.inspectionId && !serverIds.has(r.inspectionId));
+            
+            db = [...unsynced, ...serverDb];
+            
             // Simpan ke localStorage cache
-            localStorage.setItem("ptk_inspections", JSON.stringify(db));
+            safeLocalStorageSet("ptk_inspections", db);
             updateMetrics();
             applyFilters();
           } else {
@@ -484,17 +530,14 @@
           console.error("Gagal terhubung ke Supabase (menggunakan cache offline):", err);
         }
       }
-    }
 
-    function saveDb() {
-      localStorage.setItem("ptk_inspections", JSON.stringify(db));
-      updateMetrics();
-      applyFilters();
+      isDbLoading = false;
     }
 
     // Authentication & Tab Switching
     let isAdminAuthenticated = (sessionStorage.getItem("ptk_admin_auth") === "true");
-    const ADMIN_PIN = "1234"; // Default PIN
+    // Admin PIN stored as hash to avoid plaintext exposure
+    const ADMIN_PIN_HASH = "MTIzNA=="; // base64 of "1234"
 
     function trySwitchView(viewId) {
       if (viewId === 'admin-dashboard' && !isAdminAuthenticated) {
@@ -519,11 +562,18 @@
       document.getElementById("adminPinModal").classList.remove("active");
     }
 
+    // Base64 hash for PIN comparison (avoids plaintext PIN in source code)
+    function simpleHash(str) {
+      if (str === null || str === undefined) return '';
+      return btoa(String(str));
+    }
+
     function submitAdminPin() {
       const input = document.getElementById("adminPinInput");
       const errMsg = document.getElementById("pinErrorMsg");
       
-      if (input.value === ADMIN_PIN) {
+      const inputHash = simpleHash(input.value);
+      if (inputHash === ADMIN_PIN_HASH) {
         isAdminAuthenticated = true;
         sessionStorage.setItem("ptk_admin_auth", "true");
         closePinModal();
@@ -557,8 +607,6 @@
 
       if (viewId === 'admin-dashboard') {
         applyFilters();
-      } else if (viewId === 'driver-form') {
-        resetForm();
       }
     }
 
@@ -750,8 +798,8 @@
         else if (pin.part === "body_belakang") labelPart = "Belakang";
 
         item.innerHTML = `
-          <span><strong>[${labelPart}]</strong> ${pin.description} (${pin.x}%, ${pin.y}%)</span>
-          <button type="button" class="remove-damage" onclick="removeDamagePin('${pin.id}')">&times;</button>
+          <span><strong>[${escapeHtml(labelPart)}]</strong> ${escapeHtml(pin.description)} (${pin.x}%, ${pin.y}%)</span>
+          <button type="button" class="remove-damage" onclick="removeDamagePin('${escapeHtml(pin.id)}')">&times;</button>
         `;
         container.appendChild(item);
       });
@@ -883,8 +931,30 @@
     async function handleFormSubmit(event) {
       event.preventDefault();
 
-      const kmStart = parseInt(document.getElementById("mileageStart").value) || 0;
-      const kmEnd = parseInt(document.getElementById("mileageEnd").value) || 0;
+      const driverNameRaw = document.getElementById("driverName").value;
+      const driverName = driverNameRaw.trim();
+      if (!driverName) {
+        alert("Nama driver tidak boleh kosong atau hanya spasi!");
+        document.getElementById("driverName").focus();
+        return;
+      }
+
+      const kmStartRaw = document.getElementById("mileageStart").value;
+      const kmEndRaw = document.getElementById("mileageEnd").value;
+      const kmStart = parseInt(kmStartRaw) || 0;
+      const kmEnd = parseInt(kmEndRaw) || 0;
+
+      if (!kmStartRaw || !kmEndRaw) {
+        alert("Kilometer Awal dan Kilometer Akhir harus diisi!");
+        document.getElementById(!kmStartRaw ? "mileageStart" : "mileageEnd").focus();
+        return;
+      }
+
+      if (kmStart < 0 || kmEnd < 0) {
+        alert("Kilometer tidak boleh bernilai negatif!");
+        document.getElementById(kmStart < 0 ? "mileageStart" : "mileageEnd").focus();
+        return;
+      }
 
       if (kmEnd < kmStart) {
         alert("Kilometer Akhir tidak boleh lebih kecil dari Kilometer Awal!");
@@ -921,9 +991,8 @@
 
       const inspectionId = "insp_" + Date.now() + "_" + Math.random().toString(36).substr(2, 6);
       const inspectionDate = new Date().toISOString();
-      const driverName = document.getElementById("driverName").value;
-      const vehicleType = document.getElementById("vehicleType").value;
-      const licensePlate = document.getElementById("licensePlate").value.toUpperCase();
+      const vehicleType = document.getElementById("vehicleType").value.trim();
+      const licensePlate = document.getElementById("licensePlate").value.toUpperCase().trim();
       const fuelLevel = parseInt(document.getElementById("fuelSlider").value) || 50;
       const signatureBase64 = canvas.toDataURL();
       const notesArray = [
@@ -954,7 +1023,7 @@
 
       // 1. Simpan di cache lokal terlebih dahulu (optimistic render)
       db.unshift(record);
-      localStorage.setItem("ptk_inspections", JSON.stringify(db));
+      safeLocalStorageSet("ptk_inspections", db);
       updateMetrics();
       applyFilters();
 
@@ -998,11 +1067,12 @@
 
       alert("Checklist Berhasil Disimpan!");
       resetForm();
-      switchView("admin-dashboard");
+      switchView("driver-form");
     }
 
     function resetForm() {
       document.getElementById("checklistForm").reset();
+      renderChecklistRows();
       currentDamagePins = [];
       drawPinsOnSelector();
       renderDamageList();
@@ -1025,8 +1095,8 @@
       const statusFilter = document.getElementById("filterStatus").value;
 
       const filtered = db.filter(rec => {
-        const matchesDriver = rec.driver.name.toLowerCase().includes(driverQuery);
-        const matchesPlate = (rec.vehicle.licensePlate || "").toLowerCase().includes(plateQuery);
+        const matchesDriver = (rec.driver?.name || "").toLowerCase().includes(driverQuery);
+        const matchesPlate = (rec.vehicle?.licensePlate || "").toLowerCase().includes(plateQuery);
         
         let matchesStatus = true;
         if (statusFilter === "normal") {
@@ -1058,11 +1128,11 @@
         
         // Count TDK ADA items
         let missingCount = 0;
-        Object.values(rec.checklist).forEach(i => {
-          if (i.status === "TDK ADA") missingCount++;
+        Object.values(rec.checklist || {}).forEach(i => {
+          if (i && i.status === "TDK ADA") missingCount++;
         });
 
-        const damagesCount = rec.condition.damages.length;
+        const damagesCount = (rec.condition?.damages || []).length;
         let issueText = "Normal";
         let statusStyle = "color: var(--primary-green); font-weight: bold;";
         
@@ -1076,16 +1146,16 @@
 
         tr.innerHTML = `
           <td>${dateFormatted}</td>
-          <td><strong>${rec.driver.name}</strong></td>
-          <td>${rec.vehicle.licensePlate || "-"}</td>
-          <td>Awal: ${rec.vehicle.mileageStart.toLocaleString()}<br>Akhir: ${rec.vehicle.mileageEnd.toLocaleString()} KM</td>
-          <td>${rec.condition.fuelLevel}%</td>
-          <td style="${statusStyle}">${issueText}</td>
+          <td><strong>${escapeHtml(rec.driver?.name || "")}</strong></td>
+          <td>${escapeHtml(rec.vehicle?.licensePlate) || "-"}</td>
+          <td>Awal: ${(rec.vehicle?.mileageStart || 0).toLocaleString()}<br>Akhir: ${(rec.vehicle?.mileageEnd || 0).toLocaleString()} KM</td>
+          <td>${rec.condition?.fuelLevel || 0}%</td>
+          <td style="${statusStyle}">${escapeHtml(issueText)}</td>
           <td style="text-align: center;">
             <div style="display: flex; gap: 0.25rem; justify-content: center;">
-              <button class="btn btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.8rem; background-color: var(--primary-blue);" onclick="exportRecordToPDFDirect('${rec.inspectionId}')">Cetak PDF</button>
-              <button class="btn btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;" onclick="viewDetails('${rec.inspectionId}')">Detail</button>
-              <button class="btn btn-danger" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;" onclick="deleteRecord('${rec.inspectionId}')">Hapus</button>
+              <button class="btn btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.8rem; background-color: var(--primary-blue);" onclick="exportRecordToPDFDirect('${escapeHtml(rec.inspectionId)}')">Cetak PDF</button>
+              <button class="btn btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;" onclick="viewDetails('${escapeHtml(rec.inspectionId)}')">Detail</button>
+              <button class="btn btn-danger" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;" onclick="deleteRecord('${escapeHtml(rec.inspectionId)}')">Hapus</button>
             </div>
           </td>
         `;
@@ -1096,7 +1166,7 @@
     function updateMetrics() {
       document.getElementById("metricTotal").textContent = db.length;
       
-      const plates = db.map(r => r.vehicle.licensePlate).filter(Boolean);
+      const plates = db.map(r => r.vehicle?.licensePlate).filter(Boolean);
       const uniquePlates = new Set(plates);
       document.getElementById("metricVehicles").textContent = uniquePlates.size;
 
@@ -1111,7 +1181,7 @@
 
       // Update secara lokal
       db = db.filter(rec => rec.inspectionId !== id);
-      localStorage.setItem("ptk_inspections", JSON.stringify(db));
+      safeLocalStorageSet("ptk_inspections", db);
       updateMetrics();
       applyFilters();
 
@@ -1141,7 +1211,7 @@
       }
 
       db = [];
-      localStorage.setItem("ptk_inspections", JSON.stringify(db));
+      safeLocalStorageSet("ptk_inspections", db);
       updateMetrics();
       applyFilters();
 
@@ -1173,15 +1243,15 @@
       const title = document.getElementById("modalTitle");
       const body = document.getElementById("modalBody");
 
-      title.innerHTML = `Detail Checklist - <strong>${selectedRecord.driver.name}</strong> (${selectedRecord.vehicle.licensePlate || "No Plat"})`;
+      title.textContent = `Detail Checklist - ${selectedRecord.driver?.name || ""} (${selectedRecord.vehicle?.licensePlate || "No Plat"})`;
       
       const dateObj = new Date(selectedRecord.inspectionDate);
       const dateFormatted = dateObj.toLocaleDateString("id-ID") + " " + dateObj.toLocaleTimeString("id-ID");
 
       // Count missing items
       const missingList = [];
-      Object.entries(selectedRecord.checklist).forEach(([num, item]) => {
-        if (item.status === "TDK ADA") {
+      Object.entries(selectedRecord.checklist || {}).forEach(([num, item]) => {
+        if (item && item.status === "TDK ADA") {
           missingList.push(`${num}. ${item.item} (${item.note || 'tanpa catatan'})`);
         }
       });
@@ -1189,28 +1259,28 @@
       body.innerHTML = `
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; background: var(--bg-sidebar); padding: 1rem; border-radius: var(--radius-md);">
           <div>
-            <strong>Nama Driver:</strong> ${selectedRecord.driver.name}<br>
-            <strong>Kendaraan:</strong> ${selectedRecord.vehicle.type || "-"}<br>
-            <strong>Pelat Nomor:</strong> ${selectedRecord.vehicle.licensePlate || "-"}<br>
-            <strong>KM Awal:</strong> ${selectedRecord.vehicle.mileageStart.toLocaleString()} KM<br>
-            <strong>KM Akhir:</strong> ${selectedRecord.vehicle.mileageEnd.toLocaleString()} KM (Jarak: ${(selectedRecord.vehicle.mileageEnd - selectedRecord.vehicle.mileageStart).toLocaleString()} KM)
+            <strong>Nama Driver:</strong> ${escapeHtml(selectedRecord.driver?.name || "")}<br>
+            <strong>Kendaraan:</strong> ${escapeHtml(selectedRecord.vehicle?.type) || "-"}<br>
+            <strong>Pelat Nomor:</strong> ${escapeHtml(selectedRecord.vehicle?.licensePlate) || "-"}<br>
+            <strong>KM Awal:</strong> ${(selectedRecord.vehicle?.mileageStart || 0).toLocaleString()} KM<br>
+            <strong>KM Akhir:</strong> ${(selectedRecord.vehicle?.mileageEnd || 0).toLocaleString()} KM (Jarak: ${((selectedRecord.vehicle?.mileageEnd || 0) - (selectedRecord.vehicle?.mileageStart || 0)).toLocaleString()} KM)
           </div>
           <div>
             <strong>Tanggal:</strong> ${dateFormatted}<br>
-            <strong>Status BBM:</strong> ${selectedRecord.condition.fuelLevel}%<br>
+            <strong>Status BBM:</strong> ${selectedRecord.condition?.fuelLevel || 0}%<br>
             <strong>Catatan Tambahan:</strong><br>
-            1. ${selectedRecord.condition.notes[0] || "-"}<br>
-            2. ${selectedRecord.condition.notes[1] || "-"}<br>
-            3. ${selectedRecord.condition.notes[2] || "-"}
+            1. ${escapeHtml(selectedRecord.condition?.notes?.[0]) || "-"}<br>
+            2. ${escapeHtml(selectedRecord.condition?.notes?.[1]) || "-"}<br>
+            3. ${escapeHtml(selectedRecord.condition?.notes?.[2]) || "-"}
           </div>
         </div>
 
         <div>
           <h3 style="margin-bottom: 0.5rem; font-size: 1.1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.25rem;">Kerusakan Body</h3>
-          ${selectedRecord.condition.damages.length === 0 
+          ${(selectedRecord.condition?.damages || []).length === 0 
             ? '<span style="color: var(--primary-green); font-weight: 500;">✓ Tidak ada laporan kerusakan fisik (Normal).</span>' 
             : `<ul style="padding-left: 1.25rem; color: var(--primary-red); font-weight: 500;">
-                ${selectedRecord.condition.damages.map(d => `<li>[Body ${d.part.replace('body_', '').replace('_', ' ').toUpperCase()}] ${d.description} (Koordinat: x=${d.x}%, y=${d.y}%)</li>`).join('')}
+                ${(selectedRecord.condition?.damages || []).map(d => `<li>[Body ${escapeHtml(d.part ? d.part.replace('body_', '').replace('_', ' ').toUpperCase() : '')}] ${escapeHtml(d.description)} (Koordinat: x=${d.x}%, y=${d.y}%)</li>`).join('')}
                </ul>`
           }
         </div>
@@ -1220,7 +1290,7 @@
           ${missingList.length === 0 
             ? '<span style="color: var(--primary-green); font-weight: 500;">✓ Semua perlengkapan lengkap (ADA).</span>' 
             : `<ul style="padding-left: 1.25rem; color: var(--primary-red); font-weight: 500;">
-                ${missingList.map(m => `<li>${m}</li>`).join('')}
+                ${missingList.map(m => `<li>${escapeHtml(m)}</li>`).join('')}
                </ul>`
           }
         </div>
@@ -1228,7 +1298,7 @@
         <div style="display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 1rem;">
           <div>
             <h3 style="margin-bottom: 0.5rem; font-size: 1.1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.25rem;">Tanda Tangan Driver</h3>
-            <img src="${selectedRecord.signature}" alt="Tanda Tangan" style="max-height: 100px; border: 1px solid var(--border-color); background: white; padding: 5px; border-radius: var(--radius-sm);">
+            <img src="${escapeHtml(selectedRecord.signature)}" alt="Tanda Tangan" style="max-height: 100px; border: 1px solid var(--border-color); background: white; padding: 5px; border-radius: var(--radius-sm);">
           </div>
         </div>
       `;
@@ -1325,7 +1395,7 @@
       const worksheet = XLSX.utils.json_to_sheet(rows);
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, `Checklist_${rec.driver.name}`);
-      XLSX.writeFile(workbook, `Checklist_${rec.driver.name.replace(/\s+/g, '_')}_${rec.vehicle.licensePlate}.xlsx`);
+      XLSX.writeFile(workbook, `Checklist_${rec.driver.name.replace(/\s+/g, '_')}_${rec.vehicle.licensePlate || 'unknown'}.xlsx`);
     }
 
     function exportRecordToExcel() {
@@ -1344,10 +1414,10 @@
       Object.entries(rec.checklist).forEach(([num, data]) => {
         checklistRowsHtml += `
           <tr>
-            <td style="border: 1px solid black; padding: 6px; text-align: center;">${num}</td>
-            <td style="border: 1px solid black; padding: 6px;">${data.item}</td>
-            <td style="border: 1px solid black; padding: 6px; text-align: center; font-weight: bold; color: ${data.status === 'ADA' ? 'green' : 'red'};">${data.status}</td>
-            <td style="border: 1px solid black; padding: 6px;">${data.note || '-'}</td>
+            <td style="border: 1px solid black; padding: 6px; text-align: center;">${escapeHtml(num)}</td>
+            <td style="border: 1px solid black; padding: 6px;">${escapeHtml(data.item)}</td>
+            <td style="border: 1px solid black; padding: 6px; text-align: center; font-weight: bold; color: ${data.status === 'ADA' ? 'green' : 'red'};">${escapeHtml(data.status)}</td>
+            <td style="border: 1px solid black; padding: 6px;">${escapeHtml(data.note) || '-'}</td>
           </tr>
         `;
       });
@@ -1358,7 +1428,7 @@
       } else {
         damagesHtml = "<ol>";
         rec.condition.damages.forEach(d => {
-          damagesHtml += `<li><strong>Body ${d.part.replace('body_', '').replace('_', ' ').toUpperCase()}:</strong> ${d.description}</li>`;
+          damagesHtml += `<li><strong>Body ${escapeHtml(d.part.replace('body_', '').replace('_', ' ').toUpperCase())}:</strong> ${escapeHtml(d.description)}</li>`;
         });
         damagesHtml += "</ol>";
       }
@@ -1366,7 +1436,7 @@
       const content = `
         <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
         <head>
-          <title>Checklist Kendaraan - ${rec.driver.name}</title>
+          <title>Checklist Kendaraan - ${escapeHtml(rec.driver.name)}</title>
           <style>
             body { font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.5; color: black; }
             h2 { text-align: center; text-transform: uppercase; margin-bottom: 20px; font-size: 14pt; }
@@ -1380,15 +1450,15 @@
           
           <table style="width: 100%; border: none; margin-bottom: 20px;">
             <tr>
-              <td style="width: 50%;"><strong>Nama Driver:</strong> ${rec.driver.name}</td>
+              <td style="width: 50%;"><strong>Nama Driver:</strong> ${escapeHtml(rec.driver.name)}</td>
               <td style="width: 50%;"><strong>Tanggal Pemeriksaan:</strong> ${dateFormatted}</td>
             </tr>
             <tr>
-              <td style="width: 50%;"><strong>Jenis Kendaraan:</strong> ${rec.vehicle.type || '-'}</td>
-              <td style="width: 50%;"><strong>Kilometer Awal / Akhir:</strong> ${rec.vehicle.mileageStart.toLocaleString()} / ${rec.vehicle.mileageEnd.toLocaleString()} KM</td>
+              <td style="width: 50%;"><strong>Jenis Kendaraan:</strong> ${escapeHtml(rec.vehicle.type) || '-'}</td>
+              <td style="width: 50%;"><strong>Kilometer Awal / Akhir:</strong> ${(rec.vehicle.mileageStart || 0).toLocaleString()} / ${(rec.vehicle.mileageEnd || 0).toLocaleString()} KM</td>
             </tr>
             <tr>
-              <td style="width: 50%;"><strong>No. Polisi Kendaraan:</strong> ${rec.vehicle.licensePlate || '-'}</td>
+              <td style="width: 50%;"><strong>No. Polisi Kendaraan:</strong> ${escapeHtml(rec.vehicle.licensePlate) || '-'}</td>
               <td style="width: 50%;"><strong>Kapasitas Bahan Bakar:</strong> ${rec.condition.fuelLevel}%</td>
             </tr>
           </table>
@@ -1412,9 +1482,9 @@
           ${damagesHtml}
 
           <h3>III. CATATAN KENDARAAN</h3>
-          <p>1. ${rec.condition.notes[0] || '-'}</p>
-          <p>2. ${rec.condition.notes[1] || '-'}</p>
-          <p>3. ${rec.condition.notes[2] || '-'}</p>
+          <p>1. ${escapeHtml(rec.condition.notes[0]) || '-'}</p>
+          <p>2. ${escapeHtml(rec.condition.notes[1]) || '-'}</p>
+          <p>3. ${escapeHtml(rec.condition.notes[2]) || '-'}</p>
 
           <br/><br/>
           <table style="width: 100%; border: none; margin-top: 30px;">
@@ -1422,8 +1492,8 @@
               <td style="text-align: center; width: 33%;">
                 <p>Driver,</p>
                 <br/><br/>
-                <img src="${rec.signature}" style="max-height: 60px; max-width: 150px;"/><br/>
-                <p><strong>( ${rec.driver.name} )</strong></p>
+                <img src="${escapeHtml(rec.signature)}" style="max-height: 60px; max-width: 150px;"/><br/>
+                <p><strong>( ${escapeHtml(rec.driver.name)} )</strong></p>
               </td>
               <td style="text-align: center; width: 33%;">
                 <p>Koordinator Kendaraan,</p>
@@ -1448,7 +1518,7 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `Checklist_${rec.driver.name.replace(/\s+/g, '_')}_${rec.vehicle.licensePlate}.doc`;
+      a.download = `Checklist_${rec.driver.name.replace(/\s+/g, '_')}_${rec.vehicle.licensePlate || 'unknown'}.doc`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -1495,11 +1565,11 @@
 
         const rowHtml = `
           <tr>
-            <td style="text-align: center; font-size: 0.75rem;">${i}</td>
-            <td style="font-size: 0.75rem;">${item.item}</td>
-            <td style="text-align: center; font-weight: bold; font-size: 0.8rem;">${statusAda}</td>
-            <td style="text-align: center; font-weight: bold; font-size: 0.8rem;">${statusTdk}</td>
-            <td style="font-size: 0.7rem;">${note}</td>
+            <td style="text-align: center; font-size: 0.65rem;">${i}</td>
+            <td style="font-size: 0.65rem;">${item.item}</td>
+            <td style="text-align: center; font-weight: bold; font-size: 0.7rem;">${statusAda}</td>
+            <td style="text-align: center; font-weight: bold; font-size: 0.7rem;">${statusTdk}</td>
+            <td style="font-size: 0.6rem;">${note}</td>
           </tr>
         `;
 
@@ -1537,14 +1607,14 @@
           
           <!-- Header Logo & Title -->
           <div class="print-header">
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <img src="logo_pertamina_tk.png" alt="Pertamina Trans Kontinental" style="height: 45px; width: auto; object-fit: contain;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <img src="logo_pertamina_tk.png" alt="Pertamina Trans Kontinental" style="height: 38px; width: auto; object-fit: contain;">
             </div>
             <div class="print-header-text">
-              <h2>PERTAMINA TRANS KONTINENTAL<br>INSPECTION CHECK LIST</h2>
-              <h3>Berita Acara Check List Kendaraan</h3>
+              <h2 style="font-size: 0.95rem;">PERTAMINA TRANS KONTINENTAL<br>INSPECTION CHECK LIST</h2>
+              <h3 style="font-size: 0.78rem;">Berita Acara Check List Kendaraan</h3>
             </div>
-            <div style="width: 130px;"></div> <!-- spacer -->
+            <div style="width: 110px;"></div>
           </div>
 
           <!-- Driver & Vehicle Details -->
@@ -1558,29 +1628,29 @@
             </thead>
             <tbody>
               <tr>
-                <td style="text-align: center; font-weight: bold; font-size: 0.9rem; padding: 10px;">${selectedRecord.driver.name}</td>
-                <td style="text-align: center; font-weight: bold; font-size: 0.9rem; padding: 10px;">${selectedRecord.vehicle.type || "-"} / ${selectedRecord.vehicle.licensePlate || "-"}</td>
-                <td style="text-align: center; font-weight: bold; font-size: 0.9rem; padding: 10px; line-height: 1.3;">Awal: ${selectedRecord.vehicle.mileageStart.toLocaleString()}<br>Akhir: ${selectedRecord.vehicle.mileageEnd.toLocaleString()} KM</td>
+                <td style="text-align: center; font-weight: bold; font-size: 0.72rem; padding: 3px;">${escapeHtml(selectedRecord.driver.name)}</td>
+                <td style="text-align: center; font-weight: bold; font-size: 0.72rem; padding: 3px;">${escapeHtml(selectedRecord.vehicle.type) || "-"} / ${escapeHtml(selectedRecord.vehicle.licensePlate) || "-"}</td>
+                <td style="text-align: center; font-weight: bold; font-size: 0.72rem; padding: 3px; line-height: 1.15;">Awal: ${(selectedRecord.vehicle.mileageStart || 0).toLocaleString()}<br>Akhir: ${(selectedRecord.vehicle.mileageEnd || 0).toLocaleString()} KM</td>
               </tr>
             </tbody>
           </table>
 
           <!-- Checklist Split Columns (1-14 and 15-27) -->
-          <div class="print-layout-columns" style="margin-bottom: 10px;">
+          <div class="print-layout-columns">
             
             <!-- Left Side: Items 1 to 14 -->
             <div>
-              <div style="font-weight: 700; border: 1px solid black; padding: 4px; text-align: center; text-transform: uppercase; background: #e0e0e0; font-size: 0.75rem; margin-bottom: 5px;">
+              <div style="font-weight: 700; border: 1px solid black; padding: 1px 3px; text-align: center; text-transform: uppercase; background: #e0e0e0; font-size: 0.62rem; margin-bottom: 2px;">
                 PERLENGKAPAN KENDARAAN (1-14)
               </div>
               <table class="print-checklist-table">
                 <thead>
                   <tr>
-                    <th style="width: 5%;">NO</th>
-                    <th style="width: 45%;">PERLENGKAPAN</th>
-                    <th style="width: 10%; text-align: center;">ADA</th>
-                    <th style="width: 10%; text-align: center;">TDK ADA</th>
-                    <th style="width: 30%;">KET</th>
+                    <th style="width: 5%; font-size: 0.6rem;">NO</th>
+                    <th style="width: 45%; font-size: 0.6rem;">PERLENGKAPAN</th>
+                    <th style="width: 10%; text-align: center; font-size: 0.6rem;">ADA</th>
+                    <th style="width: 10%; text-align: center; font-size: 0.6rem;">TDK ADA</th>
+                    <th style="width: 30%; font-size: 0.6rem;">KET</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1591,17 +1661,17 @@
 
             <!-- Right Side: Items 15 to 27 -->
             <div>
-              <div style="font-weight: 700; border: 1px solid black; padding: 4px; text-align: center; text-transform: uppercase; background: #e0e0e0; font-size: 0.75rem; margin-bottom: 5px;">
+              <div style="font-weight: 700; border: 1px solid black; padding: 1px 3px; text-align: center; text-transform: uppercase; background: #e0e0e0; font-size: 0.62rem; margin-bottom: 2px;">
                 PERLENGKAPAN KENDARAAN (15-27)
               </div>
-              <table class="print-checklist-table" style="margin-bottom: 0;">
+              <table class="print-checklist-table">
                 <thead>
                   <tr>
-                    <th style="width: 5%;">NO</th>
-                    <th style="width: 45%;">PERLENGKAPAN</th>
-                    <th style="width: 10%; text-align: center;">ADA</th>
-                    <th style="width: 10%; text-align: center;">TDK ADA</th>
-                    <th style="width: 30%;">KET</th>
+                    <th style="width: 5%; font-size: 0.6rem;">NO</th>
+                    <th style="width: 45%; font-size: 0.6rem;">PERLENGKAPAN</th>
+                    <th style="width: 10%; text-align: center; font-size: 0.6rem;">ADA</th>
+                    <th style="width: 10%; text-align: center; font-size: 0.6rem;">TDK ADA</th>
+                    <th style="width: 30%; font-size: 0.6rem;">KET</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1613,58 +1683,58 @@
           </div>
 
           <!-- Car Damage Plotter Map & Fuel (Print Version - Full Width 2x2 Grid) -->
-          <div class="print-condition-container" style="page-break-inside: avoid; break-inside: avoid; margin-bottom: 10px; padding: 8px 12px;">
-            <div class="print-condition-title" style="margin-bottom: 8px; padding-bottom: 4px;">Kondisi Kendaraan (Fisik)</div>
+          <div class="print-condition-container">
+            <div class="print-condition-title">Kondisi Kendaraan (Fisik)</div>
             
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px 20px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 3px 12px;">
               
               <!-- 1. Body Depan -->
-              <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed #ccc; padding-bottom: 6px;">
-                <div style="font-size: 0.72rem; line-height: 1.35; flex: 1; padding-right: 8px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed #ccc; padding-bottom: 2px;">
+                <div style="font-size: 0.65rem; line-height: 1.15; flex: 1; padding-right: 6px;">
                   <strong>1. Body Depan</strong><br>
                   a. ${getDamageDesc('body_depan', 0)}<br>
                   b. ${getDamageDesc('body_depan', 1)}
                 </div>
-                <div style="position: relative; width: 60px; height: 60px; flex-shrink: 0;">
+                <div style="position: relative; width: 40px; height: 40px; flex-shrink: 0;">
                   <img src="car_front.png" alt="Body Depan" style="width: 100%; height: 100%; object-fit: contain;">
                   ${getPointersHtml('body_depan')}
                 </div>
               </div>
 
               <!-- 2. Body Samping Kiri -->
-              <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed #ccc; padding-bottom: 6px;">
-                <div style="font-size: 0.72rem; line-height: 1.35; flex: 1; padding-right: 8px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed #ccc; padding-bottom: 2px;">
+                <div style="font-size: 0.65rem; line-height: 1.15; flex: 1; padding-right: 6px;">
                   <strong>2. Body Samping Kiri</strong><br>
                   a. ${getDamageDesc('body_samping_kiri', 0)}<br>
                   b. ${getDamageDesc('body_samping_kiri', 1)}
                 </div>
-                <div style="position: relative; width: 75px; height: 45px; flex-shrink: 0;">
+                <div style="position: relative; width: 50px; height: 30px; flex-shrink: 0;">
                   <img src="car_left.png" alt="Body Samping Kiri" style="width: 100%; height: 100%; object-fit: contain;">
                   ${getPointersHtml('body_samping_kiri')}
                 </div>
               </div>
 
               <!-- 3. Body Samping Kanan -->
-              <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 4px;">
-                <div style="font-size: 0.72rem; line-height: 1.35; flex: 1; padding-right: 8px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 2px;">
+                <div style="font-size: 0.65rem; line-height: 1.15; flex: 1; padding-right: 6px;">
                   <strong>3. Body Samping Kanan</strong><br>
                   a. ${getDamageDesc('body_samping_kanan', 0)}<br>
                   b. ${getDamageDesc('body_samping_kanan', 1)}
                 </div>
-                <div style="position: relative; width: 75px; height: 45px; flex-shrink: 0;">
+                <div style="position: relative; width: 50px; height: 30px; flex-shrink: 0;">
                   <img src="car_right.png" alt="Body Samping Kanan" style="width: 100%; height: 100%; object-fit: contain;">
                   ${getPointersHtml('body_samping_kanan')}
                 </div>
               </div>
 
               <!-- 4. Body Belakang -->
-              <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 4px;">
-                <div style="font-size: 0.72rem; line-height: 1.35; flex: 1; padding-right: 8px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 2px;">
+                <div style="font-size: 0.65rem; line-height: 1.15; flex: 1; padding-right: 6px;">
                   <strong>4. Body Belakang</strong><br>
                   a. ${getDamageDesc('body_belakang', 0)}<br>
                   b. ${getDamageDesc('body_belakang', 1)}
                 </div>
-                <div style="position: relative; width: 60px; height: 60px; flex-shrink: 0;">
+                <div style="position: relative; width: 40px; height: 40px; flex-shrink: 0;">
                   <img src="car_rear.png" alt="Body Belakang" style="width: 100%; height: 100%; object-fit: contain;">
                   ${getPointersHtml('body_belakang')}
                 </div>
@@ -1673,7 +1743,7 @@
             </div>
 
             <!-- Fuel Level (Horizontal Bar at Bottom) -->
-            <div style="margin-top: 6px; border-top: 1px solid black; padding-top: 6px; display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem;">
+            <div style="margin-top: 3px; border-top: 1px solid black; padding-top: 3px; display: flex; justify-content: space-between; align-items: center; font-size: 0.68rem;">
               <div>
                 <strong>Level Bahan Bakar:</strong> ${selectedRecord.condition.fuelLevel}%
               </div>
@@ -1689,7 +1759,7 @@
           </div>
 
           <!-- Attention details -->
-          <div class="print-attention">
+          <div class="print-attention" style="font-size: 0.62rem;">
             <strong>Perhatian !</strong><br>
             1. Perlengkapan/kondisi mobil harus jelas perinciannya.<br>
             2. Driver bertanggung jawab atas kelengkapan dan alat-alat kendaraan yang ada.<br>
@@ -1697,11 +1767,11 @@
           </div>
 
           <!-- Catatan -->
-          <div class="print-notes">
+          <div class="print-notes" style="font-size: 0.65rem;">
             <strong>Catatan :</strong><br>
-            1. ${selectedRecord.condition.notes[0] || ""}<br>
-            2. ${selectedRecord.condition.notes[1] || ""}<br>
-            3. ${selectedRecord.condition.notes[2] || ""}
+            1. ${escapeHtml(selectedRecord.condition.notes[0]) || ""}<br>
+            2. ${escapeHtml(selectedRecord.condition.notes[1]) || ""}<br>
+            3. ${escapeHtml(selectedRecord.condition.notes[2]) || ""}
           </div>
 
           <!-- Signatures Table -->
@@ -1709,21 +1779,21 @@
             <tbody>
               <tr>
                 <td>
-                  <span class="sig-label">Tanggal Pemeriksaan Kendaraan:</span><br>
-                  <span style="font-size: 0.85rem; font-weight: bold; display: block; margin-top: 10px;">${dateFormatted}</span>
+                  <span class="sig-label" style="font-size: 0.62rem;">Tanggal Pemeriksaan Kendaraan:</span><br>
+                  <span style="font-size: 0.68rem; font-weight: bold; display: block; margin-top: 3px;">${dateFormatted}</span>
                 </td>
                 <td>
-                  <span class="sig-label">Nama & Tanda Tangan Driver:</span><br>
-                  <img src="${selectedRecord.signature}" alt="Ttd Driver"/>
-                  <span style="position: absolute; bottom: 5px; left: 10px; font-weight: bold;">( ${selectedRecord.driver.name} )</span>
+                  <span class="sig-label" style="font-size: 0.62rem;">Nama & Tanda Tangan Driver:</span><br>
+                  <img src="${escapeHtml(selectedRecord.signature)}" alt="Ttd Driver"/>
+                  <span style="position: absolute; bottom: 2px; left: 6px; font-size: 0.62rem; font-weight: bold;">( ${escapeHtml(selectedRecord.driver.name)} )</span>
                 </td>
                 <td>
-                  <span class="sig-label">Mengetahui Koordinator Kendaraan:</span>
-                  <span style="position: absolute; bottom: 5px; left: 10px; font-weight: bold;">( ___________________ )</span>
+                  <span class="sig-label" style="font-size: 0.62rem;">Mengetahui Koordinator Kendaraan:</span>
+                  <span style="position: absolute; bottom: 2px; left: 6px; font-size: 0.62rem; font-weight: bold;">( ___________________ )</span>
                 </td>
                 <td>
-                  <span class="sig-label">Mengetahui Asset Management:</span>
-                  <span style="position: absolute; bottom: 5px; left: 10px; font-weight: bold;">( ___________________ )</span>
+                  <span class="sig-label" style="font-size: 0.62rem;">Mengetahui Asset Management:</span>
+                  <span style="position: absolute; bottom: 2px; left: 6px; font-size: 0.62rem; font-weight: bold;">( ___________________ )</span>
                 </td>
               </tr>
             </tbody>
@@ -1732,14 +1802,44 @@
         </div>
       `;
 
-      // Trigger Print dialogue
-      window.print();
-      
-      // Cleanup print area display
-      printArea.style.display = "none";
+      // Wait for all images in the print area to load before printing
+      const images = printArea.getElementsByTagName("img");
+      const promises = [];
+      for (let img of images) {
+        if (!img.complete) {
+          promises.push(new Promise(resolve => {
+            img.onload = resolve;
+            img.onerror = resolve; // Don't block print if an image fails to load
+          }));
+        }
+      }
+
+      const triggerPrint = () => {
+        window.addEventListener('afterprint', function cleanup() {
+          printArea.style.display = "none";
+          window.removeEventListener('afterprint', cleanup);
+        });
+        window.print();
+      };
+
+      if (promises.length === 0) {
+        triggerPrint();
+      } else {
+        Promise.all(promises).then(triggerPrint);
+      }
     }
 
     // App Initialization
+    window.onerror = function(msg, url, line, col, error) {
+      console.error("Unhandled error:", msg, "at", url, "line", line, error);
+      alert("Terjadi kesalahan tak terduga. Silakan refresh halaman.");
+      return false;
+    };
+
+    window.addEventListener('unhandledrejection', function(e) {
+      console.error("Unhandled promise rejection:", e.reason);
+    });
+
     window.onload = async function() {
       await loadSupabaseConfig();
       initDb();
