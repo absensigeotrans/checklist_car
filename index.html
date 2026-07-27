@@ -27,6 +27,7 @@
     <div class="nav-tabs">
       <button class="nav-tab active" onclick="trySwitchView('driver-form')">Isi Checklist</button>
       <button class="nav-tab" onclick="trySwitchView('driver-log-form')">Log Sheet Driver</button>
+      <button class="nav-tab" onclick="trySwitchView('driver-progress')">Progres Driver</button>
       <button class="nav-tab" onclick="trySwitchView('admin-dashboard')">Panel Admin</button>
     </div>
   </header>
@@ -44,6 +45,10 @@
             <span>📝</span> Data Driver & Kendaraan
           </div>
           <div class="form-grid">
+            <div class="form-group">
+              <label for="driverNik">NIK Driver *</label>
+              <input type="text" id="driverNik" required placeholder="Masukkan NIK Driver" maxlength="50" list="driverNikDatalist">
+            </div>
             <div class="form-group">
               <label for="driverName">Nama Driver *</label>
               <input type="text" id="driverName" required placeholder="Masukkan nama lengkap" maxlength="100">
@@ -288,7 +293,7 @@
             </div>
 
             <div class="form-group">
-              <label>Tanda Tangan Pemakai (User) *</label>
+              <label>Tanda Tangan Pemakai (User) (Opsional)</label>
               <div class="signature-box">
                 <canvas id="userSigCanvas" class="signature-canvas"></canvas>
                 <button type="button" class="clear-signature" onclick="clearUserSigCanvas()">Hapus</button>
@@ -447,6 +452,160 @@
       </div>
     </section>
 
+    <!-- 4. DRIVER PROGRESS VIEW -->
+    <section id="driver-progress" class="view-section">
+      
+      <!-- NIK Authentication Card (Shown when not authenticated) -->
+      <div id="driverNikAuthCard" class="card nik-auth-card">
+        <div class="lock-icon">🔒</div>
+        <h2 style="font-size: 1.35rem; font-weight: 700; margin-bottom: 0.5rem;">Akses Progres Driver</h2>
+        <p>Masukkan NIK Driver Anda sebagai kata kunci untuk melihat rekap progres bulanan dan riwayat perjalanan Anda.</p>
+        <div class="form-group" style="text-align: left; margin-bottom: 1.25rem;">
+          <label for="inputProgressNik">NIK Driver *</label>
+          <input type="text" id="inputProgressNik" placeholder="Ketik NIK Driver Anda..." list="driverNikDatalist" onkeydown="if(event.key==='Enter') submitProgressNik()">
+        </div>
+        <button type="button" class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="submitProgressNik()">
+          <span>🔑</span> Lihat Progres Saya
+        </button>
+      </div>
+
+      <!-- Driver Progress Dashboard (Shown when NIK is active) -->
+      <div id="driverProgressDashboard" style="display: none;">
+        
+        <!-- Header Info Badge & Month Selector -->
+        <div class="driver-progress-header">
+          <div class="driver-info-badge">
+            <div class="driver-avatar-circle" id="driverAvatarInitial">D</div>
+            <div class="driver-details">
+              <h2 id="progressDriverName">Nama Driver</h2>
+              <span>NIK: <strong id="progressDriverNik" style="color: var(--primary-blue);">-</strong> | Nopol: <strong id="progressDriverPlate" style="color: var(--text-main);">-</strong></span>
+            </div>
+          </div>
+          <div class="driver-progress-filters">
+            <div class="form-group" style="margin: 0; min-width: 140px;">
+              <select id="progressFilterMonth" onchange="renderDriverProgressView()">
+                <option value="1">Januari</option>
+                <option value="2">Februari</option>
+                <option value="3">Maret</option>
+                <option value="4">April</option>
+                <option value="5">Mei</option>
+                <option value="6">Juni</option>
+                <option value="7" selected>Juli</option>
+                <option value="8">Agustus</option>
+                <option value="9">September</option>
+                <option value="10">Oktober</option>
+                <option value="11">November</option>
+                <option value="12">Desember</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin: 0; max-width: 100px;">
+              <input type="number" id="progressFilterYear" value="2026" onchange="renderDriverProgressView()">
+            </div>
+            <button type="button" class="btn btn-success" style="padding: 0.6rem 1rem; font-size: 0.85rem;" onclick="downloadDriverProgressLogPDF()">
+              <span>📥</span> Unduh PDF
+            </button>
+            <button type="button" class="btn btn-primary" style="padding: 0.6rem 1rem; font-size: 0.85rem;" onclick="printDriverProgressLogPDF()">
+              <span>📄</span> Cetak PDF
+            </button>
+            <button type="button" class="btn btn-secondary" style="padding: 0.6rem 1rem; font-size: 0.85rem;" onclick="clearDriverProgressNik()">
+              <span>🔒</span> Ganti / Keluar NIK
+            </button>
+          </div>
+        </div>
+
+        <!-- 4 Summary Metrics Cards -->
+        <div class="driver-progress-metrics">
+          <div class="driver-metric-card">
+            <div class="driver-metric-icon" style="background-color: hsl(211, 100%, 94%); color: var(--primary-blue);">🚗</div>
+            <div class="driver-metric-info">
+              <h4>Total Perjalanan</h4>
+              <p class="value" id="driverMetricTrips">0 Log</p>
+            </div>
+          </div>
+          <div class="driver-metric-card">
+            <div class="driver-metric-icon" style="background-color: hsl(145, 63%, 94%); color: var(--primary-green);">📍</div>
+            <div class="driver-metric-info">
+              <h4>Total Jarak Tempuh</h4>
+              <p class="value" id="driverMetricKm">0 KM</p>
+            </div>
+          </div>
+          <div class="driver-metric-card">
+            <div class="driver-metric-icon" style="background-color: hsl(38, 92%, 94%); color: hsl(38, 92%, 40%);">📋</div>
+            <div class="driver-metric-info">
+              <h4>Checklist Kendaraan</h4>
+              <p class="value" id="driverMetricInspections">0 Kali</p>
+            </div>
+          </div>
+          <div class="driver-metric-card">
+            <div class="driver-metric-icon" id="driverMetricHealthIcon" style="background-color: hsl(145, 63%, 94%); color: var(--primary-green);">✓</div>
+            <div class="driver-metric-info">
+              <h4>Kesehatan Fleets</h4>
+              <p class="value" id="driverMetricHealthText" style="font-size: 1.1rem; color: var(--primary-green);">Normal</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Subtabs Switcher -->
+        <div class="driver-subtabs">
+          <button type="button" class="driver-subtab active" id="driver-progress-subtab-log" onclick="switchDriverProgressSubtab('log')">📋 Rekap Log Sheet Harian</button>
+          <button type="button" class="driver-subtab" id="driver-progress-subtab-chk" onclick="switchDriverProgressSubtab('checklist')">🔍 Rekap Checklist Kendaraan</button>
+        </div>
+
+        <!-- Subtab 1: Log Sheet Harian -->
+        <div id="driver-progress-log-view">
+          <div class="card" style="padding: 1.5rem;">
+            <div class="checklist-container">
+              <table class="checklist-table">
+                <thead>
+                  <tr>
+                    <th style="width: 50px; text-align: center;">Tgl</th>
+                    <th style="width: 70px;">Hari</th>
+                    <th style="width: 100px;">Nopol</th>
+                    <th>Jam Kerja</th>
+                    <th>KM (Awal - Akhir)</th>
+                    <th>Jarak</th>
+                    <th>Pemakai (User)</th>
+                    <th style="width: 80px; text-align: center;">TTD Pemakai</th>
+                    <th>Keterangan</th>
+                    <th style="width: 110px; text-align: center;">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="driverProgressLogBody">
+                  <!-- Injected dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Subtab 2: Checklist Kendaraan -->
+        <div id="driver-progress-chk-view" style="display: none;">
+          <div class="card" style="padding: 1.5rem;">
+            <div class="checklist-container">
+              <table class="checklist-table">
+                <thead>
+                  <tr>
+                    <th>Tanggal</th>
+                    <th>Jenis Kendaraan</th>
+                    <th>Nopol</th>
+                    <th>KM (Awal - Akhir)</th>
+                    <th>Status BBM</th>
+                    <th>Status Temuan</th>
+                    <th style="width: 100px; text-align: center;">Tindakan</th>
+                  </tr>
+                </thead>
+                <tbody id="driverProgressChkBody">
+                  <!-- Injected dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
   </main>
 
   <!-- Admin PIN Modal -->
@@ -464,6 +623,76 @@
       <div style="display: flex; justify-content: center; gap: 0.75rem; margin-top: 1rem;">
         <button class="btn btn-primary" onclick="submitAdminPin()">Masuk</button>
         <button class="btn btn-secondary" onclick="closePinModal()">Batal</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Driver Log Entry & Signature Edit Modal -->
+  <div class="modal-backdrop" id="driverLogEditModal">
+    <div class="modal-content" style="max-width: 580px;">
+      <div class="modal-header">
+        <h2 style="font-size: 1.25rem;" id="driverLogEditTitle">Input Log Perjalanan & TTD</h2>
+        <button class="close-modal" onclick="closeDriverLogEditModal()">&times;</button>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 1rem; padding: 0.5rem 0;">
+        <input type="hidden" id="editLogTargetDate">
+        <input type="hidden" id="editLogId">
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label>Tanggal Perjalanan</label>
+            <input type="text" id="editLogDateStr" readonly style="background-color: var(--bg-sidebar); font-weight: bold;">
+          </div>
+          <div class="form-group">
+            <label for="editLogPlate">Nomor Polisi (Nopol) *</label>
+            <input type="text" id="editLogPlate" placeholder="Contoh: B 1234 PTK" maxlength="20">
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label for="editLogWorkStart">Jam Kerja Start *</label>
+            <input type="time" id="editLogWorkStart" value="08:00">
+          </div>
+          <div class="form-group">
+            <label for="editLogWorkEnd">Jam Kerja Finish *</label>
+            <input type="time" id="editLogWorkEnd" value="17:00">
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label for="editLogKmStart">KM Awal (Start) *</label>
+            <input type="number" id="editLogKmStart" placeholder="KM Start">
+          </div>
+          <div class="form-group">
+            <label for="editLogKmEnd">KM Akhir (Finish) *</label>
+            <input type="number" id="editLogKmEnd" placeholder="KM Finish">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="editLogUserName">Nama Pemakai (User) *</label>
+          <input type="text" id="editLogUserName" placeholder="Contoh: Pak Manager / Pak Budi" maxlength="100">
+        </div>
+
+        <div class="form-group">
+          <label for="editLogRemark">Keterangan (Remark)</label>
+          <input type="text" id="editLogRemark" placeholder="Contoh: Perjalanan dinas kantor" maxlength="200">
+        </div>
+
+        <div class="form-group">
+          <label>Tanda Tangan Pemakai (User)</label>
+          <div class="signature-box" style="height: 140px;">
+            <canvas id="editLogUserSigCanvas" class="signature-canvas"></canvas>
+            <button type="button" class="clear-signature" onclick="clearEditLogSigPad()">Hapus</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+        <button type="button" class="btn btn-primary" onclick="saveDriverLogEntry()">Simpan Data Log & TTD</button>
+        <button type="button" class="btn btn-secondary" onclick="closeDriverLogEditModal()">Batal</button>
       </div>
     </div>
   </div>
@@ -717,7 +946,8 @@
               inspectionId: row.id,
               inspectionDate: row.inspection_date,
               driver: {
-                name: row.driver_name || ""
+                name: row.driver_name || "",
+                nik: row.driver_nik || ""
               },
               vehicle: {
                 type: row.vehicle_type || "",
@@ -826,9 +1056,14 @@
       const activeTabBtn = Array.from(document.querySelectorAll(".nav-tab")).find(btn => 
         (viewId === 'driver-form' && btn.textContent.includes('Isi Checklist')) ||
         (viewId === 'driver-log-form' && btn.textContent.includes('Log Sheet Driver')) ||
+        (viewId === 'driver-progress' && btn.textContent.includes('Progres Driver')) ||
         (viewId === 'admin-dashboard' && btn.textContent.includes('Panel Admin'))
       );
       if (activeTabBtn) activeTabBtn.classList.add("active");
+
+      if (viewId === 'driver-form') {
+        populateDriverNikDatalist();
+      }
 
       if (viewId === 'driver-log-form') {
         initDriverLogPads();
@@ -842,6 +1077,16 @@
         const currentNik = document.getElementById("driverLogNik")?.value;
         if (currentNik) {
           loadDriverCheckpoint(currentNik);
+        }
+      }
+
+      if (viewId === 'driver-progress') {
+        populateDriverNikDatalist();
+        const savedNik = sessionStorage.getItem("ptk_driver_progress_nik");
+        if (savedNik) {
+          showDriverProgressDashboard(savedNik);
+        } else {
+          showDriverNikAuthCard();
         }
       }
 
@@ -1172,6 +1417,14 @@
     async function handleFormSubmit(event) {
       event.preventDefault();
 
+      const driverNikRaw = document.getElementById("driverNik")?.value || "";
+      const driverNik = driverNikRaw.trim();
+      if (!driverNik) {
+        alert("NIK Driver tidak boleh kosong!");
+        document.getElementById("driverNik")?.focus();
+        return;
+      }
+
       const driverNameRaw = document.getElementById("driverName").value;
       const driverName = driverNameRaw.trim();
       if (!driverName) {
@@ -1245,7 +1498,7 @@
       const record = {
         inspectionId: inspectionId,
         inspectionDate: inspectionDate,
-        driver: { name: driverName },
+        driver: { name: driverName, nik: driverNik },
         vehicle: {
           type: vehicleType,
           licensePlate: licensePlate,
@@ -1265,6 +1518,7 @@
       // 1. Simpan di cache lokal terlebih dahulu (optimistic render)
       db.unshift(record);
       safeLocalStorageSet("ptk_inspections", db);
+      populateDriverNikDatalist();
       updateMetrics();
       applyFilters();
 
@@ -1282,6 +1536,7 @@
             body: JSON.stringify({
               id: inspectionId,
               inspection_date: inspectionDate,
+              driver_nik: driverNik,
               driver_name: driverName,
               vehicle_type: vehicleType,
               license_plate: licensePlate,
@@ -2422,15 +2677,12 @@
       const userName = document.getElementById("driverLogUserName").value.trim();
       const remark = document.getElementById("driverLogRemark").value.trim();
 
-      if (!userSigPad || userSigPad.isEmpty()) {
-        alert("Harap bubuhkan Tanda Tangan Pemakai (User) terlebih dahulu!");
-        return;
-      }
-
       if (kmEnd < kmStart) {
         alert("KM Akhir tidak boleh lebih kecil dari KM Awal!");
         return;
       }
+
+      const userSigUrl = (userSigPad && !userSigPad.isEmpty()) ? userSigPad.toDataURL() : '';
 
       const newLog = {
         logId: "log_" + Date.now() + "_" + Math.random().toString(36).substr(2, 4),
@@ -2444,7 +2696,7 @@
         kmStart: kmStart,
         kmEnd: kmEnd,
         userName: userName,
-        userSignature: userSigPad.toDataURL(),
+        userSignature: userSigUrl,
         remark: remark,
         createdAt: new Date().toISOString()
       };
@@ -3158,6 +3410,513 @@
       XLSX.writeFile(wb, `LogSheet_${report.driverName.replace(/\s+/g, '_')}_${monthNames[month]}_${year}.xlsx`);
     }
 
+    // --- DRIVER PROGRESS DASHBOARD FUNCTIONS & LOG EDIT MODAL ---
+    let activeDriverProgressSubtab = 'log';
+    let editLogSigPad = null;
+
+    function submitProgressNik() {
+      const nikInput = document.getElementById("inputProgressNik");
+      const nik = (nikInput?.value || "").trim();
+      if (!nik) {
+        alert("Silakan masukkan NIK Driver Anda terlebih dahulu!");
+        nikInput?.focus();
+        return;
+      }
+
+      sessionStorage.setItem("ptk_driver_progress_nik", nik);
+      showDriverProgressDashboard(nik);
+    }
+
+    function clearDriverProgressNik() {
+      sessionStorage.removeItem("ptk_driver_progress_nik");
+      const nikInput = document.getElementById("inputProgressNik");
+      if (nikInput) nikInput.value = "";
+      showDriverNikAuthCard();
+    }
+
+    function showDriverNikAuthCard() {
+      document.getElementById("driverNikAuthCard").style.display = "block";
+      document.getElementById("driverProgressDashboard").style.display = "none";
+      setTimeout(() => document.getElementById("inputProgressNik")?.focus(), 150);
+    }
+
+    function showDriverProgressDashboard(nik) {
+      document.getElementById("driverNikAuthCard").style.display = "none";
+      document.getElementById("driverProgressDashboard").style.display = "block";
+
+      const monthSel = document.getElementById("progressFilterMonth");
+      const yearInput = document.getElementById("progressFilterYear");
+      const now = new Date();
+      if (monthSel && !monthSel.value) {
+        monthSel.value = String(now.getMonth() + 1);
+      }
+      if (yearInput && !yearInput.value) {
+        yearInput.value = String(now.getFullYear());
+      }
+
+      renderDriverProgressView();
+    }
+
+    function switchDriverProgressSubtab(subtab) {
+      activeDriverProgressSubtab = subtab;
+      document.getElementById("driver-progress-subtab-log").classList.toggle("active", subtab === 'log');
+      document.getElementById("driver-progress-subtab-chk").classList.toggle("active", subtab === 'checklist');
+
+      document.getElementById("driver-progress-log-view").style.display = (subtab === 'log' ? 'block' : 'none');
+      document.getElementById("driver-progress-chk-view").style.display = (subtab === 'checklist' ? 'block' : 'none');
+    }
+
+    function openDriverLogEditModal(dateStr, dayName, logId) {
+      const modal = document.getElementById("driverLogEditModal");
+      const title = document.getElementById("driverLogEditTitle");
+      
+      document.getElementById("editLogTargetDate").value = dateStr;
+      document.getElementById("editLogId").value = logId || '';
+      document.getElementById("editLogDateStr").value = `${dayName}, ${dateStr}`;
+      
+      title.textContent = logId ? `Edit Log Perjalanan (${dayName}, ${dateStr})` : `Input Log Perjalanan (${dayName}, ${dateStr})`;
+
+      const existing = logId ? driverLogs.find(l => l.logId === logId) : null;
+      const activeNik = sessionStorage.getItem("ptk_driver_progress_nik") || "";
+      const lastKnownPlate = existing?.licensePlate || driverLogs.find(l => l.driverNik === activeNik)?.licensePlate || "";
+
+      document.getElementById("editLogPlate").value = existing?.licensePlate || lastKnownPlate;
+      document.getElementById("editLogWorkStart").value = existing?.workStart || '08:00';
+      document.getElementById("editLogWorkEnd").value = existing?.workEnd || '17:00';
+
+      if (existing) {
+        document.getElementById("editLogKmStart").value = existing.kmStart !== undefined ? existing.kmStart : '';
+        document.getElementById("editLogKmEnd").value = existing.kmEnd !== undefined ? existing.kmEnd : '';
+        document.getElementById("editLogUserName").value = existing.userName || '';
+        document.getElementById("editLogRemark").value = existing.remark || '';
+      } else {
+        // Calculate KM start from previous day's end KM if available
+        const [y, m, d] = dateStr.split('-').map(Number);
+        let prevKmEnd = '';
+        if (d > 1) {
+          const prevDayStr = `${y}-${String(m).padStart(2, '0')}-${String(d - 1).padStart(2, '0')}`;
+          const prevLog = driverLogs.find(l => l.driverNik === activeNik && l.date === prevDayStr);
+          if (prevLog && prevLog.kmEnd !== undefined) {
+            prevKmEnd = prevLog.kmEnd;
+          }
+        }
+        document.getElementById("editLogKmStart").value = prevKmEnd;
+        document.getElementById("editLogKmEnd").value = '';
+        document.getElementById("editLogUserName").value = '';
+        document.getElementById("editLogRemark").value = '';
+      }
+
+      modal.classList.add("active");
+
+      setTimeout(() => {
+        if (!editLogSigPad) {
+          editLogSigPad = setupCanvasPad('editLogUserSigCanvas');
+        } else {
+          editLogSigPad.clear();
+        }
+        document.getElementById("editLogPlate")?.focus();
+      }, 150);
+    }
+
+    function closeDriverLogEditModal() {
+      document.getElementById("driverLogEditModal").classList.remove("active");
+    }
+
+    function clearEditLogSigPad() {
+      if (editLogSigPad) editLogSigPad.clear();
+    }
+
+    async function saveDriverLogEntry() {
+      const activeNik = sessionStorage.getItem("ptk_driver_progress_nik") || "";
+      if (!activeNik) {
+        alert("Sesi NIK tidak ditemukan. Silakan masukkan NIK kembali.");
+        closeDriverLogEditModal();
+        return;
+      }
+
+      const dateStr = document.getElementById("editLogTargetDate").value;
+      const logId = document.getElementById("editLogId").value;
+      const plate = document.getElementById("editLogPlate").value.trim();
+      const workStart = document.getElementById("editLogWorkStart").value;
+      const workEnd = document.getElementById("editLogWorkEnd").value;
+      const kmStart = parseFloat(document.getElementById("editLogKmStart").value) || 0;
+      const kmEnd = parseFloat(document.getElementById("editLogKmEnd").value) || 0;
+      const userName = document.getElementById("editLogUserName").value.trim();
+      const remark = document.getElementById("editLogRemark").value.trim();
+
+      if (!plate) {
+        alert("Nomor Polisi (Nopol) wajib diisi!");
+        document.getElementById("editLogPlate")?.focus();
+        return;
+      }
+
+      if (!userName) {
+        alert("Nama Pemakai (User) wajib diisi!");
+        document.getElementById("editLogUserName")?.focus();
+        return;
+      }
+
+      if (kmEnd < kmStart) {
+        alert("KM Akhir tidak boleh lebih kecil dari KM Awal!");
+        document.getElementById("editLogKmEnd")?.focus();
+        return;
+      }
+
+      const matchingLog = driverLogs.find(l => (l.driverNik || "").trim().toLowerCase() === activeNik.trim().toLowerCase());
+      const matchingChk = db.find(r => (r.driver?.nik || "").trim().toLowerCase() === activeNik.trim().toLowerCase());
+      const driverName = matchingLog?.driverName || matchingChk?.driver?.name || "Driver";
+
+      const days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+      const dObj = new Date(dateStr + "T00:00:00");
+      const dayName = !isNaN(dObj.getTime()) ? days[dObj.getDay()] : "";
+
+      let sigUrl = "";
+      if (editLogSigPad && !editLogSigPad.isEmpty()) {
+        sigUrl = editLogSigPad.toDataURL();
+      }
+
+      let targetLog = logId ? driverLogs.find(l => l.logId === logId) : null;
+
+      if (targetLog) {
+        targetLog.licensePlate = plate;
+        targetLog.workStart = workStart;
+        targetLog.workEnd = workEnd;
+        targetLog.kmStart = kmStart;
+        targetLog.kmEnd = kmEnd;
+        targetLog.userName = userName;
+        if (sigUrl) targetLog.userSignature = sigUrl;
+        targetLog.remark = remark;
+      } else {
+        targetLog = {
+          logId: "log_" + Date.now() + "_" + Math.random().toString(36).substr(2, 4),
+          driverName: driverName,
+          driverNik: activeNik,
+          licensePlate: plate,
+          date: dateStr,
+          day: dayName,
+          workStart: workStart,
+          workEnd: workEnd,
+          kmStart: kmStart,
+          kmEnd: kmEnd,
+          userName: userName,
+          userSignature: sigUrl,
+          remark: remark,
+          createdAt: new Date().toISOString()
+        };
+        driverLogs.unshift(targetLog);
+      }
+
+      // Save locally
+      safeLocalStorageSet("ptk_driver_logs", driverLogs);
+
+      // Sync to Supabase if configured
+      if (SUPABASE_URL && SUPABASE_KEY && !SUPABASE_URL.includes("YOUR_SUPABASE")) {
+        try {
+          await fetch(`${SUPABASE_URL}/rest/v1/driver_logs`, {
+            method: 'POST',
+            headers: {
+              'apikey': SUPABASE_KEY,
+              'Authorization': `Bearer ${SUPABASE_KEY}`,
+              'Content-Type': 'application/json',
+              'Prefer': 'resolution=merge-duplicates'
+            },
+            body: JSON.stringify({
+              id: targetLog.logId,
+              driver_name: targetLog.driverName,
+              driver_nik: targetLog.driverNik,
+              license_plate: targetLog.licensePlate,
+              log_date: targetLog.date,
+              log_day: targetLog.day,
+              work_start: targetLog.workStart,
+              work_end: targetLog.workEnd,
+              km_start: targetLog.kmStart,
+              km_end: targetLog.kmEnd,
+              user_name: targetLog.userName,
+              user_signature: targetLog.userSignature,
+              remark: targetLog.remark
+            })
+          });
+        } catch (e) {
+          console.error("Gagal sinkronisasi log sheet ke Supabase:", e);
+        }
+      }
+
+      closeDriverLogEditModal();
+      populateDriverNikDatalist();
+      renderDriverProgressView();
+    }
+
+    function renderDriverProgressView() {
+      const nik = sessionStorage.getItem("ptk_driver_progress_nik") || "";
+      if (!nik) return;
+
+      const selMonth = parseInt(document.getElementById("progressFilterMonth").value) || (new Date().getMonth() + 1);
+      const selYear = parseInt(document.getElementById("progressFilterYear").value) || new Date().getFullYear();
+
+      // Generate 30-day sequential report for this NIK and month/year
+      const report = generateMonthlyLogReport(nik, selMonth, selYear);
+
+      const driverName = report.driverName;
+      const matchingChk = db.find(r => (r.driver?.nik || "").trim().toLowerCase() === nik.trim().toLowerCase());
+      const driverPlate = report.rows.find(r => r.licensePlate)?.licensePlate || matchingChk?.vehicle?.licensePlate || "-";
+
+      document.getElementById("progressDriverName").textContent = driverName;
+      document.getElementById("progressDriverNik").textContent = nik;
+      document.getElementById("progressDriverPlate").textContent = driverPlate;
+
+      const initial = driverName.charAt(0).toUpperCase() || "D";
+      document.getElementById("driverAvatarInitial").textContent = initial;
+
+      // Calculate Metrics for filled entries
+      const filledRows = report.rows.filter(r => r.logId !== null);
+      const totalTrips = filledRows.length;
+      
+      let totalKm = 0;
+      filledRows.forEach(l => {
+        const start = parseFloat(l.kmStart) || 0;
+        const end = parseFloat(l.kmEnd) || 0;
+        if (end >= start) {
+          totalKm += (end - start);
+        }
+      });
+
+      // Filter Checklist Inspections for this NIK (or Name matching if NIK was not recorded originally)
+      const filteredChecklists = db.filter(r => {
+        const rNik = (r.driver?.nik || "").trim().toLowerCase();
+        const rName = (r.driver?.name || "").trim().toLowerCase();
+        const searchNik = nik.trim().toLowerCase();
+        const searchName = driverName.trim().toLowerCase();
+
+        const isMatch = (rNik && rNik === searchNik) || (rName && rName === searchName);
+        if (!isMatch) return false;
+
+        const d = new Date(r.inspectionDate);
+        return d.getFullYear() === selYear && (d.getMonth() + 1) === selMonth;
+      });
+
+      const totalInspections = filteredChecklists.length;
+      const defectiveInspections = filteredChecklists.filter(r => r.attentionNeeded).length;
+
+      document.getElementById("driverMetricTrips").textContent = `${totalTrips} Log`;
+      document.getElementById("driverMetricKm").textContent = `${totalKm.toLocaleString('id-ID')} KM`;
+      document.getElementById("driverMetricInspections").textContent = `${totalInspections} Kali`;
+
+      const healthIcon = document.getElementById("driverMetricHealthIcon");
+      const healthText = document.getElementById("driverMetricHealthText");
+      if (defectiveInspections > 0) {
+        healthIcon.style.backgroundColor = "hsl(354, 85%, 94%)";
+        healthIcon.style.color = "var(--primary-red)";
+        healthIcon.textContent = "⚠️";
+        healthText.style.color = "var(--primary-red)";
+        healthText.textContent = `${defectiveInspections} Temuan`;
+      } else {
+        healthIcon.style.backgroundColor = "hsl(145, 63%, 94%)";
+        healthIcon.style.color = "var(--primary-green)";
+        healthIcon.textContent = "✓";
+        healthText.style.color = "var(--primary-green)";
+        healthText.textContent = "Normal";
+      }
+
+      // Render 30-Day Sequential Log Sheet Table
+      const logBody = document.getElementById("driverProgressLogBody");
+      logBody.innerHTML = "";
+
+      report.rows.forEach(r => {
+        const hasData = r.logId !== null;
+        const dateStr = `${selYear}-${String(selMonth).padStart(2, '0')}-${String(r.dateNum).padStart(2, '0')}`;
+        const distance = (r.kmEnd !== '' && r.kmStart !== '') ? (r.kmEnd - r.kmStart) : 0;
+
+        let sigHtml = `<span style="font-size: 0.75rem; color: var(--text-muted);">-</span>`;
+        if (r.userSignature) {
+          sigHtml = `<img src="${escapeHtml(r.userSignature)}" style="max-height: 25px; max-width: 60px; object-fit: contain;">`;
+        } else if (hasData) {
+          sigHtml = `<span style="font-size: 0.75rem; color: var(--primary-red); font-weight: bold;">Belum TTD</span>`;
+        }
+
+        let actionBtnHtml = '';
+        if (hasData) {
+          const btnLabel = r.userSignature ? '✏️ Ubah Log' : '✍️ Isi TTD';
+          actionBtnHtml = `<button type="button" class="btn btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;" onclick="openDriverLogEditModal('${dateStr}', '${r.dayName}', '${r.logId}')">${btnLabel}</button>`;
+        } else {
+          actionBtnHtml = `<button type="button" class="btn btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.8rem; background-color: var(--primary-blue);" onclick="openDriverLogEditModal('${dateStr}', '${r.dayName}', null)">➕ Isi Log & TTD</button>`;
+        }
+
+        const tr = document.createElement("tr");
+        if (!hasData) {
+          tr.style.opacity = "0.8";
+        }
+
+        tr.innerHTML = `
+          <td><strong>${r.dateNum}</strong></td>
+          <td>${escapeHtml(r.dayName)}</td>
+          <td>${escapeHtml(r.licensePlate || '-')}</td>
+          <td>${r.workStart ? escapeHtml(r.workStart + ' - ' + r.workEnd) : '-'}</td>
+          <td>${r.kmStart !== '' ? ((r.kmStart).toLocaleString('id-ID') + ' - ' + (r.kmEnd).toLocaleString('id-ID')) : '-'}</td>
+          <td><strong>${hasData ? distance.toLocaleString('id-ID') + ' KM' : '-'}</strong></td>
+          <td>${escapeHtml(r.userName || '-')}</td>
+          <td>${sigHtml}</td>
+          <td>${escapeHtml(r.remark || '-')}</td>
+          <td style="text-align: center;">${actionBtnHtml}</td>
+        `;
+        logBody.appendChild(tr);
+      });
+
+      // Render Checklist Table
+      const chkBody = document.getElementById("driverProgressChkBody");
+      chkBody.innerHTML = "";
+      if (filteredChecklists.length === 0) {
+        chkBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted);">Tidak ada data pemeriksaan kendaraan (Checklist) untuk bulan ini.</td></tr>`;
+      } else {
+        filteredChecklists.forEach(rec => {
+          const dateObj = new Date(rec.inspectionDate);
+          const dateFormatted = dateObj.toLocaleDateString("id-ID") + " " + dateObj.toLocaleTimeString("id-ID", {hour: '2-digit', minute:'2-digit'});
+
+          let missingCount = 0;
+          Object.values(rec.checklist || {}).forEach(i => {
+            if (i && i.status === "TDK ADA") missingCount++;
+          });
+          const damagesCount = (rec.condition?.damages || []).length;
+          
+          let issueText = "Normal (Lengkap)";
+          let statusStyle = "color: var(--primary-green); font-weight: bold;";
+
+          if (rec.attentionNeeded) {
+            statusStyle = "color: var(--primary-red); font-weight: bold;";
+            const parts = [];
+            if (missingCount > 0) parts.push(`${missingCount} Alat Absen`);
+            if (damagesCount > 0) parts.push(`${damagesCount} Kerusakan`);
+            issueText = parts.join(", ") || "Ada Temuan";
+          }
+
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${dateFormatted}</td>
+            <td>${escapeHtml(rec.vehicle?.type || '-')}</td>
+            <td><strong>${escapeHtml(rec.vehicle?.licensePlate || '-')}</strong></td>
+            <td>${(rec.vehicle?.mileageStart || 0).toLocaleString()} - ${(rec.vehicle?.mileageEnd || 0).toLocaleString()} KM</td>
+            <td>${rec.condition?.fuelLevel || 0}%</td>
+            <td style="${statusStyle}">${escapeHtml(issueText)}</td>
+            <td style="text-align: center;">
+              <button type="button" class="btn btn-secondary" style="padding: 0.25rem 0.65rem; font-size: 0.8rem;" onclick="viewDetails('${escapeHtml(rec.inspectionId)}')">Detail</button>
+            </td>
+          `;
+          chkBody.appendChild(tr);
+        });
+      }
+    }
+
+    // Driver Progress PDF Print and Download Functions
+    function printDriverProgressLogPDF() {
+      const nik = sessionStorage.getItem("ptk_driver_progress_nik") || "";
+      if (!nik) return;
+      const month = parseInt(document.getElementById("progressFilterMonth").value) || (new Date().getMonth() + 1);
+      const year = parseInt(document.getElementById("progressFilterYear").value) || new Date().getFullYear();
+      const monthNames = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+
+      const report = generateMonthlyLogReport(nik, month, year);
+      prepareMonthlyPrintArea(report, monthNames);
+
+      const printArea = document.getElementById("print-area");
+      printArea.style.display = "block";
+
+      const triggerPrint = () => {
+        window.addEventListener('afterprint', function cleanup() {
+          printArea.style.display = "none";
+          window.removeEventListener('afterprint', cleanup);
+        });
+        window.print();
+      };
+
+      const images = printArea.getElementsByTagName("img");
+      const promises = [];
+      for (let img of images) {
+        if (!img.complete) {
+          promises.push(new Promise(resolve => {
+            img.onload = resolve;
+            img.onerror = resolve;
+          }));
+        }
+      }
+
+      if (promises.length === 0) triggerPrint();
+      else Promise.all(promises).then(triggerPrint);
+    }
+
+    function downloadDriverProgressLogPDF() {
+      const nik = sessionStorage.getItem("ptk_driver_progress_nik") || "";
+      if (!nik) return;
+      const month = parseInt(document.getElementById("progressFilterMonth").value) || (new Date().getMonth() + 1);
+      const year = parseInt(document.getElementById("progressFilterYear").value) || new Date().getFullYear();
+      const monthNames = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+
+      const report = generateMonthlyLogReport(nik, month, year);
+      prepareMonthlyPrintArea(report, monthNames);
+
+      const printArea = document.getElementById("print-area");
+      printArea.style.position = "fixed";
+      printArea.style.left = "0";
+      printArea.style.top = "0";
+      printArea.style.zIndex = "-9999";
+      printArea.style.width = "790px";
+      printArea.style.display = "block";
+
+      const images = printArea.getElementsByTagName("img");
+      const promises = [];
+      for (let img of images) {
+        if (!img.complete) {
+          promises.push(new Promise(resolve => {
+            img.onload = resolve;
+            img.onerror = resolve;
+          }));
+        }
+      }
+
+      const triggerDownload = () => {
+        const element = printArea.querySelector('.official-driver-log-print');
+        if (!element) {
+          alert("Gagal memuat template PDF.");
+          return;
+        }
+
+        const opt = {
+          margin:       5,
+          filename:     `LogSheet_${report.driverName.replace(/\s+/g, '_')}_Bulan_${month}_${year}.pdf`,
+          image:        { type: 'jpeg', quality: 0.98 },
+          html2canvas:  { scale: 2, useCORS: true, logging: false, scrollX: 0, scrollY: 0 },
+          jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        if (typeof html2pdf === 'undefined') {
+          alert("Library PDF (html2pdf) belum siap. Membuka dialog Cetak PDF...");
+          printArea.style.display = "none";
+          printDriverProgressLogPDF();
+          return;
+        }
+
+        html2pdf().from(element).set(opt).save().then(() => {
+          printArea.style.display = "none";
+          printArea.style.position = "";
+          printArea.style.left = "";
+          printArea.style.top = "";
+          printArea.style.zIndex = "";
+          printArea.style.width = "";
+        }).catch(err => {
+          console.error("Monthly PDF generation failed:", err);
+          printArea.style.display = "none";
+          printArea.style.position = "";
+          printArea.style.left = "";
+          printArea.style.top = "";
+          printArea.style.zIndex = "";
+          printArea.style.width = "";
+          alert("Gagal mengunduh PDF secara langsung. Membuka dialog Cetak PDF...");
+          printDriverProgressLogPDF();
+        });
+      };
+
+      if (promises.length === 0) triggerDownload();
+      else Promise.all(promises).then(triggerDownload);
+    }
+
     // App Initialization
     window.onerror = function(msg, url, line, col, error) {
       console.error("Unhandled error:", msg, "at", url, "line", line, error);
@@ -3183,6 +3942,8 @@
         switchView('admin-dashboard');
       } else if (savedView === 'driver-log-form') {
         switchView('driver-log-form');
+      } else if (savedView === 'driver-progress') {
+        switchView('driver-progress');
       } else {
         switchView('driver-form');
       }
