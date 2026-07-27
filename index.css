@@ -1072,3 +1072,146 @@ input:focus, select:focus, textarea:focus {
   color: white;
   border-color: var(--primary-blue);
 }
+
+/* --- DRIVER LOG SHEET 30-DAY PRINT TEMPLATE (1:1 PHYSICAL FORM) --- */
+.official-driver-log-print {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  background-color: white;
+  color: black;
+  padding: 10px 14px;
+  font-family: Arial, sans-serif;
+  border: 1.5px solid #000;
+  box-sizing: border-box;
+}
+
+.driver-log-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 8px;
+}
+
+.driver-log-header img {
+  height: 42px;
+  width: auto;
+}
+
+.driver-log-meta-top {
+  font-size: 0.8rem;
+  font-weight: bold;
+  text-align: right;
+  line-height: 1.4;
+}
+
+.driver-log-driver-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.driver-log-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 8px;
+}
+
+.driver-log-table th, .driver-log-table td {
+  border: 1px solid black;
+  padding: 2.5px 3px;
+  font-size: 0.67rem;
+  text-align: center;
+  color: black;
+  line-height: 1.15;
+}
+
+.driver-log-table th {
+  font-weight: bold;
+  background-color: #f8f8f8;
+}
+
+.driver-log-table td.text-left {
+  text-align: left;
+}
+
+.driver-log-table td .user-sig-img {
+  max-height: 18px;
+  max-width: 60px;
+  object-fit: contain;
+  vertical-align: middle;
+}
+
+.driver-log-footer-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 4px;
+}
+
+.driver-log-footer-table td {
+  border: 1px solid black;
+  width: 33.33%;
+  height: 80px;
+  vertical-align: top;
+  padding: 4px 6px;
+  font-size: 0.72rem;
+  font-weight: bold;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.driver-log-footer-table td .sig-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  justify-content: space-between;
+}
+
+.driver-log-footer-table td img {
+  max-height: 40px;
+  max-width: 80%;
+  object-fit: contain;
+  margin: 2px 0;
+}
+
+/* Tab bar in admin for switching reports */
+.admin-subtabs {
+  display: flex;
+  gap: 8px;
+  border-bottom: 2px solid var(--border-color);
+  margin-bottom: 1.5rem;
+}
+
+.admin-subtab {
+  background: none;
+  border: none;
+  padding: 0.75rem 1.25rem;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: var(--transition-fast);
+}
+
+.admin-subtab.active {
+  color: var(--primary-blue);
+  border-bottom-color: var(--primary-blue);
+}
+
+/* Checkpoint Info Banner */
+.checkpoint-banner {
+  background-color: hsl(211, 100%, 96%);
+  border: 1px solid hsl(211, 100%, 85%);
+  border-left: 4px solid var(--primary-blue);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+  box-shadow: var(--shadow-sm);
+  animation: fadeIn var(--transition-fast);
+}
+
+

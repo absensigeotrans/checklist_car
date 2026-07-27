@@ -26,6 +26,7 @@
     </div>
     <div class="nav-tabs">
       <button class="nav-tab active" onclick="trySwitchView('driver-form')">Isi Checklist</button>
+      <button class="nav-tab" onclick="trySwitchView('driver-log-form')">Log Sheet Driver</button>
       <button class="nav-tab" onclick="trySwitchView('admin-dashboard')">Panel Admin</button>
     </div>
   </header>
@@ -206,7 +207,106 @@
       </form>
     </section>
 
-    <!-- 2. ADMIN DASHBOARD VIEW -->
+    <!-- 2. DRIVER LOG SHEET FORM VIEW -->
+    <section id="driver-log-form" class="view-section">
+      <form id="driverLogForm" onsubmit="handleDriverLogSubmit(event)">
+        
+        <!-- Checkpoint Info Banner -->
+        <div id="checkpointInfoBanner" class="checkpoint-banner" style="display: none;">
+          <div style="font-weight: 700; font-size: 0.95rem; color: var(--primary-blue); display: flex; align-items: center; gap: 0.5rem;">
+            <span>📍</span> Checkpoint Otomatis Dimuat!
+          </div>
+          <div id="checkpointInfoText" style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">
+            <!-- Injected dynamically -->
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <span>📋</span> Data Driver & Trip Log Harian
+          </div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="driverLogNik">NIK Driver *</label>
+              <input type="text" id="driverLogNik" required placeholder="Ketik NIK atau pilih..." maxlength="50" list="driverNikDatalist" oninput="loadDriverCheckpoint(this.value)" onchange="loadDriverCheckpoint(this.value)">
+              <datalist id="driverNikDatalist">
+                <!-- Populated dynamically -->
+              </datalist>
+            </div>
+            <div class="form-group">
+              <label for="driverLogName">Nama Driver *</label>
+              <input type="text" id="driverLogName" required placeholder="Contoh: Supriadi" maxlength="100">
+            </div>
+            <div class="form-group">
+              <label for="driverLogPlate">Nomor Polisi (Nopol) *</label>
+              <input type="text" id="driverLogPlate" required placeholder="Contoh: B 1234 PTK" maxlength="20">
+            </div>
+            <div class="form-group">
+              <label for="driverLogDate">Tanggal Perjalanan *</label>
+              <input type="date" id="driverLogDate" required onchange="autoFillDriverLogDay(this.value)">
+            </div>
+            <div class="form-group">
+              <label for="driverLogDay">Hari</label>
+              <input type="text" id="driverLogDay" readonly placeholder="Otomatis terisi" style="background-color: var(--bg-sidebar);">
+            </div>
+          </div>
+
+          <div class="form-grid" style="margin-top: 1.5rem;">
+            <div class="form-group">
+              <label for="driverLogWorkStart">Jam Kerja Awal (Start) *</label>
+              <input type="time" id="driverLogWorkStart" required>
+            </div>
+            <div class="form-group">
+              <label for="driverLogWorkEnd">Jam Kerja Akhir (Finish) *</label>
+              <input type="time" id="driverLogWorkEnd" required>
+            </div>
+            <div class="form-group">
+              <label for="driverLogKmStart">KM Awal (Start) *</label>
+              <input type="number" id="driverLogKmStart" required placeholder="Contoh: 10200">
+            </div>
+            <div class="form-group">
+              <label for="driverLogKmEnd">KM Akhir (Finish) *</label>
+              <input type="number" id="driverLogKmEnd" required placeholder="Contoh: 10350">
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <span>👤</span> Data Pemakai (User) & Tanda Tangan
+          </div>
+          <div class="signature-grid">
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+              <div class="form-group">
+                <label for="driverLogUserName">Nama Pemakai (User) *</label>
+                <input type="text" id="driverLogUserName" required placeholder="Contoh: Pak Manager / Pak Budi" maxlength="100">
+              </div>
+              <div class="form-group">
+                <label for="driverLogRemark">Keterangan (Remark)</label>
+                <input type="text" id="driverLogRemark" placeholder="Contoh: Perjalanan dinas Jabodetabek" maxlength="200">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Tanda Tangan Pemakai (User) *</label>
+              <div class="signature-box">
+                <canvas id="userSigCanvas" class="signature-canvas"></canvas>
+                <button type="button" class="clear-signature" onclick="clearUserSigCanvas()">Hapus</button>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top: 2rem; text-align: right;">
+            <button type="submit" class="btn btn-success" style="font-size: 1.1rem; padding: 0.85rem 2.5rem;">
+              <span>💾</span> Simpan Log Harian
+            </button>
+          </div>
+        </div>
+
+      </form>
+    </section>
+
+    <!-- 3. ADMIN DASHBOARD VIEW -->
     <section id="admin-dashboard" class="view-section">
       
       <!-- Metrics Overview -->
@@ -225,56 +325,124 @@
         </div>
       </div>
 
-      <!-- Filters & Global Actions -->
-      <div class="card" style="padding: 1.5rem;">
-        <div class="filter-bar">
-          <div class="form-group">
-            <label for="filterDriver">Cari Driver</label>
-            <input type="text" id="filterDriver" placeholder="Nama driver" oninput="applyFilters()">
+      <!-- Subtabs in Admin Dashboard -->
+      <div class="admin-subtabs">
+        <button type="button" class="admin-subtab active" id="subtab-checklist" onclick="switchAdminSubtab('checklist-logs')">Checklist Kondisi Kendaraan</button>
+        <button type="button" class="admin-subtab" id="subtab-driver-monthly" onclick="switchAdminSubtab('driver-monthly-logs')">Rekap Log Sheet Driver (30 Hari)</button>
+      </div>
+
+      <!-- View 1: Checklist Logs -->
+      <div id="admin-checklist-view">
+        <div class="card" style="padding: 1.5rem;">
+          <div class="filter-bar">
+            <div class="form-group">
+              <label for="filterDriver">Cari Driver</label>
+              <input type="text" id="filterDriver" placeholder="Nama driver" oninput="applyFilters()">
+            </div>
+            <div class="form-group">
+              <label for="filterPlate">Cari Nopol</label>
+              <input type="text" id="filterPlate" placeholder="Contoh: B 1234 PTK" oninput="applyFilters()">
+            </div>
+            <div class="form-group">
+              <label for="filterStatus">Status</label>
+              <select id="filterStatus" onchange="applyFilters()">
+                <option value="all">Semua Status</option>
+                <option value="normal">Normal (Semua Ada)</option>
+                <option value="attention">Butuh Perhatian</option>
+              </select>
+            </div>
+            <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+              <button class="btn btn-primary" onclick="exportAllToExcel()">
+                <span>📊</span> Ekspor Semua Excel
+              </button>
+              <button class="btn btn-secondary" onclick="clearAllData()">
+                <span>🗑️</span> Hapus Semua Data
+              </button>
+              <button class="btn btn-danger" onclick="logoutAdmin()">
+                <span>🔒</span> Keluar Admin
+              </button>
+            </div>
           </div>
-          <div class="form-group">
-            <label for="filterPlate">Cari Nopol</label>
-            <input type="text" id="filterPlate" placeholder="Contoh: B 1234 PTK" oninput="applyFilters()">
-          </div>
-          <div class="form-group">
-            <label for="filterStatus">Status</label>
-            <select id="filterStatus" onchange="applyFilters()">
-              <option value="all">Semua Status</option>
-              <option value="normal">Normal (Semua Ada)</option>
-              <option value="attention">Butuh Perhatian</option>
-            </select>
-          </div>
-          <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
-            <button class="btn btn-primary" onclick="exportAllToExcel()">
-              <span>📊</span> Ekspor Semua Excel
-            </button>
-            <button class="btn btn-secondary" onclick="clearAllData()">
-              <span>🗑️</span> Hapus Semua Data
-            </button>
-            <button class="btn btn-danger" onclick="logoutAdmin()">
-              <span>🔒</span> Keluar Admin
-            </button>
+
+          <!-- Logs Table -->
+          <div class="checklist-container">
+            <table class="checklist-table">
+              <thead>
+                <tr>
+                  <th>Tanggal</th>
+                  <th>Nama Driver</th>
+                  <th>Nopol</th>
+                  <th>KM</th>
+                  <th>BBM</th>
+                  <th>Masalah</th>
+                  <th style="width: 250px; text-align: center;">Tindakan</th>
+                </tr>
+              </thead>
+              <tbody id="adminLogsBody">
+                <!-- Submissions list -->
+              </tbody>
+            </table>
           </div>
         </div>
+      </div>
 
-        <!-- Logs Table -->
-        <div class="checklist-container">
-          <table class="checklist-table">
-            <thead>
-              <tr>
-                <th>Tanggal</th>
-                <th>Nama Driver</th>
-                <th>Nopol</th>
-                <th>KM</th>
-                <th>BBM</th>
-                <th>Masalah</th>
-                <th style="width: 250px; text-align: center;">Tindakan</th>
-              </tr>
-            </thead>
-            <tbody id="adminLogsBody">
-              <!-- Submissions list -->
-            </tbody>
-          </table>
+      <!-- View 2: Driver Monthly Log Sheets -->
+      <div id="admin-driver-monthly-view" style="display: none;">
+        <div class="card" style="padding: 1.5rem;">
+          <div class="filter-bar">
+            <div class="form-group">
+              <label for="monthlyFilterDriver">Pilih Driver / NIK</label>
+              <select id="monthlyFilterDriver" onchange="renderMonthlyLogPreview()">
+                <!-- Populated dynamically -->
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="monthlyFilterMonth">Bulan</label>
+              <select id="monthlyFilterMonth" onchange="renderMonthlyLogPreview()">
+                <option value="1">Januari</option>
+                <option value="2">Februari</option>
+                <option value="3">Maret</option>
+                <option value="4">April</option>
+                <option value="5">Mei</option>
+                <option value="6">Juni</option>
+                <option value="7" selected>Juli</option>
+                <option value="8">Agustus</option>
+                <option value="9">September</option>
+                <option value="10">Oktober</option>
+                <option value="11">November</option>
+                <option value="12">Desember</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="monthlyFilterYear">Tahun</label>
+              <input type="number" id="monthlyFilterYear" value="2026" onchange="renderMonthlyLogPreview()">
+            </div>
+            <div style="display: flex; gap: 0.5rem; margin-top: 1rem; flex-wrap: wrap;">
+              <button class="btn btn-primary" onclick="openMonthlySignaturesModal()">
+                <span>✍️</span> Kelola TTD Persetujuan
+              </button>
+              <button class="btn btn-success" onclick="downloadMonthlyLogPDF()">
+                <span>📥</span> Unduh PDF
+              </button>
+              <button class="btn btn-primary" onclick="printMonthlyLogPDF()">
+                <span>📄</span> Cetak PDF
+              </button>
+              <button class="btn btn-secondary" onclick="exportMonthlyLogExcel()">
+                <span>📊</span> Export Excel (.xlsx)
+              </button>
+              <button class="btn btn-danger" style="margin-left: auto;" onclick="deleteDriverByNik()">
+                <span>🗑️</span> Hapus Driver Ini
+              </button>
+              <button class="btn btn-danger" onclick="clearAllDriverLogs()">
+                <span>⚠️</span> Hapus Semua Log
+              </button>
+            </div>
+          </div>
+
+          <!-- Monthly Log Preview Table -->
+          <div class="checklist-container" id="monthlyPreviewContainer">
+            <!-- Rendered dynamically -->
+          </div>
         </div>
       </div>
     </section>
@@ -356,6 +524,55 @@
           <span>📄</span> Cetak PDF
         </button>
         <button class="btn btn-secondary" onclick="closeDetailModal()">Tutup</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Monthly Report Signatures Modal -->
+  <div class="modal-backdrop" id="monthlySignaturesModal">
+    <div class="modal-content" style="max-width: 650px;">
+      <div class="modal-header">
+        <h2 style="font-size: 1.25rem;">Tanda Tangan Persetujuan Rekap Bulanan</h2>
+        <button class="close-modal" onclick="closeMonthlySignaturesModal()">&times;</button>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 1.25rem; padding: 0.5rem 0;">
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
+          <!-- 1. Dibuat Oleh (Driver) -->
+          <div class="form-group">
+            <label>Dibuat Oleh (Driver)</label>
+            <input type="text" id="sigNameDriver" placeholder="Nama Driver">
+            <div class="signature-box" style="height: 110px; margin-top: 0.5rem;">
+              <canvas id="canvasSigDriver" class="signature-canvas"></canvas>
+              <button type="button" class="clear-signature" onclick="clearCanvasSig('Driver')">Hapus</button>
+            </div>
+          </div>
+
+          <!-- 2. Disetujui Oleh (Supervisor) -->
+          <div class="form-group">
+            <label>Disetujui Oleh</label>
+            <input type="text" id="sigNameSupervisor" placeholder="Nama Supervisor">
+            <div class="signature-box" style="height: 110px; margin-top: 0.5rem;">
+              <canvas id="canvasSigSupervisor" class="signature-canvas"></canvas>
+              <button type="button" class="clear-signature" onclick="clearCanvasSig('Supervisor')">Hapus</button>
+            </div>
+          </div>
+
+          <!-- 3. Diterima Oleh (Admin) -->
+          <div class="form-group">
+            <label>Diterima Oleh</label>
+            <input type="text" id="sigNameAdmin" placeholder="Nama Admin/Asset">
+            <div class="signature-box" style="height: 110px; margin-top: 0.5rem;">
+              <canvas id="canvasSigAdmin" class="signature-canvas"></canvas>
+              <button type="button" class="clear-signature" onclick="clearCanvasSig('Admin')">Hapus</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+        <button type="button" class="btn btn-primary" onclick="saveMonthlySignatures()">Simpan Tanda Tangan</button>
+        <button type="button" class="btn btn-secondary" onclick="closeMonthlySignaturesModal()">Batal</button>
       </div>
     </div>
   </div>
@@ -603,15 +820,34 @@
       document.querySelectorAll(".view-section").forEach(sec => sec.classList.remove("active"));
       document.querySelectorAll(".nav-tab").forEach(tab => tab.classList.remove("active"));
       
-      document.getElementById(viewId).classList.add("active");
+      const targetSec = document.getElementById(viewId);
+      if (targetSec) targetSec.classList.add("active");
+
       const activeTabBtn = Array.from(document.querySelectorAll(".nav-tab")).find(btn => 
-        (viewId === 'driver-form' && btn.textContent === 'Isi Checklist') ||
-        (viewId === 'admin-dashboard' && btn.textContent === 'Panel Admin')
+        (viewId === 'driver-form' && btn.textContent.includes('Isi Checklist')) ||
+        (viewId === 'driver-log-form' && btn.textContent.includes('Log Sheet Driver')) ||
+        (viewId === 'admin-dashboard' && btn.textContent.includes('Panel Admin'))
       );
       if (activeTabBtn) activeTabBtn.classList.add("active");
 
+      if (viewId === 'driver-log-form') {
+        initDriverLogPads();
+        populateDriverNikDatalist();
+        const dateInput = document.getElementById("driverLogDate");
+        if (dateInput && !dateInput.value) {
+          const todayStr = new Date().toISOString().split('T')[0];
+          dateInput.value = todayStr;
+          autoFillDriverLogDay(todayStr);
+        }
+        const currentNik = document.getElementById("driverLogNik")?.value;
+        if (currentNik) {
+          loadDriverCheckpoint(currentNik);
+        }
+      }
+
       if (viewId === 'admin-dashboard') {
         applyFilters();
+        populateMonthlyDriverSelect();
       }
     }
 
@@ -1240,6 +1476,101 @@
       }
     }
 
+    // --- DELETE DRIVER LOG FUNCTIONS ---
+
+    async function deleteDriverByNik() {
+      const nik = document.getElementById("monthlyFilterDriver")?.value;
+      if (!nik) {
+        alert("Silakan pilih driver terlebih dahulu!");
+        return;
+      }
+
+      const driverName = driverLogs.find(l => l.driverNik === nik)?.driverName || nik;
+      if (!confirm(`⚠️ Anda yakin ingin menghapus SEMUA log harian milik driver "${driverName}" (NIK: ${nik})?\n\nTindakan ini tidak dapat dibatalkan!`)) {
+        return;
+      }
+
+      // Hapus dari lokal
+      const toDelete = driverLogs.filter(l => l.driverNik === nik);
+      driverLogs = driverLogs.filter(l => l.driverNik !== nik);
+      safeLocalStorageSet("ptk_driver_logs", driverLogs);
+
+      // Hapus dari Supabase
+      if (SUPABASE_URL && SUPABASE_KEY && !SUPABASE_URL.includes("YOUR_SUPABASE")) {
+        try {
+          await fetch(`${SUPABASE_URL}/rest/v1/driver_logs?driver_nik=eq.${encodeURIComponent(nik)}`, {
+            method: 'DELETE',
+            headers: {
+              'apikey': SUPABASE_KEY,
+              'Authorization': `Bearer ${SUPABASE_KEY}`
+            }
+          });
+        } catch (err) {
+          console.error("Gagal menghapus log driver dari Supabase:", err);
+        }
+      }
+
+      populateMonthlyDriverSelect();
+      populateDriverNikDatalist();
+      alert(`Semua log driver "${driverName}" (${toDelete.length} entri) berhasil dihapus.`);
+    }
+
+    async function deleteDriverLogEntry(logId) {
+      if (!confirm("Apakah Anda yakin ingin menghapus log harian ini?")) {
+        return;
+      }
+
+      driverLogs = driverLogs.filter(l => l.logId !== logId);
+      safeLocalStorageSet("ptk_driver_logs", driverLogs);
+
+      // Hapus dari Supabase
+      if (SUPABASE_URL && SUPABASE_KEY && !SUPABASE_URL.includes("YOUR_SUPABASE")) {
+        try {
+          await fetch(`${SUPABASE_URL}/rest/v1/driver_logs?id=eq.${encodeURIComponent(logId)}`, {
+            method: 'DELETE',
+            headers: {
+              'apikey': SUPABASE_KEY,
+              'Authorization': `Bearer ${SUPABASE_KEY}`
+            }
+          });
+        } catch (err) {
+          console.error("Gagal menghapus log dari Supabase:", err);
+        }
+      }
+
+      populateMonthlyDriverSelect();
+      populateDriverNikDatalist();
+      renderMonthlyLogPreview();
+    }
+
+    async function clearAllDriverLogs() {
+      if (!confirm("⚠️ Peringatan: Anda akan menghapus SELURUH data log sheet driver dari cloud dan lokal.\n\nTindakan ini tidak dapat dibatalkan! Lanjutkan?")) {
+        return;
+      }
+
+      driverLogs = [];
+      safeLocalStorageSet("ptk_driver_logs", driverLogs);
+
+      // Hapus semua dari Supabase
+      if (SUPABASE_URL && SUPABASE_KEY && !SUPABASE_URL.includes("YOUR_SUPABASE")) {
+        try {
+          await fetch(`${SUPABASE_URL}/rest/v1/driver_logs?id=not.is.null`, {
+            method: 'DELETE',
+            headers: {
+              'apikey': SUPABASE_KEY,
+              'Authorization': `Bearer ${SUPABASE_KEY}`
+            }
+          });
+        } catch (err) {
+          console.error("Gagal mengosongkan log driver dari Supabase:", err);
+        }
+      }
+
+      populateMonthlyDriverSelect();
+      populateDriverNikDatalist();
+      alert("Seluruh data log sheet driver berhasil dihapus.");
+    }
+
     // Modal Views for Details
     function viewDetails(id) {
       selectedRecord = db.find(r => r.inspectionId === id);
@@ -1849,9 +2180,11 @@
       preparePrintArea(selectedRecord);
 
       // Set off-screen style but visible to browser rendering for html2canvas
-      printArea.style.position = "absolute";
-      printArea.style.left = "-9999px";
+      printArea.style.position = "fixed";
+      printArea.style.left = "0";
       printArea.style.top = "0";
+      printArea.style.zIndex = "-9999";
+      printArea.style.width = "790px";
       printArea.style.display = "block";
 
       // Wait for images to load before converting to PDF
@@ -1872,23 +2205,34 @@
           margin:       8,
           filename:     `Checklist_${selectedRecord.driver?.name?.replace(/\s+/g, '_') || 'unknown'}_${selectedRecord.vehicle?.licensePlate || 'unknown'}.pdf`,
           image:        { type: 'jpeg', quality: 0.98 },
-          html2canvas:  { scale: 2.5, useCORS: true, logging: false },
+          html2canvas:  { scale: 2, useCORS: true, logging: false, scrollX: 0, scrollY: 0 },
           jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
 
+        if (typeof html2pdf === 'undefined') {
+          alert("Library PDF belum siap. Membuka dialog Cetak...");
+          printArea.style.display = "none";
+          exportRecordToPDF();
+          return;
+        }
+
         html2pdf().from(element).set(opt).save().then(() => {
-          // Hide print area again
           printArea.style.display = "none";
           printArea.style.position = "";
           printArea.style.left = "";
           printArea.style.top = "";
+          printArea.style.zIndex = "";
+          printArea.style.width = "";
         }).catch(err => {
           console.error("PDF generation failed:", err);
-          alert("Gagal mengunduh PDF. Silakan coba lagi.");
           printArea.style.display = "none";
           printArea.style.position = "";
           printArea.style.left = "";
           printArea.style.top = "";
+          printArea.style.zIndex = "";
+          printArea.style.width = "";
+          alert("Gagal mengunduh PDF secara langsung. Membuka mode cetak...");
+          exportRecordToPDF();
         });
       };
 
@@ -1897,6 +2241,921 @@
       } else {
         Promise.all(promises).then(triggerDownload);
       }
+    }
+
+    // --- DRIVER LOG SHEET & 30-DAY MONTHLY REPORT LOGIC ---
+
+    let driverLogs = [];
+    let monthlySignatures = {
+      driverName: '',
+      driverSig: '',
+      supervisorName: '',
+      supervisorSig: '',
+      adminName: '',
+      adminSig: ''
+    };
+
+    let userSigPad = null;
+    let canvasSigDriverPad = null;
+    let canvasSigSupervisorPad = null;
+    let canvasSigAdminPad = null;
+
+    function setupCanvasPad(canvasId) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) return null;
+      const ctx = canvas.getContext('2d');
+      let isDrawing = false;
+      let hasDrawn = false;
+
+      function resizeCanvas() {
+        const parent = canvas.parentElement;
+        canvas.width = parent.clientWidth || 300;
+        canvas.height = parent.clientHeight || 140;
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = '#000000';
+      }
+
+      resizeCanvas();
+
+      function getPos(e) {
+        const rect = canvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        return {
+          x: clientX - rect.left,
+          y: clientY - rect.top
+        };
+      }
+
+      function startDraw(e) {
+        isDrawing = true;
+        hasDrawn = true;
+        const pos = getPos(e);
+        ctx.beginPath();
+        ctx.moveTo(pos.x, pos.y);
+      }
+
+      function draw(e) {
+        if (!isDrawing) return;
+        if (e.touches) e.preventDefault();
+        const pos = getPos(e);
+        ctx.lineTo(pos.x, pos.y);
+        ctx.stroke();
+      }
+
+      function stopDraw() {
+        isDrawing = false;
+      }
+
+      canvas.addEventListener('mousedown', startDraw);
+      canvas.addEventListener('mousemove', draw);
+      canvas.addEventListener('mouseup', stopDraw);
+      canvas.addEventListener('mouseleave', stopDraw);
+
+      canvas.addEventListener('touchstart', startDraw, { passive: false });
+      canvas.addEventListener('touchmove', draw, { passive: false });
+      canvas.addEventListener('touchend', stopDraw);
+
+      return {
+        clear: () => {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          hasDrawn = false;
+        },
+        isEmpty: () => !hasDrawn,
+        toDataURL: () => hasDrawn ? canvas.toDataURL() : ''
+      };
+    }
+
+    function initDriverLogPads() {
+      if (!userSigPad) {
+        userSigPad = setupCanvasPad('userSigCanvas');
+      }
+    }
+
+    function clearUserSigCanvas() {
+      if (userSigPad) userSigPad.clear();
+    }
+
+    function autoFillDriverLogDay(dateStr) {
+      const dayInput = document.getElementById("driverLogDay");
+      if (!dateStr) {
+        dayInput.value = "";
+        return;
+      }
+      const days = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+      const d = new Date(dateStr + "T00:00:00");
+      if (!isNaN(d.getTime())) {
+        dayInput.value = days[d.getDay()];
+      }
+    }
+
+    function populateDriverNikDatalist() {
+      const datalist = document.getElementById("driverNikDatalist");
+      if (!datalist) return;
+      const map = new Map();
+      driverLogs.forEach(l => {
+        if (l.driverNik && !map.has(l.driverNik)) {
+          map.set(l.driverNik, l.driverName);
+        }
+      });
+      datalist.innerHTML = "";
+      map.forEach((name, nik) => {
+        const option = document.createElement("option");
+        option.value = nik;
+        option.label = `${name} (${nik})`;
+        datalist.appendChild(option);
+      });
+    }
+
+    function loadDriverCheckpoint(nik) {
+      const trimmedNik = (nik || "").trim();
+      const banner = document.getElementById("checkpointInfoBanner");
+      const bannerText = document.getElementById("checkpointInfoText");
+
+      if (!trimmedNik) {
+        if (banner) banner.style.display = "none";
+        return;
+      }
+
+      // Find most recent log entry for this driverNik
+      const lastLog = driverLogs.find(l => l.driverNik === trimmedNik);
+
+      if (lastLog) {
+        // Auto fill Name, Plate, KM Start = last log's KM End
+        document.getElementById("driverLogName").value = lastLog.driverName || "";
+        document.getElementById("driverLogPlate").value = lastLog.licensePlate || "";
+        document.getElementById("driverLogKmStart").value = lastLog.kmEnd !== undefined ? lastLog.kmEnd : "";
+
+        // Default date to today
+        const todayStr = new Date().toISOString().split('T')[0];
+        document.getElementById("driverLogDate").value = todayStr;
+        autoFillDriverLogDay(todayStr);
+
+        if (banner && bannerText) {
+          bannerText.innerHTML = `Driver <strong>${escapeHtml(lastLog.driverName)}</strong> (${escapeHtml(lastLog.licensePlate)}) | Log terakhir tanggal <strong>${lastLog.date || '-'}</strong> | Checkpoint KM Awal diset ke: <strong>${lastLog.kmEnd || 0} KM</strong>`;
+          banner.style.display = "block";
+        }
+      } else {
+        // Driver NIK is new
+        if (banner) banner.style.display = "none";
+        const todayStr = new Date().toISOString().split('T')[0];
+        if (!document.getElementById("driverLogDate").value) {
+          document.getElementById("driverLogDate").value = todayStr;
+          autoFillDriverLogDay(todayStr);
+        }
+      }
+    }
+
+    async function handleDriverLogSubmit(event) {
+      event.preventDefault();
+
+      const name = document.getElementById("driverLogName").value.trim();
+      const nik = document.getElementById("driverLogNik").value.trim();
+      const plate = document.getElementById("driverLogPlate").value.trim();
+      const date = document.getElementById("driverLogDate").value;
+      const day = document.getElementById("driverLogDay").value;
+      const workStart = document.getElementById("driverLogWorkStart").value;
+      const workEnd = document.getElementById("driverLogWorkEnd").value;
+      const kmStart = parseFloat(document.getElementById("driverLogKmStart").value) || 0;
+      const kmEnd = parseFloat(document.getElementById("driverLogKmEnd").value) || 0;
+      const userName = document.getElementById("driverLogUserName").value.trim();
+      const remark = document.getElementById("driverLogRemark").value.trim();
+
+      if (!userSigPad || userSigPad.isEmpty()) {
+        alert("Harap bubuhkan Tanda Tangan Pemakai (User) terlebih dahulu!");
+        return;
+      }
+
+      if (kmEnd < kmStart) {
+        alert("KM Akhir tidak boleh lebih kecil dari KM Awal!");
+        return;
+      }
+
+      const newLog = {
+        logId: "log_" + Date.now() + "_" + Math.random().toString(36).substr(2, 4),
+        driverName: name,
+        driverNik: nik,
+        licensePlate: plate,
+        date: date,
+        day: day,
+        workStart: workStart,
+        workEnd: workEnd,
+        kmStart: kmStart,
+        kmEnd: kmEnd,
+        userName: userName,
+        userSignature: userSigPad.toDataURL(),
+        remark: remark,
+        createdAt: new Date().toISOString()
+      };
+
+      driverLogs.unshift(newLog);
+      safeLocalStorageSet("ptk_driver_logs", driverLogs);
+
+      if (SUPABASE_URL && SUPABASE_KEY && !SUPABASE_URL.includes("YOUR_SUPABASE")) {
+        try {
+          await fetch(`${SUPABASE_URL}/rest/v1/driver_logs`, {
+            method: 'POST',
+            headers: {
+              'apikey': SUPABASE_KEY,
+              'Authorization': `Bearer ${SUPABASE_KEY}`,
+              'Content-Type': 'application/json',
+              'Prefer': 'return=minimal'
+            },
+            body: JSON.stringify({
+              id: newLog.logId,
+              driver_name: newLog.driverName,
+              driver_nik: newLog.driverNik,
+              license_plate: newLog.licensePlate,
+              log_date: newLog.date,
+              log_day: newLog.day,
+              work_start: newLog.workStart,
+              work_end: newLog.workEnd,
+              km_start: newLog.kmStart,
+              km_end: newLog.kmEnd,
+              user_name: newLog.userName,
+              user_signature: newLog.userSignature,
+              remark: newLog.remark
+            })
+          });
+        } catch (e) {
+          console.warn("Supabase sync warning:", e);
+        }
+      }
+
+      alert("Log harian driver berhasil disimpan!");
+
+      document.getElementById("driverLogWorkStart").value = "";
+      document.getElementById("driverLogWorkEnd").value = "";
+      document.getElementById("driverLogKmStart").value = kmEnd;
+      document.getElementById("driverLogKmEnd").value = "";
+      document.getElementById("driverLogUserName").value = "";
+      document.getElementById("driverLogRemark").value = "";
+      userSigPad.clear();
+
+      populateMonthlyDriverSelect();
+      populateDriverNikDatalist();
+    }
+
+    async function initDriverLogsDb() {
+      const stored = safeLocalStorageGet("ptk_driver_logs");
+      if (stored) {
+        try {
+          driverLogs = JSON.parse(stored);
+        } catch (e) {
+          driverLogs = [];
+        }
+      } else {
+        driverLogs = [];
+      }
+
+      const storedSigs = safeLocalStorageGet("ptk_monthly_signatures");
+      if (storedSigs) {
+        try {
+          monthlySignatures = JSON.parse(storedSigs);
+        } catch (e) {}
+      }
+
+      if (SUPABASE_URL && SUPABASE_KEY && !SUPABASE_URL.includes("YOUR_SUPABASE")) {
+        try {
+          const res = await fetch(`${SUPABASE_URL}/rest/v1/driver_logs?order=log_date.desc`, {
+            method: 'GET',
+            headers: {
+              'apikey': SUPABASE_KEY,
+              'Authorization': `Bearer ${SUPABASE_KEY}`
+            }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            const serverLogs = data.map(r => ({
+              logId: r.id,
+              driverName: r.driver_name || "",
+              driverNik: r.driver_nik || "",
+              licensePlate: r.license_plate || "",
+              date: r.log_date || "",
+              day: r.log_day || "",
+              workStart: r.work_start || "",
+              workEnd: r.work_end || "",
+              kmStart: r.km_start || 0,
+              kmEnd: r.km_end || 0,
+              userName: r.user_name || "",
+              userSignature: r.user_signature || "",
+              remark: r.remark || ""
+            }));
+
+            const serverIds = new Set(serverLogs.map(l => l.logId));
+            const unsynced = driverLogs.filter(l => l.logId && !serverIds.has(l.logId));
+            driverLogs = [...unsynced, ...serverLogs];
+            safeLocalStorageSet("ptk_driver_logs", driverLogs);
+          }
+        } catch (e) {}
+      }
+
+      populateMonthlyDriverSelect();
+      populateDriverNikDatalist();
+    }
+
+    function populateMonthlyDriverSelect() {
+      const select = document.getElementById("monthlyFilterDriver");
+      if (!select) return;
+
+      const map = new Map();
+      driverLogs.forEach(l => {
+        if (l.driverNik) {
+          map.set(l.driverNik, `${l.driverName} (NIK: ${l.driverNik})`);
+        }
+      });
+
+      const currentVal = select.value;
+      select.innerHTML = "";
+
+      if (map.size === 0) {
+        select.innerHTML = `<option value="">-- Belum Ada Data Driver --</option>`;
+      } else {
+        map.forEach((label, nik) => {
+          const opt = document.createElement("option");
+          opt.value = nik;
+          opt.textContent = label;
+          if (nik === currentVal) opt.selected = true;
+          select.appendChild(opt);
+        });
+      }
+      renderMonthlyLogPreview();
+    }
+
+    function switchAdminSubtab(subtabId) {
+      const tabChecklist = document.getElementById("subtab-checklist");
+      const tabDriver = document.getElementById("subtab-driver-monthly");
+      const viewChecklist = document.getElementById("admin-checklist-view");
+      const viewDriver = document.getElementById("admin-driver-monthly-view");
+
+      if (subtabId === 'checklist-logs') {
+        tabChecklist.classList.add("active");
+        tabDriver.classList.remove("active");
+        viewChecklist.style.display = "block";
+        viewDriver.style.display = "none";
+      } else {
+        tabDriver.classList.add("active");
+        tabChecklist.classList.remove("active");
+        viewDriver.style.display = "block";
+        viewChecklist.style.display = "none";
+        populateMonthlyDriverSelect();
+      }
+    }
+
+    function generateMonthlyLogReport(nik, month, year) {
+      const daysInMonth = new Date(year, month, 0).getDate();
+
+      const logsMap = new Map();
+      let matchedDriverName = "";
+      let matchedPlate = "";
+
+      driverLogs.forEach(l => {
+        if (l.driverNik === nik && l.date) {
+          const [y, m, d] = l.date.split('-');
+          if (parseInt(y, 10) === parseInt(year, 10) && parseInt(m, 10) === parseInt(month, 10)) {
+            const dayNum = parseInt(d, 10);
+            logsMap.set(dayNum, l);
+            if (!matchedDriverName) matchedDriverName = l.driverName;
+            if (!matchedPlate) matchedPlate = l.licensePlate;
+          }
+        }
+      });
+
+      const dayNames = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+      const rows = [];
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dateObj = new Date(year, month - 1, day);
+        const dayName = dayNames[dateObj.getDay()];
+        const entry = logsMap.get(day);
+
+        rows.push({
+          logId: entry ? entry.logId : null,
+          dateNum: day,
+          dayName: dayName,
+          licensePlate: entry ? entry.licensePlate : "",
+          workStart: entry ? entry.workStart : "",
+          workEnd: entry ? entry.workEnd : "",
+          kmStart: entry ? entry.kmStart : "",
+          kmEnd: entry ? entry.kmEnd : "",
+          userName: entry ? entry.userName : "",
+          userSignature: entry ? entry.userSignature : "",
+          remark: entry ? entry.remark : ""
+        });
+      }
+
+      return {
+        driverNik: nik,
+        driverName: matchedDriverName || (nik ? "Driver NIK " + nik : "Belum Ada Data"),
+        month: month,
+        year: year,
+        daysInMonth: daysInMonth,
+        rows: rows
+      };
+    }
+
+    function renderMonthlyLogPreview() {
+      const container = document.getElementById("monthlyPreviewContainer");
+      if (!container) return;
+
+      const nik = document.getElementById("monthlyFilterDriver")?.value;
+      const month = parseInt(document.getElementById("monthlyFilterMonth")?.value || 7, 10);
+      const year = parseInt(document.getElementById("monthlyFilterYear")?.value || 2026, 10);
+      const monthNames = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+
+      if (!nik) {
+        container.innerHTML = `<div style="padding: 2rem; text-align: center; color: var(--text-muted);">Silakan masukkan log harian driver terlebih dahulu untuk melihat rekap.</div>`;
+        return;
+      }
+
+      const report = generateMonthlyLogReport(nik, month, year);
+
+      let html = `
+        <!-- Header Info (matching PDF) -->
+        <div style="margin-bottom: 1rem; padding: 1rem; background: var(--bg-sidebar); border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+          <div style="font-weight: 800; font-size: 1.1rem; color: var(--primary-blue); margin-bottom: 0.35rem;">PERTAMINA TRANS KONTINENTAL</div>
+          <div style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.75rem;">BERITA ACARA / DAILY DRIVER LOG SHEET</div>
+          <div style="display: flex; gap: 2rem; flex-wrap: wrap; font-size: 0.9rem;">
+            <div>Tahun (Year): <strong>${year}</strong></div>
+            <div>Bulan (Month): <strong>${monthNames[month]}</strong></div>
+          </div>
+          <div style="display: flex; gap: 2rem; flex-wrap: wrap; font-size: 0.9rem; margin-top: 0.35rem;">
+            <div>Nama Driver: <strong style="color: var(--primary-blue);">${escapeHtml(report.driverName)}</strong></div>
+            <div>NIK: <strong>${escapeHtml(report.driverNik)}</strong></div>
+          </div>
+        </div>
+
+        <!-- Data Table (matching PDF two-row header) -->
+        <div style="overflow-x: auto;">
+        <table class="checklist-table" style="font-size: 0.82rem;">
+          <thead>
+            <tr>
+              <th rowspan="2" style="width: 40px; text-align: center;">Tanggal<br>(Date)</th>
+              <th rowspan="2" style="width: 70px;">Hari<br>(Day)</th>
+              <th rowspan="2" style="width: 100px;">Nomer Polisi<br>(Vehicle Number)</th>
+              <th colspan="2" style="text-align: center;">Jam Kerja (Working Hour)</th>
+              <th colspan="2" style="text-align: center;">KM (Kilometer)</th>
+              <th colspan="2" style="text-align: center;">Pemakai (User)</th>
+              <th rowspan="2">Keterangan<br>(Remark)</th>
+              <th rowspan="2" style="width: 60px; text-align: center;">Aksi</th>
+            </tr>
+            <tr>
+              <th style="width: 70px; text-align: center;">Awal (Start)</th>
+              <th style="width: 70px; text-align: center;">Akhir (Finish)</th>
+              <th style="width: 80px; text-align: right;">Awal (Start)</th>
+              <th style="width: 80px; text-align: right;">Akhir (Finish)</th>
+              <th>Nama (Name)</th>
+              <th style="width: 70px; text-align: center;">TTD (Signature)</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+
+      report.rows.forEach(r => {
+        const hasData = r.logId !== null;
+        html += `
+          <tr>
+            <td style="text-align: center; font-weight: bold;">${r.dateNum}</td>
+            <td>${r.dayName}</td>
+            <td>${escapeHtml(r.licensePlate)}</td>
+            <td style="text-align: center;">${r.workStart || '-'}</td>
+            <td style="text-align: center;">${r.workEnd || '-'}</td>
+            <td style="text-align: right;">${r.kmStart !== '' ? r.kmStart : '-'}</td>
+            <td style="text-align: right;">${r.kmEnd !== '' ? r.kmEnd : '-'}</td>
+            <td>${escapeHtml(r.userName) || '-'}</td>
+            <td style="text-align: center;">
+              ${r.userSignature ? `<img src="${r.userSignature}" style="max-height: 20px; max-width: 50px;">` : '-'}
+            </td>
+            <td>${escapeHtml(r.remark) || '-'}</td>
+            <td style="text-align: center;">
+              ${hasData ? `<button class="btn btn-danger" style="padding: 0.15rem 0.4rem; font-size: 0.72rem;" onclick="deleteDriverLogEntry('${r.logId}')">🗑️</button>` : ''}
+            </td>
+          </tr>
+        `;
+      });
+
+      html += `</tbody></table>
+        </div>
+
+        <!-- Footer Signatures (matching PDF) -->
+        <div style="margin-top: 1.5rem; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; font-size: 0.85rem;">
+          <div style="border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1rem; text-align: center;">
+            <div style="font-weight: 700; margin-bottom: 2rem;">Dibuat Oleh</div>
+            ${monthlySignatures.driverSig ? `<img src="${monthlySignatures.driverSig}" style="max-height: 50px; margin-bottom: 0.5rem;">` : '<div style="height: 50px;"></div>'}
+            <div style="border-top: 1px solid var(--border-color); padding-top: 0.5rem; text-align: left;">Nama: ${escapeHtml(monthlySignatures.driverName || report.driverName)}</div>
+          </div>
+          <div style="border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1rem; text-align: center;">
+            <div style="font-weight: 700; margin-bottom: 2rem;">Disetujui Oleh</div>
+            ${monthlySignatures.supervisorSig ? `<img src="${monthlySignatures.supervisorSig}" style="max-height: 50px; margin-bottom: 0.5rem;">` : '<div style="height: 50px;"></div>'}
+            <div style="border-top: 1px solid var(--border-color); padding-top: 0.5rem; text-align: left;">Nama: ${escapeHtml(monthlySignatures.supervisorName || "-")}</div>
+          </div>
+          <div style="border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1rem; text-align: center;">
+            <div style="font-weight: 700; margin-bottom: 2rem;">Diterima Oleh</div>
+            ${monthlySignatures.adminSig ? `<img src="${monthlySignatures.adminSig}" style="max-height: 50px; margin-bottom: 0.5rem;">` : '<div style="height: 50px;"></div>'}
+            <div style="border-top: 1px solid var(--border-color); padding-top: 0.5rem; text-align: left;">Nama: ${escapeHtml(monthlySignatures.adminName || "-")}</div>
+          </div>
+        </div>
+      `;
+      container.innerHTML = html;
+    }
+
+    function openMonthlySignaturesModal() {
+      const modal = document.getElementById("monthlySignaturesModal");
+      modal.classList.add("active");
+
+      document.getElementById("sigNameDriver").value = monthlySignatures.driverName || "";
+      document.getElementById("sigNameSupervisor").value = monthlySignatures.supervisorName || "";
+      document.getElementById("sigNameAdmin").value = monthlySignatures.adminName || "";
+
+      setTimeout(() => {
+        if (!canvasSigDriverPad) canvasSigDriverPad = setupCanvasPad('canvasSigDriver');
+        if (!canvasSigSupervisorPad) canvasSigSupervisorPad = setupCanvasPad('canvasSigSupervisor');
+        if (!canvasSigAdminPad) canvasSigAdminPad = setupCanvasPad('canvasSigAdmin');
+      }, 150);
+    }
+
+    function closeMonthlySignaturesModal() {
+      document.getElementById("monthlySignaturesModal").classList.remove("active");
+    }
+
+    function clearCanvasSig(role) {
+      if (role === 'Driver' && canvasSigDriverPad) canvasSigDriverPad.clear();
+      if (role === 'Supervisor' && canvasSigSupervisorPad) canvasSigSupervisorPad.clear();
+      if (role === 'Admin' && canvasSigAdminPad) canvasSigAdminPad.clear();
+    }
+
+    function saveMonthlySignatures() {
+      monthlySignatures.driverName = document.getElementById("sigNameDriver").value.trim();
+      monthlySignatures.supervisorName = document.getElementById("sigNameSupervisor").value.trim();
+      monthlySignatures.adminName = document.getElementById("sigNameAdmin").value.trim();
+
+      if (canvasSigDriverPad && !canvasSigDriverPad.isEmpty()) {
+        monthlySignatures.driverSig = canvasSigDriverPad.toDataURL();
+      }
+      if (canvasSigSupervisorPad && !canvasSigSupervisorPad.isEmpty()) {
+        monthlySignatures.supervisorSig = canvasSigSupervisorPad.toDataURL();
+      }
+      if (canvasSigAdminPad && !canvasSigAdminPad.isEmpty()) {
+        monthlySignatures.adminSig = canvasSigAdminPad.toDataURL();
+      }
+
+      safeLocalStorageSet("ptk_monthly_signatures", monthlySignatures);
+      closeMonthlySignaturesModal();
+      alert("Tanda tangan persetujuan berhasil disimpan!");
+    }
+
+    function prepareMonthlyPrintArea(report, monthNames) {
+      const printArea = document.getElementById("print-area");
+
+      let tableRowsHtml = "";
+      report.rows.forEach(r => {
+        tableRowsHtml += `
+          <tr>
+            <td style="width: 5%; font-weight: bold;">${r.dateNum}</td>
+            <td style="width: 9%;">${r.dayName}</td>
+            <td style="width: 14%;">${escapeHtml(r.licensePlate)}</td>
+            <td style="width: 8%;">${r.workStart || ''}</td>
+            <td style="width: 8%;">${r.workEnd || ''}</td>
+            <td style="width: 9%;">${r.kmStart !== '' ? r.kmStart : ''}</td>
+            <td style="width: 9%;">${r.kmEnd !== '' ? r.kmEnd : ''}</td>
+            <td style="width: 14%;" class="text-left">${escapeHtml(r.userName)}</td>
+            <td style="width: 10%;">
+              ${r.userSignature ? `<img src="${r.userSignature}" class="user-sig-img">` : ''}
+            </td>
+            <td style="width: 14%;" class="text-left">${escapeHtml(r.remark)}</td>
+          </tr>
+        `;
+      });
+
+      printArea.innerHTML = `
+        <div class="official-driver-log-print">
+          <!-- Header -->
+          <div class="driver-log-header">
+            <img src="logo_pertamina_tk.png" alt="Pertamina Trans Kontinental">
+            <div class="driver-log-meta-top">
+              Tahun (Year) &nbsp;<span style="border-bottom: 1px solid black; padding: 0 15px;">${report.year}</span>&nbsp;&nbsp;&nbsp;&nbsp;Bulan (Month) &nbsp;<span style="border-bottom: 1px solid black; padding: 0 15px;">${monthNames[report.month]}</span>
+            </div>
+          </div>
+
+          <!-- Driver Info -->
+          <div class="driver-log-driver-info">
+            <div>Nama Driver (Driver's Name) : <span style="border-bottom: 1px dotted black; padding: 0 10px;">${escapeHtml(report.driverName)}</span></div>
+            <div>NIK Driver (Driver's NIK) : <span style="border-bottom: 1px dotted black; padding: 0 10px;">${escapeHtml(report.driverNik)}</span></div>
+          </div>
+
+          <!-- Table -->
+          <table class="driver-log-table">
+            <thead>
+              <tr>
+                <th rowspan="2" style="width: 5%;">Tanggal<br>(Date)</th>
+                <th rowspan="2" style="width: 9%;">Hari<br>(Day)</th>
+                <th rowspan="2" style="width: 14%;">Nomer Polisi<br>(Vehicle Number)</th>
+                <th colspan="2" style="width: 16%;">Jam Kerja (Working Hour)</th>
+                <th colspan="2" style="width: 18%;">KM (Kilometer)</th>
+                <th colspan="2" style="width: 24%;">Pemakai (User)</th>
+                <th rowspan="2" style="width: 14%;">Keterangan<br>(Remark)</th>
+              </tr>
+              <tr>
+                <th style="width: 8%;">Awal (Start)</th>
+                <th style="width: 8%;">Akhir (Finish)</th>
+                <th style="width: 9%;">Awal (Start)</th>
+                <th style="width: 9%;">Akhir (Finish)</th>
+                <th style="width: 14%;">Nama (Name)</th>
+                <th style="width: 10%;">Tanda Tangan (Signature)</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${tableRowsHtml}
+            </tbody>
+          </table>
+
+          <!-- Footer Signatures -->
+          <table class="driver-log-footer-table">
+            <tr>
+              <td style="text-align: center;">
+                <div class="sig-container">
+                  <div>Dibuat Oleh</div>
+                  <div>${monthlySignatures.driverSig ? `<img src="${monthlySignatures.driverSig}">` : ''}</div>
+                  <div style="text-align: left;">Nama : ${escapeHtml(monthlySignatures.driverName || report.driverName)}</div>
+                </div>
+              </td>
+              <td style="text-align: center;">
+                <div class="sig-container">
+                  <div>Disetujui Oleh</div>
+                  <div>${monthlySignatures.supervisorSig ? `<img src="${monthlySignatures.supervisorSig}">` : ''}</div>
+                  <div style="text-align: left;">Nama : ${escapeHtml(monthlySignatures.supervisorName)}</div>
+                </div>
+              </td>
+              <td style="text-align: center;">
+                <div class="sig-container">
+                  <div>Diterima Oleh</div>
+                  <div>${monthlySignatures.adminSig ? `<img src="${monthlySignatures.adminSig}">` : ''}</div>
+                  <div style="text-align: left;">Nama : ${escapeHtml(monthlySignatures.adminName)}</div>
+                </div>
+              </td>
+            </tr>
+          </table>
+        </div>
+      `;
+    }
+
+    function printMonthlyLogPDF() {
+      const nik = document.getElementById("monthlyFilterDriver")?.value;
+      const month = parseInt(document.getElementById("monthlyFilterMonth")?.value || 7, 10);
+      const year = parseInt(document.getElementById("monthlyFilterYear")?.value || 2026, 10);
+
+      if (!nik) {
+        alert("Silakan pilih driver terlebih dahulu!");
+        return;
+      }
+
+      const report = generateMonthlyLogReport(nik, month, year);
+      const monthNames = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+
+      const printArea = document.getElementById("print-area");
+      prepareMonthlyPrintArea(report, monthNames);
+      printArea.style.display = "block";
+
+      const images = printArea.getElementsByTagName("img");
+      const promises = [];
+      for (let img of images) {
+        if (!img.complete) {
+          promises.push(new Promise(resolve => {
+            img.onload = resolve;
+            img.onerror = resolve;
+          }));
+        }
+      }
+
+      const triggerPrint = () => {
+        window.addEventListener('afterprint', function cleanup() {
+          printArea.style.display = "none";
+          window.removeEventListener('afterprint', cleanup);
+        });
+        window.print();
+      };
+
+      if (promises.length === 0) {
+        triggerPrint();
+      } else {
+        Promise.all(promises).then(triggerPrint);
+      }
+    }
+
+    function downloadMonthlyLogPDF() {
+      const nik = document.getElementById("monthlyFilterDriver")?.value;
+      const month = parseInt(document.getElementById("monthlyFilterMonth")?.value || 7, 10);
+      const year = parseInt(document.getElementById("monthlyFilterYear")?.value || 2026, 10);
+
+      if (!nik) {
+        alert("Silakan pilih driver terlebih dahulu!");
+        return;
+      }
+
+      const report = generateMonthlyLogReport(nik, month, year);
+      const monthNames = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+
+      const printArea = document.getElementById("print-area");
+      prepareMonthlyPrintArea(report, monthNames);
+
+      // Render container visible to DOM but fixed offscreen behind everything to allow html2canvas to capture exact width
+      printArea.style.position = "fixed";
+      printArea.style.left = "0";
+      printArea.style.top = "0";
+      printArea.style.zIndex = "-9999";
+      printArea.style.width = "790px";
+      printArea.style.display = "block";
+
+      const images = printArea.getElementsByTagName("img");
+      const promises = [];
+      for (let img of images) {
+        if (!img.complete) {
+          promises.push(new Promise(resolve => {
+            img.onload = resolve;
+            img.onerror = resolve;
+          }));
+        }
+      }
+
+      const triggerDownload = () => {
+        const element = printArea.querySelector('.official-driver-log-print');
+        if (!element) {
+          alert("Gagal memuat template PDF.");
+          return;
+        }
+
+        const opt = {
+          margin:       5,
+          filename:     `LogSheet_${report.driverName.replace(/\s+/g, '_')}_Bulan_${month}_${year}.pdf`,
+          image:        { type: 'jpeg', quality: 0.98 },
+          html2canvas:  { scale: 2, useCORS: true, logging: false, scrollX: 0, scrollY: 0 },
+          jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        if (typeof html2pdf === 'undefined') {
+          alert("Library PDF (html2pdf) belum siap. Membuka dialog Cetak PDF...");
+          printArea.style.display = "none";
+          printMonthlyLogPDF();
+          return;
+        }
+
+        html2pdf().from(element).set(opt).save().then(() => {
+          printArea.style.display = "none";
+          printArea.style.position = "";
+          printArea.style.left = "";
+          printArea.style.top = "";
+          printArea.style.zIndex = "";
+          printArea.style.width = "";
+        }).catch(err => {
+          console.error("Monthly PDF generation failed:", err);
+          printArea.style.display = "none";
+          printArea.style.position = "";
+          printArea.style.left = "";
+          printArea.style.top = "";
+          printArea.style.zIndex = "";
+          printArea.style.width = "";
+          alert("Gagal mengunduh PDF secara langsung. Membuka dialog Cetak PDF...");
+          printMonthlyLogPDF();
+        });
+      };
+
+      if (promises.length === 0) {
+        triggerDownload();
+      } else {
+        Promise.all(promises).then(triggerDownload);
+      }
+    }
+
+    function exportMonthlyLogExcel() {
+      const nik = document.getElementById("monthlyFilterDriver")?.value;
+      const month = parseInt(document.getElementById("monthlyFilterMonth")?.value || 7, 10);
+      const year = parseInt(document.getElementById("monthlyFilterYear")?.value || 2026, 10);
+
+      if (!nik) {
+        alert("Silakan pilih driver terlebih dahulu!");
+        return;
+      }
+
+      const report = generateMonthlyLogReport(nik, month, year);
+      const monthNames = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+
+      // Build data array matching PDF layout
+      const data = [];
+
+      // Row 0: Title (merged across all columns)
+      data.push(["PERTAMINA TRANS KONTINENTAL", "", "", "", "", "", "", "", "", ""]);
+      // Row 1: Subtitle
+      data.push(["BERITA ACARA / DAILY DRIVER LOG SHEET", "", "", "", "", "", "", "", "", ""]);
+      // Row 2: Blank separator
+      data.push([]);
+      // Row 3: Year & Month
+      data.push([`Tahun (Year): ${year}`, "", "", `Bulan (Month): ${monthNames[month]}`, "", "", "", "", "", ""]);
+      // Row 4: Driver Name & NIK
+      data.push([`Nama Driver (Driver's Name): ${report.driverName}`, "", "", "", `NIK Driver (Driver's NIK): ${report.driverNik}`, "", "", "", "", ""]);
+      // Row 5: Blank separator before table
+      data.push([]);
+
+      // Row 6: Header row 1 (with merged headers for grouped columns)
+      data.push([
+        "Tanggal\n(Date)",
+        "Hari\n(Day)",
+        "Nomer Polisi\n(Vehicle Number)",
+        "Jam Kerja (Working Hour)", "",
+        "KM (Kilometer)", "",
+        "Pemakai (User)", "",
+        "Keterangan\n(Remark)"
+      ]);
+      // Row 7: Header row 2 (sub-headers)
+      data.push([
+        "", "", "",
+        "Awal (Start)", "Akhir (Finish)",
+        "Awal (Start)", "Akhir (Finish)",
+        "Nama (Name)", "Tanda Tangan (Signature)",
+        ""
+      ]);
+
+      // Row 8 onwards: Data rows
+      report.rows.forEach(r => {
+        data.push([
+          r.dateNum,
+          r.dayName,
+          r.licensePlate,
+          r.workStart || "",
+          r.workEnd || "",
+          r.kmStart !== "" ? r.kmStart : "",
+          r.kmEnd !== "" ? r.kmEnd : "",
+          r.userName || "",
+          r.userSignature ? "✓" : "",
+          r.remark || ""
+        ]);
+      });
+
+      // Blank row after data
+      const sigStartRow = data.length;
+      data.push([]);
+
+      // Footer signature section
+      data.push(["Dibuat Oleh", "", "", "Disetujui Oleh", "", "", "Diterima Oleh", "", "", ""]);
+      data.push([]);
+      data.push([]);
+      data.push([]);
+      data.push([`Nama: ${monthlySignatures.driverName || report.driverName}`, "", "", `Nama: ${monthlySignatures.supervisorName || "-"}`, "", "", `Nama: ${monthlySignatures.adminName || "-"}`, "", "", ""]);
+
+      // Create worksheet
+      const ws = XLSX.utils.aoa_to_sheet(data);
+
+      // Define merges matching PDF layout
+      const merges = [
+        // Title row (Row 0): merge A1:J1
+        { s: { r: 0, c: 0 }, e: { r: 0, c: 9 } },
+        // Subtitle row (Row 1): merge A2:J2
+        { s: { r: 1, c: 0 }, e: { r: 1, c: 9 } },
+        // Year row (Row 3): merge A4:C4, D4:J4
+        { s: { r: 3, c: 0 }, e: { r: 3, c: 2 } },
+        { s: { r: 3, c: 3 }, e: { r: 3, c: 9 } },
+        // Driver info row (Row 4): merge A5:D5, E5:J5
+        { s: { r: 4, c: 0 }, e: { r: 4, c: 3 } },
+        { s: { r: 4, c: 4 }, e: { r: 4, c: 9 } },
+        // Header row 1 (Row 6): Tanggal A7:A8, Hari B7:B8, Nomer Polisi C7:C8
+        { s: { r: 6, c: 0 }, e: { r: 7, c: 0 } },
+        { s: { r: 6, c: 1 }, e: { r: 7, c: 1 } },
+        { s: { r: 6, c: 2 }, e: { r: 7, c: 2 } },
+        // Jam Kerja D7:E7
+        { s: { r: 6, c: 3 }, e: { r: 6, c: 4 } },
+        // KM F7:G7
+        { s: { r: 6, c: 5 }, e: { r: 6, c: 6 } },
+        // Pemakai H7:I7
+        { s: { r: 6, c: 7 }, e: { r: 6, c: 8 } },
+        // Keterangan J7:J8
+        { s: { r: 6, c: 9 }, e: { r: 7, c: 9 } },
+        // Footer signature merges
+        { s: { r: sigStartRow + 1, c: 0 }, e: { r: sigStartRow + 1, c: 2 } },
+        { s: { r: sigStartRow + 1, c: 3 }, e: { r: sigStartRow + 1, c: 5 } },
+        { s: { r: sigStartRow + 1, c: 6 }, e: { r: sigStartRow + 1, c: 9 } },
+        { s: { r: sigStartRow + 5, c: 0 }, e: { r: sigStartRow + 5, c: 2 } },
+        { s: { r: sigStartRow + 5, c: 3 }, e: { r: sigStartRow + 5, c: 5 } },
+        { s: { r: sigStartRow + 5, c: 6 }, e: { r: sigStartRow + 5, c: 9 } },
+      ];
+      ws["!merges"] = merges;
+
+      // Set column widths matching PDF proportions
+      ws["!cols"] = [
+        { wch: 9 },   // A: Tanggal
+        { wch: 10 },  // B: Hari
+        { wch: 16 },  // C: Nomer Polisi
+        { wch: 14 },  // D: Jam Kerja Awal
+        { wch: 14 },  // E: Jam Kerja Akhir
+        { wch: 12 },  // F: KM Awal
+        { wch: 12 },  // G: KM Akhir
+        { wch: 18 },  // H: Nama Pemakai
+        { wch: 14 },  // I: TTD
+        { wch: 18 },  // J: Keterangan
+      ];
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Log Sheet Driver");
+      XLSX.writeFile(wb, `LogSheet_${report.driverName.replace(/\s+/g, '_')}_${monthNames[month]}_${year}.xlsx`);
     }
 
     // App Initialization
@@ -1913,6 +3172,7 @@
     window.onload = async function() {
       await loadSupabaseConfig();
       initDb();
+      initDriverLogsDb();
       renderChecklistRows();
       initSignaturePad();
       resetForm();
@@ -1921,6 +3181,8 @@
       const savedView = sessionStorage.getItem("ptk_active_view") || 'driver-form';
       if (savedView === 'admin-dashboard' && isAdminAuthenticated) {
         switchView('admin-dashboard');
+      } else if (savedView === 'driver-log-form') {
+        switchView('driver-log-form');
       } else {
         switchView('driver-form');
       }
