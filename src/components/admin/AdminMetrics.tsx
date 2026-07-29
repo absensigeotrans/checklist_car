@@ -16,8 +16,8 @@ export default function AdminMetrics({ records, driverLogs }: AdminMetricsProps)
   const signedCount = driverLogs.filter((l) => Boolean(l.userSignature)).length;
 
   return (
-    <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-5 mb-8">
-      <div className="bg-white rounded-[16px] p-5 border border-border shadow-sm flex items-center gap-4 hover:-translate-y-[2px] transition-all">
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 max-md:gap-2.5 mb-6">
+      <div className="bg-white rounded-[16px] p-4 max-md:p-3 border border-border shadow-sm flex items-center gap-3 hover:-translate-y-[2px] transition-all">
         <div className="text-3xl w-[50px] h-[50px] rounded-[12px] flex items-center justify-center flex-shrink-0 bg-blue-100 text-primary-blue font-bold">
           🔍
         </div>

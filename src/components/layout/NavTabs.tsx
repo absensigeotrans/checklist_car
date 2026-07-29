@@ -21,15 +21,15 @@ export default function NavTabs() {
   });
 
   return (
-    <div className="flex bg-bg-sidebar p-[4px] rounded-[12px] gap-[4px] max-md:w-full">
+    <div className="flex bg-bg-sidebar p-[4px] rounded-[12px] gap-[4px] max-md:w-full overflow-x-auto whitespace-nowrap no-scrollbar">
       {visibleTabs.map((tab) => (
         <button
           key={tab.id}
           type="button"
-          className={`border-none bg-none px-5 py-2 font-semibold text-sm cursor-pointer rounded-[10px] transition-all ${
+          className={`border-none bg-none px-5 py-2.5 max-md:px-3.5 max-md:py-2 font-semibold text-sm cursor-pointer rounded-[10px] transition-all flex-1 text-center ${
             pathname === tab.href
               ? "bg-white text-primary-blue shadow-sm"
-              : "text-text-muted"
+              : "text-text-muted hover:text-text-main"
           }`}
           onClick={() => router.push(tab.href)}
         >
