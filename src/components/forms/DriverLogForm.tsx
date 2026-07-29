@@ -92,7 +92,7 @@ export default function DriverLogForm() {
     <form onSubmit={handleSubmit}>
       <div className="bg-white rounded-[16px] shadow-md p-8 mb-8 border border-border max-md:p-5">
         <div className="text-lg font-bold mb-6 flex items-center gap-2 border-b-2 border-bg-main pb-3">
-          <span>📋</span> Data Driver & Trip Log Harian
+          <span>📋</span> Data Driver & Timesheet Harian
         </div>
         <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-6">
           <div className="flex flex-col gap-2">

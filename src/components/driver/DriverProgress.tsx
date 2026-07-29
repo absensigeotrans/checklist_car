@@ -189,7 +189,7 @@ export default function DriverProgress() {
           }`}
           onClick={() => setActiveSubtab("log")}
         >
-          📋 Rekap Log Sheet Harian
+          📋 Rekap Timesheet Harian
         </button>
         <button
           type="button"

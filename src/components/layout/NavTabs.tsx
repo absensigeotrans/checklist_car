@@ -5,8 +5,8 @@ import { usePathname, useRouter } from "next/navigation";
 
 const tabs = [
   { id: "driver-form", label: "Isi Checklist", href: "/driver", roles: ["driver"] },
-  { id: "driver-log-form", label: "Log Sheet Driver", href: "/log-sheet", roles: ["driver"] },
-  { id: "driver-progress", label: "Progres Driver", href: "/progress", roles: ["driver"] },
+  { id: "driver-log-form", label: "Timesheet", href: "/log-sheet", roles: ["driver"] },
+  { id: "driver-progress", label: "Review", href: "/progress", roles: ["driver"] },
   { id: "admin-dashboard", label: "Panel Admin", href: "/admin", roles: ["admin"] },
 ];
 
