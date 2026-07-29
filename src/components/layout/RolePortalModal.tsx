@@ -116,9 +116,11 @@ export default function RolePortalModal() {
             <Image
               src="/logo_pertamina_tk.png"
               alt="Pertamina Trans Kontinental"
-              width={60}
+              width={180}
               height={60}
-              className="object-contain mx-auto mb-3"
+              priority
+              unoptimized
+              className="h-14 w-auto object-contain mx-auto mb-3"
             />
             <h2 className="text-2xl font-extrabold text-text-main">
               Selamat Datang

@@ -21,9 +21,11 @@ export default function Header() {
         <Image
           src="/logo_pertamina_tk.png"
           alt="Pertamina Trans Kontinental"
-          width={0}
-          height={55}
-          style={{ height: 55, width: "auto", objectFit: "contain" }}
+          width={220}
+          height={60}
+          priority
+          unoptimized
+          className="h-[52px] w-auto object-contain"
         />
         <div>
           <h1 className="text-xl font-bold text-text-main tracking-tight max-md:text-lg">
