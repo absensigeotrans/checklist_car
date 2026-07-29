@@ -356,6 +356,10 @@ export function prepareTimesheetPrintMarkup(
       matchedLog && matchedLog.kmStart ? matchedLog.kmStart.toLocaleString() : "";
     const kmEnd =
       matchedLog && matchedLog.kmEnd ? matchedLog.kmEnd.toLocaleString() : "";
+    const kmTotal =
+      matchedLog && matchedLog.kmEnd && matchedLog.kmStart && matchedLog.kmEnd >= matchedLog.kmStart
+        ? (matchedLog.kmEnd - matchedLog.kmStart).toLocaleString()
+        : "";
     const userName = matchedLog ? escapeHtml(matchedLog.userName) : "";
     const userSig =
       matchedLog && matchedLog.userSignature
@@ -372,6 +376,7 @@ export function prepareTimesheetPrintMarkup(
         <td style="border:1px solid #000; padding:0px 2px; text-align:center;">${workEnd}</td>
         <td style="border:1px solid #000; padding:0px 2px; text-align:center;">${kmStart}</td>
         <td style="border:1px solid #000; padding:0px 2px; text-align:center;">${kmEnd}</td>
+        <td style="border:1px solid #000; padding:0px 2px; text-align:center; font-weight:bold;">${kmTotal}</td>
         <td style="border:1px solid #000; padding:0px 2px; text-align:center;">${userName}</td>
         <td style="border:1px solid #000; padding:0px 2px; text-align:center; vertical-align:middle;">${userSig}</td>
         <td style="border:1px solid #000; padding:0px 2px; text-align:left;">${remark}</td>
@@ -409,21 +414,22 @@ export function prepareTimesheetPrintMarkup(
       <table style="width:100%; border-collapse:collapse; border:1px solid #000; font-size:0.53rem; table-layout:fixed; line-height:1.1;">
         <thead>
           <tr style="background-color:#ffffff; text-align:center; font-weight:bold;">
-            <th rowspan="2" style="border:1px solid #000; width:5%; padding:1px 1px;">Tanggal<br/><span style="font-weight:normal;font-size:0.48rem;">(Date)</span></th>
-            <th rowspan="2" style="border:1px solid #000; width:7%; padding:1px 1px;">Hari<br/><span style="font-weight:normal;font-size:0.48rem;">(Day)</span></th>
-            <th rowspan="2" style="border:1px solid #000; width:11%; padding:1px 1px;">Nomer Polisi<br/><span style="font-weight:normal;font-size:0.48rem;">(Vehicle Number)</span></th>
+            <th rowspan="2" style="border:1px solid #000; width:4.5%; padding:1px 1px;">Tanggal<br/><span style="font-weight:normal;font-size:0.48rem;">(Date)</span></th>
+            <th rowspan="2" style="border:1px solid #000; width:6.5%; padding:1px 1px;">Hari<br/><span style="font-weight:normal;font-size:0.48rem;">(Day)</span></th>
+            <th rowspan="2" style="border:1px solid #000; width:10%; padding:1px 1px;">Nomer Polisi<br/><span style="font-weight:normal;font-size:0.48rem;">(Vehicle Number)</span></th>
             <th colspan="2" style="border:1px solid #000; padding:1px 1px;">Jam Kerja<br/><span style="font-weight:normal;font-size:0.48rem;">(Working Hour)</span></th>
-            <th colspan="2" style="border:1px solid #000; padding:1px 1px;">KM<br/><span style="font-weight:normal;font-size:0.48rem;">(Kilometer)</span></th>
+            <th colspan="3" style="border:1px solid #000; padding:1px 1px;">KM<br/><span style="font-weight:normal;font-size:0.48rem;">(Kilometer)</span></th>
             <th colspan="2" style="border:1px solid #000; padding:1px 1px;">Pemakai<br/><span style="font-weight:normal;font-size:0.48rem;">(User)</span></th>
-            <th rowspan="2" style="border:1px solid #000; width:14%; padding:1px 1px;">Keterangan<br/><span style="font-weight:normal;font-size:0.48rem;">(Remark)</span></th>
+            <th rowspan="2" style="border:1px solid #000; width:13.5%; padding:1px 1px;">Keterangan<br/><span style="font-weight:normal;font-size:0.48rem;">(Remark)</span></th>
           </tr>
           <tr style="background-color:#ffffff; text-align:center; font-weight:bold;">
+            <th style="border:1px solid #000; width:6.5%; padding:1px 1px;">Awal<br/><span style="font-weight:normal;font-size:0.48rem;">(Start)</span></th>
+            <th style="border:1px solid #000; width:6.5%; padding:1px 1px;">Akhir<br/><span style="font-weight:normal;font-size:0.48rem;">(Finish)</span></th>
             <th style="border:1px solid #000; width:7.5%; padding:1px 1px;">Awal<br/><span style="font-weight:normal;font-size:0.48rem;">(Start)</span></th>
             <th style="border:1px solid #000; width:7.5%; padding:1px 1px;">Akhir<br/><span style="font-weight:normal;font-size:0.48rem;">(Finish)</span></th>
-            <th style="border:1px solid #000; width:9%; padding:1px 1px;">Awal<br/><span style="font-weight:normal;font-size:0.48rem;">(Start)</span></th>
-            <th style="border:1px solid #000; width:9%; padding:1px 1px;">Akhir<br/><span style="font-weight:normal;font-size:0.48rem;">(Finish)</span></th>
-            <th style="border:1px solid #000; width:15%; padding:1px 1px;">Nama<br/><span style="font-weight:normal;font-size:0.48rem;">(Name)</span></th>
-            <th style="border:1px solid #000; width:15%; padding:1px 1px;">Tanda Tangan<br/><span style="font-weight:normal;font-size:0.48rem;">(Signature)</span></th>
+            <th style="border:1px solid #000; width:7.5%; padding:1px 1px;">Jumlah<br/><span style="font-weight:normal;font-size:0.48rem;">(Total)</span></th>
+            <th style="border:1px solid #000; width:14%; padding:1px 1px;">Nama<br/><span style="font-weight:normal;font-size:0.48rem;">(Name)</span></th>
+            <th style="border:1px solid #000; width:14%; padding:1px 1px;">Tanda Tangan<br/><span style="font-weight:normal;font-size:0.48rem;">(Signature)</span></th>
           </tr>
         </thead>
         <tbody>
