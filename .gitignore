@@ -4,6 +4,7 @@ config.js
 .env
 .env.local
 .env*.local
+import.env
 
 # Next.js
 .next/
