@@ -5,7 +5,7 @@ import { useInspections } from "@/hooks/useInspections";
 import { useDriverLogs } from "@/hooks/useDriverLogs";
 import { useAuth } from "@/context/AuthContext";
 import type { InspectionRecord, DriverLogEntry } from "@/types";
-import { exportAllToExcel, exportMonthlyLogExcel, preparePrintMarkup } from "@/lib/export";
+import { exportAllToExcel, exportMonthlyLogExcel, preparePrintMarkup, prepareTimesheetPrintMarkup } from "@/lib/export";
 import { formatDateID, formatDateShort, escapeHtml } from "@/lib/utils";
 import Modal from "../ui/Modal";
 import AdminMetrics from "./AdminMetrics";
@@ -91,6 +91,39 @@ export default function AdminDashboard() {
   const handleViewTsDetail = (log: DriverLogEntry) => {
     setSelectedLog(log);
     setTsDetailOpen(true);
+  };
+
+  const handlePrintTimesheetPDF = (logToPrint?: DriverLogEntry) => {
+    const targetLog = logToPrint || selectedLog;
+    const name = targetLog ? targetLog.driverName : (tsFilterDriver || "Driver");
+    const nik = targetLog ? targetLog.driverNik : "";
+    const m = tsFilterMonth === "all" ? (new Date().getMonth() + 1) : tsFilterMonth;
+    const y = new Date().getFullYear();
+
+    const logsForDriver = driverLogs.filter((l) => {
+      const isMatch = targetLog
+        ? l.driverNik === targetLog.driverNik || l.driverName === targetLog.driverName
+        : true;
+      const dateObj = new Date(l.logDate);
+      return isMatch && dateObj.getMonth() + 1 === m && dateObj.getFullYear() === y;
+    });
+
+    const markup = prepareTimesheetPrintMarkup(
+      logsForDriver.length > 0 ? logsForDriver : filteredLogs,
+      name,
+      nik,
+      m,
+      y
+    );
+
+    const win = window.open("", "_blank");
+    if (win) {
+      win.document.write(`<html><head><title>Timesheet PDF - ${name}</title><style>@media print{@page{size:A4 portrait;margin:4mm;}}</style></head><body>${markup}</body></html>`);
+      win.document.close();
+      setTimeout(() => {
+        win.print();
+      }, 300);
+    }
   };
 
   const handleDownloadPDF = () => {
@@ -292,6 +325,12 @@ export default function AdminDashboard() {
               </div>
             </div>
             <div className="flex gap-2 mt-4 flex-wrap">
+              <button
+                className="bg-primary-blue text-white px-4 py-3 rounded-[12px] font-semibold cursor-pointer shadow-sm hover:bg-primary-blue-hover transition-all inline-flex items-center gap-2 text-sm"
+                onClick={() => handlePrintTimesheetPDF()}
+              >
+                <span>📄</span> Cetak / PDF Timesheet
+              </button>
               <button
                 className="bg-primary-green text-white px-4 py-3 rounded-[12px] font-semibold cursor-pointer shadow-sm hover:bg-primary-green-hover transition-all inline-flex items-center gap-2 text-sm"
                 onClick={() => exportMonthlyLogExcel(filteredLogs)}
@@ -524,7 +563,14 @@ export default function AdminDashboard() {
               )}
             </div>
 
-            <div className="flex justify-end pt-3 border-t border-border">
+            <div className="flex justify-end gap-2 pt-3 border-t border-border">
+              <button
+                type="button"
+                className="bg-primary-blue text-white px-4 py-2 rounded-[10px] font-semibold text-xs cursor-pointer shadow-sm hover:bg-primary-blue-hover transition-all inline-flex items-center gap-1.5"
+                onClick={() => handlePrintTimesheetPDF(selectedLog)}
+              >
+                <span>📄</span> Cetak PDF Timesheet
+              </button>
               <button
                 type="button"
                 className="bg-bg-sidebar text-text-muted border border-border px-4 py-2 rounded-[10px] font-semibold text-xs cursor-pointer hover:bg-border hover:text-text-main transition-all"

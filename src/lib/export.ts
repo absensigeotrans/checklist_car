@@ -238,3 +238,151 @@ function getPartLabel(part: string): string {
   };
   return labels[part] || part;
 }
+
+const INDO_DAYS = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+const MONTH_NAMES = [
+  "Januari",
+  "Februari",
+  "Maret",
+  "April",
+  "Mei",
+  "Juni",
+  "Juli",
+  "Agustus",
+  "September",
+  "Oktober",
+  "November",
+  "Desember",
+];
+
+export function prepareTimesheetPrintMarkup(
+  logs: DriverLogEntry[],
+  driverName: string,
+  driverNik: string,
+  month: number,
+  year: number
+): string {
+  const daysInMonth = new Date(year, month, 0).getDate();
+  let tableRowsHtml = "";
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateObj = new Date(year, month - 1, d);
+    const dateStr = `${year}-${String(month).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+    const dayName = INDO_DAYS[dateObj.getDay()];
+
+    const matchedLog = logs.find(
+      (l) => l.logDate.startsWith(dateStr) || l.logDate === dateStr
+    );
+
+    const plate = matchedLog ? escapeHtml(matchedLog.licensePlate) : "";
+    const workStart = matchedLog ? escapeHtml(matchedLog.workStart) : "";
+    const workEnd = matchedLog ? escapeHtml(matchedLog.workEnd) : "";
+    const kmStart =
+      matchedLog && matchedLog.kmStart ? matchedLog.kmStart.toLocaleString() : "";
+    const kmEnd =
+      matchedLog && matchedLog.kmEnd ? matchedLog.kmEnd.toLocaleString() : "";
+    const userName = matchedLog ? escapeHtml(matchedLog.userName) : "";
+    const userSig =
+      matchedLog && matchedLog.userSignature
+        ? `<img src="${matchedLog.userSignature}" alt="TTD" style="max-height:20px; max-width:60px; object-fit:contain; display:block; margin:0 auto;"/>`
+        : "";
+    const remark = matchedLog ? escapeHtml(matchedLog.remark) : "";
+
+    tableRowsHtml += `
+      <tr style="height:20px;">
+        <td style="border:1px solid #000; padding:1px 2px; text-align:center; font-weight:bold;">${d}</td>
+        <td style="border:1px solid #000; padding:1px 2px; text-align:center;">${dayName}</td>
+        <td style="border:1px solid #000; padding:1px 2px; text-align:center;">${plate}</td>
+        <td style="border:1px solid #000; padding:1px 2px; text-align:center;">${workStart}</td>
+        <td style="border:1px solid #000; padding:1px 2px; text-align:center;">${workEnd}</td>
+        <td style="border:1px solid #000; padding:1px 2px; text-align:center;">${kmStart}</td>
+        <td style="border:1px solid #000; padding:1px 2px; text-align:center;">${kmEnd}</td>
+        <td style="border:1px solid #000; padding:1px 2px; text-align:center;">${userName}</td>
+        <td style="border:1px solid #000; padding:1px 2px; text-align:center; vertical-align:middle;">${userSig}</td>
+        <td style="border:1px solid #000; padding:1px 2px; text-align:left;">${remark}</td>
+      </tr>`;
+  }
+
+  return `
+    <div class="official-timesheet-print" style="width:100%; max-width:900px; margin:0 auto; background-color:white; color:black; padding:8px 12px; font-family:Arial,sans-serif; box-sizing:border-box;">
+      
+      <!-- Top Header -->
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <img src="/logo_pertamina_tk.png" alt="Pertamina Trans Kontinental" style="height:36px; width:auto; object-fit:contain;">
+        </div>
+        <div style="font-size:0.75rem; font-weight:bold; text-align:right;">
+          Tahun (Year): <span style="border-bottom:1px solid #000; padding:0 12px; display:inline-block;">${year}</span>
+          &nbsp;&nbsp;&nbsp;&nbsp;
+          Bulan (Month): <span style="border-bottom:1px solid #000; padding:0 12px; display:inline-block;">${MONTH_NAMES[month - 1]}</span>
+        </div>
+      </div>
+
+      <!-- Driver Metadata -->
+      <div style="display:flex; justify-content:space-between; font-size:0.75rem; font-weight:bold; margin-bottom:8px;">
+        <div style="width:48%;">
+          Nama Driver (Driver's Name): 
+          <div style="border-bottom:1px solid #000; min-height:16px; width:100%; font-weight:normal; margin-top:2px;">${escapeHtml(driverName)}</div>
+        </div>
+        <div style="width:48%;">
+          NIK Driver (Driver's NIK): 
+          <div style="border-bottom:1px solid #000; min-height:16px; width:100%; font-weight:normal; margin-top:2px;">${escapeHtml(driverNik)}</div>
+        </div>
+      </div>
+
+      <!-- Timesheet Grid Table -->
+      <table style="width:100%; border-collapse:collapse; border:1px solid #000; font-size:0.6rem; table-layout:fixed;">
+        <thead>
+          <tr style="background-color:#ffffff; text-align:center; font-weight:bold;">
+            <th rowspan="2" style="border:1px solid #000; width:5%; padding:3px 1px;">Tanggal<br/><span style="font-weight:normal;font-size:0.52rem;">(Date)</span></th>
+            <th rowspan="2" style="border:1px solid #000; width:7%; padding:3px 1px;">Hari<br/><span style="font-weight:normal;font-size:0.52rem;">(Day)</span></th>
+            <th rowspan="2" style="border:1px solid #000; width:11%; padding:3px 1px;">Nomer Polisi<br/><span style="font-weight:normal;font-size:0.52rem;">(Vehicle Number)</span></th>
+            <th colspan="2" style="border:1px solid #000; padding:2px 1px;">Jam Kerja<br/><span style="font-weight:normal;font-size:0.52rem;">(Working Hour)</span></th>
+            <th colspan="2" style="border:1px solid #000; padding:2px 1px;">KM<br/><span style="font-weight:normal;font-size:0.52rem;">(Kilometer)</span></th>
+            <th colspan="2" style="border:1px solid #000; padding:2px 1px;">Pemakai<br/><span style="font-weight:normal;font-size:0.52rem;">(User)</span></th>
+            <th rowspan="2" style="border:1px solid #000; width:14%; padding:3px 1px;">Keterangan<br/><span style="font-weight:normal;font-size:0.52rem;">(Remark)</span></th>
+          </tr>
+          <tr style="background-color:#ffffff; text-align:center; font-weight:bold;">
+            <th style="border:1px solid #000; width:7.5%; padding:2px 1px;">Awal<br/><span style="font-weight:normal;font-size:0.52rem;">(Start)</span></th>
+            <th style="border:1px solid #000; width:7.5%; padding:2px 1px;">Akhir<br/><span style="font-weight:normal;font-size:0.52rem;">(Finish)</span></th>
+            <th style="border:1px solid #000; width:9%; padding:2px 1px;">Awal<br/><span style="font-weight:normal;font-size:0.52rem;">(Start)</span></th>
+            <th style="border:1px solid #000; width:9%; padding:2px 1px;">Akhir<br/><span style="font-weight:normal;font-size:0.52rem;">(Finish)</span></th>
+            <th style="border:1px solid #000; width:15%; padding:2px 1px;">Nama<br/><span style="font-weight:normal;font-size:0.52rem;">(Name)</span></th>
+            <th style="border:1px solid #000; width:15%; padding:2px 1px;">Tanda Tangan<br/><span style="font-weight:normal;font-size:0.52rem;">(Signature)</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          ${tableRowsHtml}
+        </tbody>
+      </table>
+
+      <!-- Bottom 3 Sign-off Boxes -->
+      <table style="width:100%; border-collapse:collapse; margin-top:8px; border:1px solid #000; font-size:0.68rem; text-align:center; table-layout:fixed;">
+        <tr>
+          <td style="border:1px solid #000; width:33.33%; padding:4px; height:45px; vertical-align:top;">
+            <strong style="display:block; margin-bottom:2px;">Dibuat Oleh</strong>
+          </td>
+          <td style="border:1px solid #000; width:33.33%; padding:4px; height:45px; vertical-align:top;">
+            <strong style="display:block; margin-bottom:2px;">Disetujui Oleh</strong>
+          </td>
+          <td style="border:1px solid #000; width:33.33%; padding:4px; height:45px; vertical-align:top;">
+            <strong style="display:block; margin-bottom:2px;">Diterima Oleh</strong>
+          </td>
+        </tr>
+        <tr>
+          <td style="border:1px solid #000; padding:2px 4px; text-align:left;">
+            Nama: ${escapeHtml(driverName)}
+          </td>
+          <td style="border:1px solid #000; padding:2px 4px; text-align:left;">
+            Nama:
+          </td>
+          <td style="border:1px solid #000; padding:2px 4px; text-align:left;">
+            Nama:
+          </td>
+        </tr>
+      </table>
+
+    </div>
+  `;
+}
+

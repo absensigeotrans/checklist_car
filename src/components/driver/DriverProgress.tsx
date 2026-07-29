@@ -7,6 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { getStoredNik, getStoredDriverName } from "@/lib/storage";
 import { escapeHtml, formatDateShort } from "@/lib/utils";
 import type { DriverLogEntry, InspectionRecord } from "@/types";
+import { prepareTimesheetPrintMarkup } from "@/lib/export";
 import Modal from "../ui/Modal";
 
 const INDO_DAYS = [
@@ -229,6 +230,24 @@ export default function DriverProgress() {
     setShowSignatureModal(false);
   };
 
+  const handlePrintTimesheetPDF = () => {
+    const markup = prepareTimesheetPrintMarkup(
+      driverLogs,
+      displayName,
+      activeNik,
+      filterMonth,
+      filterYear
+    );
+    const win = window.open("", "_blank");
+    if (win) {
+      win.document.write(`<html><head><title>Timesheet PDF - ${displayName}</title><style>@media print{@page{size:A4 portrait;margin:4mm;}}</style></head><body>${markup}</body></html>`);
+      win.document.close();
+      setTimeout(() => {
+        win.print();
+      }, 300);
+    }
+  };
+
   return (
     <div>
       {/* Header */}
@@ -387,6 +406,18 @@ export default function DriverProgress() {
       {/* Log Sheet / Timesheet Table (Full 1 to End Month Grid) */}
       {activeSubtab === "log" && (
         <div className="bg-white rounded-[16px] shadow-md p-6 border border-border">
+          <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
+            <h3 className="text-base font-bold text-text-main">
+              Rekapitulasi Timesheet Harian Driver
+            </h3>
+            <button
+              type="button"
+              className="bg-primary-blue text-white px-4 py-2 rounded-[10px] font-semibold text-xs cursor-pointer shadow-sm hover:bg-primary-blue-hover transition-all inline-flex items-center gap-1.5"
+              onClick={handlePrintTimesheetPDF}
+            >
+              <span>📄</span> Cetak / PDF Timesheet
+            </button>
+          </div>
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
