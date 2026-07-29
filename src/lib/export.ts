@@ -432,26 +432,26 @@ export function prepareTimesheetPrintMarkup(
       </table>
 
       <!-- Bottom 3 Sign-off Boxes -->
-      <table style="width:100%; border-collapse:collapse; margin-top:5px; border:1px solid #000; font-size:0.62rem; text-align:center; table-layout:fixed;">
+      <table style="width:100%; border-collapse:collapse; margin-top:6px; border:1px solid #000; font-size:0.65rem; text-align:center; table-layout:fixed;">
         <tr>
-          <td style="border:1px solid #000; width:33.33%; padding:2px; height:28px; vertical-align:top;">
-            <strong style="display:block; margin-bottom:1px;">Dibuat Oleh</strong>
+          <td style="border:1px solid #000; width:33.33%; padding:4px 6px; height:52px; vertical-align:top;">
+            <strong style="display:block; margin-bottom:2px;">Dibuat Oleh</strong>
           </td>
-          <td style="border:1px solid #000; width:33.33%; padding:2px; height:28px; vertical-align:top;">
-            <strong style="display:block; margin-bottom:1px;">Disetujui Oleh</strong>
+          <td style="border:1px solid #000; width:33.33%; padding:4px 6px; height:52px; vertical-align:top;">
+            <strong style="display:block; margin-bottom:2px;">Disetujui Oleh</strong>
           </td>
-          <td style="border:1px solid #000; width:33.33%; padding:2px; height:28px; vertical-align:top;">
-            <strong style="display:block; margin-bottom:1px;">Diterima Oleh</strong>
+          <td style="border:1px solid #000; width:33.33%; padding:4px 6px; height:52px; vertical-align:top;">
+            <strong style="display:block; margin-bottom:2px;">Diterima Oleh</strong>
           </td>
         </tr>
         <tr>
-          <td style="border:1px solid #000; padding:1px 3px; text-align:left;">
+          <td style="border:1px solid #000; padding:3px 6px; text-align:left;">
             Nama: ${escapeHtml(driverName)}
           </td>
-          <td style="border:1px solid #000; padding:1px 3px; text-align:left;">
+          <td style="border:1px solid #000; padding:3px 6px; text-align:left;">
             Nama:
           </td>
-          <td style="border:1px solid #000; padding:1px 3px; text-align:left;">
+          <td style="border:1px solid #000; padding:3px 6px; text-align:left;">
             Nama:
           </td>
         </tr>
