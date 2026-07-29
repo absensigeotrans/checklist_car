@@ -6,7 +6,7 @@ import { useDriverLogs } from "@/hooks/useDriverLogs";
 import { useAuth } from "@/context/AuthContext";
 import type { InspectionRecord, DriverLogEntry } from "@/types";
 import { exportAllToExcel, exportMonthlyLogExcel, preparePrintMarkup, prepareTimesheetPrintMarkup } from "@/lib/export";
-import { getRegisteredDrivers } from "@/lib/storage";
+import { getRegisteredDrivers, safeLocalStorageSet } from "@/lib/storage";
 import type { RegisteredDriver } from "@/lib/storage";
 import { formatDateID, formatDateShort, escapeHtml } from "@/lib/utils";
 import Modal from "../ui/Modal";
@@ -33,10 +33,10 @@ export default function AdminDashboard() {
   const { logs: driverLogs, deleteLog, clearAll: clearAllLogs } = useDriverLogs();
   const { logoutAdmin } = useAuth();
 
-  const [activeTab, setActiveTab] = useState<"checklist" | "timesheet">("checklist");
+  const [activeTab, setActiveTab] = useState<"checklist" | "timesheet" | "accounts">("checklist");
 
-  // Registered drivers list
-  const [registeredDrivers] = useState<RegisteredDriver[]>(() => getRegisteredDrivers());
+  // Registered drivers list (mutable for delete)
+  const [registeredDrivers, setRegisteredDrivers] = useState<RegisteredDriver[]>(() => getRegisteredDrivers());
 
   // Filters for Checklist
   const [filterDriver, setFilterDriver] = useState("");
@@ -53,6 +53,21 @@ export default function AdminDashboard() {
   const [tsFilterMonth, setTsFilterMonth] = useState<number | "all">("all");
   const [selectedLog, setSelectedLog] = useState<DriverLogEntry | null>(null);
   const [tsDetailOpen, setTsDetailOpen] = useState(false);
+
+  const handleDeleteDriver = (nik: string) => {
+    const updated = registeredDrivers.filter((d) => d.nik !== nik);
+    setRegisteredDrivers(updated);
+    safeLocalStorageSet("ptk_registered_drivers", updated);
+    // Clear filters if deleted driver was selected
+    if (tsFilterDriverDropdown === registeredDrivers.find((d) => d.nik === nik)?.name) {
+      setTsFilterDriverDropdown("");
+      setTsFilterDriver("");
+    }
+    if (filterDriverDropdown === registeredDrivers.find((d) => d.nik === nik)?.name) {
+      setFilterDriverDropdown("");
+      setFilterDriver("");
+    }
+  };
 
   const filteredInspections = useMemo(() => {
     return records.filter((rec) => {
@@ -179,41 +194,11 @@ export default function AdminDashboard() {
 
       <AdminMetrics records={records} driverLogs={driverLogs} />
 
-      {/* Registered Drivers Panel */}
-      {registeredDrivers.length > 0 && (
-        <div className="bg-white rounded-[16px] shadow-md p-6 mb-6 border border-border">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-bold text-text-main">
-              Akun Driver Terdaftar
-            </h2>
-            <span className="text-xs font-semibold text-text-muted bg-bg-sidebar px-3 py-1 rounded-full">
-              {registeredDrivers.length} driver
-            </span>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
-            {registeredDrivers.map((d) => (
-              <div
-                key={d.nik}
-                className="bg-bg-sidebar border border-border rounded-[10px] px-3 py-2.5 text-sm flex items-center gap-3"
-              >
-                <div className="w-8 h-8 rounded-full bg-primary-blue/10 text-primary-blue flex items-center justify-center font-bold text-xs shrink-0">
-                  {d.name.charAt(0).toUpperCase()}
-                </div>
-                <div className="min-w-0">
-                  <div className="font-bold text-text-main truncate">{d.name}</div>
-                  <div className="text-text-muted text-xs truncate">NIK: {d.nik}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Admin Subtabs */}
-      <div className="flex gap-2 border-b-2 border-border mb-6">
+      <div className="flex gap-2 border-b-2 border-border mb-6 overflow-x-auto no-scrollbar">
         <button
           type="button"
-          className={`bg-none border-none px-6 py-3 font-bold text-sm cursor-pointer border-b-3 border-transparent transition-all ${
+          className={`bg-none border-none px-6 py-3 font-bold text-sm cursor-pointer border-b-3 border-transparent transition-all whitespace-nowrap ${
             activeTab === "checklist"
               ? "text-primary-blue border-b-[3px] border-primary-blue"
               : "text-text-muted hover:text-text-main"
@@ -224,7 +209,7 @@ export default function AdminDashboard() {
         </button>
         <button
           type="button"
-          className={`bg-none border-none px-6 py-3 font-bold text-sm cursor-pointer border-b-3 border-transparent transition-all ${
+          className={`bg-none border-none px-6 py-3 font-bold text-sm cursor-pointer border-b-3 border-transparent transition-all whitespace-nowrap ${
             activeTab === "timesheet"
               ? "text-primary-blue border-b-[3px] border-primary-blue"
               : "text-text-muted hover:text-text-main"
@@ -232,6 +217,17 @@ export default function AdminDashboard() {
           onClick={() => setActiveTab("timesheet")}
         >
           📋 Rekap Timesheet Driver ({driverLogs.length})
+        </button>
+        <button
+          type="button"
+          className={`bg-none border-none px-6 py-3 font-bold text-sm cursor-pointer border-b-3 border-transparent transition-all whitespace-nowrap ${
+            activeTab === "accounts"
+              ? "text-primary-blue border-b-[3px] border-primary-blue"
+              : "text-text-muted hover:text-text-main"
+          }`}
+          onClick={() => setActiveTab("accounts")}
+        >
+          👤 Akun Driver ({registeredDrivers.length})
         </button>
       </div>
 
@@ -407,14 +403,34 @@ export default function AdminDashboard() {
             </div>
             <div className="flex gap-2 mt-4 flex-wrap">
               <button
-                className="bg-primary-blue text-white px-4 py-3 rounded-[12px] font-semibold cursor-pointer shadow-sm hover:bg-primary-blue-hover transition-all inline-flex items-center gap-2 text-sm"
-                onClick={() => handlePrintTimesheetPDF()}
+                className={`px-4 py-3 rounded-[12px] font-semibold cursor-pointer shadow-sm transition-all inline-flex items-center gap-2 text-sm ${
+                  tsFilterDriverDropdown
+                    ? "bg-primary-blue text-white hover:bg-primary-blue-hover"
+                    : "bg-border text-text-muted cursor-not-allowed opacity-60"
+                }`}
+                onClick={() => {
+                  if (!tsFilterDriverDropdown) {
+                    alert("⚠️ Pilih driver terlebih dahulu dari dropdown 'Pilih Driver' sebelum mencetak PDF.");
+                    return;
+                  }
+                  handlePrintTimesheetPDF();
+                }}
               >
                 <span>📄</span> Cetak / PDF Timesheet
               </button>
               <button
-                className="bg-primary-green text-white px-4 py-3 rounded-[12px] font-semibold cursor-pointer shadow-sm hover:bg-primary-green-hover transition-all inline-flex items-center gap-2 text-sm"
-                onClick={() => exportMonthlyLogExcel(filteredLogs)}
+                className={`px-4 py-3 rounded-[12px] font-semibold cursor-pointer shadow-sm transition-all inline-flex items-center gap-2 text-sm ${
+                  tsFilterDriverDropdown
+                    ? "bg-primary-green text-white hover:bg-primary-green-hover"
+                    : "bg-border text-text-muted cursor-not-allowed opacity-60"
+                }`}
+                onClick={() => {
+                  if (!tsFilterDriverDropdown) {
+                    alert("⚠️ Pilih driver terlebih dahulu dari dropdown 'Pilih Driver' sebelum mengekspor Excel.");
+                    return;
+                  }
+                  exportMonthlyLogExcel(filteredLogs);
+                }}
               >
                 <span>📊</span> Ekspor Timesheet Excel
               </button>
@@ -663,6 +679,72 @@ export default function AdminDashboard() {
           </div>
         </Modal>
       )}
+      {/* TAB 3: Akun Driver Terdaftar */}
+      {activeTab === "accounts" && (
+        <div className="bg-white rounded-[16px] shadow-md p-6 border border-border">
+          <div className="flex items-center justify-between mb-5">
+            <div>
+              <h2 className="text-lg font-bold text-text-main">👤 Daftar Akun Driver Terdaftar</h2>
+              <p className="text-xs text-text-muted mt-0.5">Akun driver yang telah mendaftar dan dapat login ke sistem. Hapus akun untuk mencabut akses login driver.</p>
+            </div>
+            <span className="text-xs font-semibold text-white bg-primary-blue px-3 py-1.5 rounded-full">
+              {registeredDrivers.length} Akun
+            </span>
+          </div>
+
+          {registeredDrivers.length === 0 ? (
+            <div className="text-center py-12 text-text-muted">
+              <div className="text-5xl mb-3">👤</div>
+              <div className="text-base font-semibold">Belum ada driver terdaftar.</div>
+              <div className="text-xs mt-1">Driver perlu mendaftar melalui portal login driver.</div>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr>
+                    <th className="bg-bg-sidebar text-text-muted font-bold uppercase text-xs px-4 py-3 border-b border-border text-left w-8">#</th>
+                    <th className="bg-bg-sidebar text-text-muted font-bold uppercase text-xs px-4 py-3 border-b border-border text-left">Nama Driver</th>
+                    <th className="bg-bg-sidebar text-text-muted font-bold uppercase text-xs px-4 py-3 border-b border-border text-left">NIK</th>
+                    <th className="bg-bg-sidebar text-text-muted font-bold uppercase text-xs px-4 py-3 border-b border-border text-center">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {registeredDrivers.map((driver, idx) => (
+                    <tr key={driver.nik} className="border-b border-border last:border-0 hover:bg-bg-sidebar/40 transition-colors">
+                      <td className="px-4 py-3 text-xs text-text-muted font-semibold">{idx + 1}</td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-full bg-primary-blue/10 text-primary-blue flex items-center justify-center font-bold text-sm shrink-0">
+                            {driver.name.charAt(0).toUpperCase()}
+                          </div>
+                          <span className="font-semibold text-sm text-text-main">{driver.name}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="text-sm font-mono text-text-muted bg-bg-sidebar px-2 py-0.5 rounded-[6px]">{driver.nik}</span>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <button
+                          type="button"
+                          className="text-xs font-semibold text-primary-red border border-primary-red/30 bg-primary-red/5 px-3 py-1.5 rounded-[8px] cursor-pointer hover:bg-primary-red hover:text-white transition-all"
+                          onClick={() => {
+                            if (confirm(`Hapus akun driver "${driver.name}" (NIK: ${driver.nik})? Aksi ini tidak dapat dibatalkan.`))
+                              handleDeleteDriver(driver.nik);
+                          }}
+                        >
+                          🗑️ Hapus Akun
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
     </div>
   );
 }
