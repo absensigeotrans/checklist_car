@@ -248,7 +248,7 @@ export default function DriverProgress() {
   <meta charset="UTF-8"/>
   <title>${fileName}</title>
   <style>
-    * { box-sizing: border-box; }
+    * { box-sizing: border-box; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
     body { margin: 0; padding: 0; background: white; }
     @media print {
       @page { size: A4 landscape; margin: 6mm; }

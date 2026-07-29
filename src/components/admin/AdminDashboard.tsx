@@ -150,7 +150,7 @@ export default function AdminDashboard() {
   <meta charset="UTF-8"/>
   <title>${fileName}</title>
   <style>
-    * { box-sizing: border-box; }
+    * { box-sizing: border-box; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
     body { margin: 0; padding: 0; background: white; }
     @media print {
       @page { size: A4 landscape; margin: 6mm; }
@@ -181,25 +181,45 @@ ${markup}
   const handleDownloadPDF = () => {
     if (!selectedRecord) return;
     const markup = preparePrintMarkup(selectedRecord);
+    const fileName = `Checklist_${selectedRecord.driver.name.replace(/\s+/g, "_")}_${selectedRecord.vehicle.licensePlate.replace(/\s+/g, "_")}`;
     const win = window.open("", "_blank");
     if (win) {
-      win.document.write(`<html><head><title>Checklist PDF</title><style>@media print{@page{size:A4 portrait;margin:5mm;}}</style></head><body>${markup}</body></html>`);
+      win.document.write(`
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8"/>
+  <title>${fileName}</title>
+  <style>
+    * { box-sizing: border-box; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    body { margin: 0; padding: 0; background: white; }
+    @media print {
+      @page { size: A4 portrait; margin: 5mm; }
+      body { margin: 0; }
+    }
+  </style>
+</head>
+<body>
+${markup}
+<script>
+  window.onload = function() {
+    window.focus();
+    setTimeout(function() {
+      window.print();
+      window.onafterprint = function() { window.close(); };
+      setTimeout(function() { window.close(); }, 2000);
+    }, 400);
+  };
+<\/script>
+</body>
+</html>`);
       win.document.close();
-      setTimeout(() => {
-        win.print();
-        win.close();
-      }, 500);
     }
   };
 
   const handleExportPDF = () => {
     if (!selectedRecord) return;
-    const markup = preparePrintMarkup(selectedRecord);
-    const win = window.open("", "_blank");
-    if (win) {
-      win.document.write(`<html><head><title>Checklist PDF</title></head><body>${markup}</body></html>`);
-      win.document.close();
-    }
+    handleDownloadPDF();
   };
 
   return (

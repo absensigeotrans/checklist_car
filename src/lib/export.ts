@@ -93,7 +93,7 @@ export function preparePrintMarkup(rec: InspectionRecord): string {
       .filter((d) => d.part === part)
       .map(
         (d) =>
-          `<div style="position:absolute;left:calc(${d.x}% - 4px);top:calc(${d.y}% - 4px);width:8px;height:8px;background-color:red;border:1px solid white;border-radius:50%;z-index:100;box-shadow:0 0 2px rgba(0,0,0,0.8);"></div>`
+          `<svg style="position:absolute;left:calc(${d.x}% - 6px);top:calc(${d.y}% - 6px);width:12px;height:12px;z-index:100;overflow:visible;" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" fill="#ff0000" stroke="#ffffff" stroke-width="2"/></svg>`
       )
       .join("");
 
