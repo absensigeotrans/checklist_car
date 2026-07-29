@@ -361,12 +361,10 @@ export function prepareTimesheetPrintMarkup(
       const endNum = Number(matchedLog.kmEnd);
 
       const hasStart =
-        matchedLog.kmStart !== "" &&
         matchedLog.kmStart !== null &&
         matchedLog.kmStart !== undefined &&
         !isNaN(startNum);
       const hasEnd =
-        matchedLog.kmEnd !== "" &&
         matchedLog.kmEnd !== null &&
         matchedLog.kmEnd !== undefined &&
         !isNaN(endNum);
