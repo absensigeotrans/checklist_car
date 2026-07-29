@@ -5,7 +5,12 @@ import { useInspections } from "@/hooks/useInspections";
 import { useDriverLogs } from "@/hooks/useDriverLogs";
 import { useAuth } from "@/context/AuthContext";
 import type { InspectionRecord, DriverLogEntry } from "@/types";
-import { exportAllToExcel, exportMonthlyLogExcel, preparePrintMarkup, prepareTimesheetPrintMarkup } from "@/lib/export";
+import {
+  exportAllToExcel,
+  exportMonthlyLogExcel,
+  preparePrintMarkup,
+  prepareTimesheetPrintMarkup,
+} from "@/lib/export";
 import { useRegisteredDrivers } from "@/hooks/useRegisteredDrivers";
 import { formatDateID, formatDateShort, escapeHtml } from "@/lib/utils";
 import Modal from "../ui/Modal";
@@ -114,19 +119,24 @@ export default function AdminDashboard() {
 
   const handlePrintTimesheetPDF = (logToPrint?: DriverLogEntry) => {
     const targetLog = logToPrint || selectedLog;
-    const name = targetLog ? targetLog.driverName : (tsFilterDriverDropdown || tsFilterDriver || "Driver");
-    const nik = targetLog ? targetLog.driverNik : (registeredDrivers.find((d) => d.name === tsFilterDriverDropdown)?.nik || "");
-    const m = tsFilterMonth === "all" ? (new Date().getMonth() + 1) : tsFilterMonth;
+    const name = targetLog
+      ? targetLog.driverName
+      : tsFilterDriverDropdown || tsFilterDriver || "Driver";
+    const nik = targetLog
+      ? targetLog.driverNik
+      : registeredDrivers.find((d) => d.name === tsFilterDriverDropdown)?.nik || "";
+    const m = tsFilterMonth === "all" ? new Date().getMonth() + 1 : tsFilterMonth;
     const y = new Date().getFullYear();
 
     const logsForDriver = driverLogs.filter((l) => {
       const isMatch = targetLog
         ? l.driverNik === targetLog.driverNik || l.driverName === targetLog.driverName
-        : (tsFilterDriverDropdown
-            ? l.driverName === tsFilterDriverDropdown
-            : tsFilterDriver
-              ? l.driverName.toLowerCase().includes(tsFilterDriver.toLowerCase()) || l.driverNik.toLowerCase().includes(tsFilterDriver.toLowerCase())
-              : true);
+        : tsFilterDriverDropdown
+        ? l.driverName === tsFilterDriverDropdown
+        : tsFilterDriver
+        ? l.driverName.toLowerCase().includes(tsFilterDriver.toLowerCase()) ||
+          l.driverNik.toLowerCase().includes(tsFilterDriver.toLowerCase())
+        : true;
       const dateObj = new Date(l.logDate);
       return isMatch && dateObj.getMonth() + 1 === m && dateObj.getFullYear() === y;
     });
@@ -166,7 +176,6 @@ ${markup}
     setTimeout(function() {
       window.print();
       window.onafterprint = function() { window.close(); };
-      // Fallback: close after 2s if onafterprint not fired
       setTimeout(function() { window.close(); }, 2000);
     }, 400);
   };
@@ -177,11 +186,13 @@ ${markup}
     }
   };
 
-
   const handleDownloadPDF = () => {
     if (!selectedRecord) return;
     const markup = preparePrintMarkup(selectedRecord);
-    const fileName = `Checklist_${selectedRecord.driver.name.replace(/\s+/g, "_")}_${selectedRecord.vehicle.licensePlate.replace(/\s+/g, "_")}`;
+    const fileName = `Checklist_${selectedRecord.driver.name.replace(
+      /\s+/g,
+      "_"
+    )}_${selectedRecord.vehicle.licensePlate.replace(/\s+/g, "_")}`;
     const win = window.open("", "_blank");
     if (win) {
       win.document.write(`
@@ -222,72 +233,150 @@ ${markup}
     handleDownloadPDF();
   };
 
+  const resetChecklistFilters = () => {
+    setFilterDriver("");
+    setFilterDriverDropdown("");
+    setFilterPlate("");
+    setFilterStatus("all");
+  };
+
+  const resetTimesheetFilters = () => {
+    setTsFilterDriver("");
+    setTsFilterDriverDropdown("");
+    setTsFilterPlate("");
+    setTsFilterMonth("all");
+  };
+
   return (
-    <div>
-      {/* Header & Metrics */}
-      <div className="flex justify-between items-center flex-wrap gap-4 mb-6">
-        <div>
-          <h1 className="text-2xl font-extrabold text-text-main">
-            ⚙️ Panel Control Admin
-          </h1>
-          <p className="text-sm text-text-muted mt-1">
-            Pantau seluruh checklist kendaraan dan log timesheet armada PTK.
-          </p>
+    <div className="space-y-6">
+      {/* 1. Header Admin */}
+      <div className="bg-white rounded-[20px] p-6 max-md:p-4 border border-border shadow-xs flex justify-between items-center flex-wrap gap-4">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-[16px] bg-primary-red/10 text-primary-red flex items-center justify-center text-2xl font-bold shrink-0 border border-primary-red/20 shadow-2xs">
+            ⚙️
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl max-md:text-lg font-black text-text-main">
+                Panel Control Admin PTK
+              </h1>
+              <span className="bg-emerald-50 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-200">
+                Cloud Synced
+              </span>
+            </div>
+            <p className="text-xs text-text-muted mt-0.5">
+              Pantau pemeriksaan fisik kendaraan, log timesheet harian driver, dan kelola akun armada.
+            </p>
+          </div>
         </div>
+
         <button
-          className="bg-primary-red text-white px-4 py-2.5 rounded-[12px] font-semibold cursor-pointer shadow-sm hover:bg-primary-red-hover transition-all inline-flex items-center gap-2 text-sm"
+          type="button"
+          className="bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white border border-rose-200 px-4 py-2.5 rounded-[12px] font-bold cursor-pointer transition-all inline-flex items-center gap-2 text-xs shadow-2xs"
           onClick={logoutAdmin}
         >
           <span>🔒</span> Keluar Admin
         </button>
       </div>
 
+      {/* 2. Admin Executive Metrics */}
       <AdminMetrics records={records} driverLogs={driverLogs} />
 
-      {/* Admin Subtabs */}
-      <div className="flex gap-2 border-b-2 border-border mb-6 overflow-x-auto no-scrollbar">
+      {/* 3. Subtabs Navigation (Segmented Control) */}
+      <div className="bg-bg-sidebar/60 p-1.5 rounded-[16px] border border-border flex gap-1.5 overflow-x-auto no-scrollbar">
         <button
           type="button"
-          className={`bg-none border-none px-6 py-3 font-bold text-sm cursor-pointer border-b-3 border-transparent transition-all whitespace-nowrap ${
+          className={`flex-1 min-w-[160px] py-2.5 px-4 rounded-[12px] font-bold text-xs cursor-pointer transition-all inline-flex items-center justify-center gap-2 ${
             activeTab === "checklist"
-              ? "text-primary-blue border-b-[3px] border-primary-blue"
-              : "text-text-muted hover:text-text-main"
+              ? "bg-white text-primary-blue shadow-sm border border-border"
+              : "text-text-muted hover:text-text-main hover:bg-white/50"
           }`}
           onClick={() => setActiveTab("checklist")}
         >
-          🔍 Checklist Kendaraan ({records.length})
+          <span>🔍</span> Checklist Kendaraan
+          <span
+            className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+              activeTab === "checklist"
+                ? "bg-blue-100 text-primary-blue"
+                : "bg-gray-200 text-gray-600"
+            }`}
+          >
+            {records.length}
+          </span>
         </button>
+
         <button
           type="button"
-          className={`bg-none border-none px-6 py-3 font-bold text-sm cursor-pointer border-b-3 border-transparent transition-all whitespace-nowrap ${
+          className={`flex-1 min-w-[160px] py-2.5 px-4 rounded-[12px] font-bold text-xs cursor-pointer transition-all inline-flex items-center justify-center gap-2 ${
             activeTab === "timesheet"
-              ? "text-primary-blue border-b-[3px] border-primary-blue"
-              : "text-text-muted hover:text-text-main"
+              ? "bg-white text-primary-blue shadow-sm border border-border"
+              : "text-text-muted hover:text-text-main hover:bg-white/50"
           }`}
           onClick={() => setActiveTab("timesheet")}
         >
-          📋 Rekap Timesheet Driver ({driverLogs.length})
+          <span>📋</span> Rekap Timesheet Driver
+          <span
+            className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+              activeTab === "timesheet"
+                ? "bg-emerald-100 text-emerald-700"
+                : "bg-gray-200 text-gray-600"
+            }`}
+          >
+            {driverLogs.length}
+          </span>
         </button>
+
         <button
           type="button"
-          className={`bg-none border-none px-6 py-3 font-bold text-sm cursor-pointer border-b-3 border-transparent transition-all whitespace-nowrap ${
+          className={`flex-1 min-w-[160px] py-2.5 px-4 rounded-[12px] font-bold text-xs cursor-pointer transition-all inline-flex items-center justify-center gap-2 ${
             activeTab === "accounts"
-              ? "text-primary-blue border-b-[3px] border-primary-blue"
-              : "text-text-muted hover:text-text-main"
+              ? "bg-white text-primary-blue shadow-sm border border-border"
+              : "text-text-muted hover:text-text-main hover:bg-white/50"
           }`}
           onClick={() => setActiveTab("accounts")}
         >
-          👤 Akun Driver ({registeredDrivers.length})
+          <span>👤</span> Akun Driver Terdaftar
+          <span
+            className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+              activeTab === "accounts"
+                ? "bg-purple-100 text-purple-700"
+                : "bg-gray-200 text-gray-600"
+            }`}
+          >
+            {registeredDrivers.length}
+          </span>
         </button>
       </div>
 
       {/* TAB 1: Checklist Kendaraan */}
       {activeTab === "checklist" && (
-        <>
-          <div className="bg-white rounded-[16px] shadow-md p-6 mb-8 border border-border">
-            <div className="flex gap-4 items-end flex-wrap">
-              <div className="flex-1 min-w-[180px] flex flex-col gap-2">
-                <label className="text-xs font-bold text-text-muted uppercase">Pilih Driver</label>
+        <div className="space-y-6">
+          {/* Filter Control Box */}
+          <div className="bg-white rounded-[16px] shadow-xs p-5 border border-border">
+            <div className="flex items-center justify-between gap-2 mb-4 pb-3 border-b border-border">
+              <div className="flex items-center gap-2">
+                <span className="text-base">🎯</span>
+                <h3 className="text-sm font-bold text-text-main">
+                  Filter & Filter Laporan Checklist
+                </h3>
+              </div>
+              {(filterDriver || filterPlate || filterStatus !== "all" || filterDriverDropdown) && (
+                <button
+                  type="button"
+                  onClick={resetChecklistFilters}
+                  className="text-xs text-primary-blue hover:underline font-semibold cursor-pointer"
+                >
+                  ↺ Reset Filter
+                </button>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              {/* Dropdown Driver */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[11px] font-bold text-text-muted uppercase tracking-wider">
+                  Pilih Driver
+                </label>
                 <select
                   value={filterDriverDropdown}
                   onChange={(e) => {
@@ -295,18 +384,22 @@ ${markup}
                     setFilterDriverDropdown(val);
                     setFilterDriver(val);
                   }}
-                  className="w-full border-2 border-border rounded-[12px] px-4 py-3 outline-none text-base focus:border-primary-blue focus:shadow-[0_0_0_4px_hsl(211,100%,92%)] bg-white"
+                  className="w-full border border-border rounded-[10px] px-3 py-2 outline-none text-xs focus:border-primary-blue focus:ring-2 focus:ring-blue-100 bg-white font-medium"
                 >
-                  <option value="">Semua Driver</option>
+                  <option value="">-- Semua Driver Terdaftar --</option>
                   {registeredDrivers.map((d) => (
                     <option key={d.nik} value={d.name}>
-                      {d.name}
+                      {d.name} ({d.nik})
                     </option>
                   ))}
                 </select>
               </div>
-              <div className="flex-1 min-w-[150px] flex flex-col gap-2">
-                <label className="text-xs font-bold text-text-muted uppercase">Cari Nama</label>
+
+              {/* Cari Nama Manual */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[11px] font-bold text-text-muted uppercase tracking-wider">
+                  Ketik Nama Driver
+                </label>
                 <input
                   type="text"
                   value={filterDriver}
@@ -314,48 +407,70 @@ ${markup}
                     setFilterDriver(e.target.value);
                     setFilterDriverDropdown("");
                   }}
-                  placeholder="Ketik nama driver..."
-                  className="w-full border-2 border-border rounded-[12px] px-4 py-3 outline-none text-base focus:border-primary-blue focus:shadow-[0_0_0_4px_hsl(211,100%,92%)]"
+                  placeholder="Ketik nama..."
+                  className="w-full border border-border rounded-[10px] px-3 py-2 outline-none text-xs focus:border-primary-blue focus:ring-2 focus:ring-blue-100 font-medium"
                 />
               </div>
-              <div className="flex-1 min-w-[150px] flex flex-col gap-2">
-                <label className="text-xs font-bold text-text-muted uppercase">Cari Nopol</label>
+
+              {/* Cari Nopol */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[11px] font-bold text-text-muted uppercase tracking-wider">
+                  No. Polisi
+                </label>
                 <input
                   type="text"
                   value={filterPlate}
                   onChange={(e) => setFilterPlate(e.target.value)}
-                  placeholder="Contoh: B 1234 PTK..."
-                  className="w-full border-2 border-border rounded-[12px] px-4 py-3 outline-none text-base focus:border-primary-blue focus:shadow-[0_0_0_4px_hsl(211,100%,92%)]"
+                  placeholder="Contoh: B 1234 PTK"
+                  className="w-full border border-border rounded-[10px] px-3 py-2 outline-none text-xs focus:border-primary-blue focus:ring-2 focus:ring-blue-100 font-medium"
                 />
               </div>
-              <div className="flex-1 min-w-[150px] flex flex-col gap-2">
-                <label className="text-xs font-bold text-text-muted uppercase">Status</label>
+
+              {/* Status */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[11px] font-bold text-text-muted uppercase tracking-wider">
+                  Status Temuan
+                </label>
                 <select
                   value={filterStatus}
                   onChange={(e) => setFilterStatus(e.target.value)}
-                  className="w-full border-2 border-border rounded-[12px] px-4 py-3 outline-none text-base focus:border-primary-blue focus:shadow-[0_0_0_4px_hsl(211,100%,92%)] bg-white"
+                  className="w-full border border-border rounded-[10px] px-3 py-2 outline-none text-xs focus:border-primary-blue focus:ring-2 focus:ring-blue-100 bg-white font-medium"
                 >
                   <option value="all">Semua Status</option>
-                  <option value="normal">Normal (Semua Ada)</option>
-                  <option value="attention">Butuh Perhatian</option>
+                  <option value="normal">✓ Normal (Lengkap & Mulus)</option>
+                  <option value="attention">⚠️ Butuh Perhatian (Rusak/Absen)</option>
                 </select>
               </div>
             </div>
-            <div className="flex gap-2 mt-4 flex-wrap">
+
+            {/* Export & Bulk Action Bar */}
+            <div className="flex items-center justify-between gap-3 mt-4 pt-3 border-t border-border flex-wrap">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  className="bg-emerald-600 text-white hover:bg-emerald-700 px-3.5 py-2 rounded-[10px] font-bold cursor-pointer shadow-2xs transition-all inline-flex items-center gap-1.5 text-xs"
+                  onClick={() => exportAllToExcel(filteredInspections)}
+                >
+                  <span>📊</span> Ekspor Rekap Excel
+                </button>
+                <span className="text-xs text-text-muted font-medium">
+                  Menampilkan <strong>{filteredInspections.length}</strong> dari {records.length} laporan
+                </span>
+              </div>
+
               <button
-                className="bg-primary-blue text-white px-4 py-3 rounded-[12px] font-semibold cursor-pointer shadow-sm hover:bg-primary-blue-hover transition-all inline-flex items-center gap-2 text-sm"
-                onClick={() => exportAllToExcel(filteredInspections)}
-              >
-                <span>📊</span> Ekspor Checklist Excel
-              </button>
-              <button
-                className="bg-bg-sidebar text-text-muted border border-border px-4 py-3 rounded-[12px] font-semibold cursor-pointer hover:bg-border hover:text-text-main transition-all inline-flex items-center gap-2 text-sm"
+                type="button"
+                className="text-xs text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 px-3 py-2 rounded-[10px] font-semibold cursor-pointer transition-all inline-flex items-center gap-1"
                 onClick={() => {
-                  if (confirm("⚠️ Peringatan: Anda akan menghapus SELURUH data pemeriksaan dari cloud dan lokal. Lanjutkan?"))
+                  if (
+                    confirm(
+                      "⚠️ Peringatan: Anda akan menghapus SELURUH data pemeriksaan dari cloud dan lokal. Lanjutkan?"
+                    )
+                  )
                     clearAllInspections();
                 }}
               >
-                <span>🗑️</span> Hapus Semua Data Checklist
+                <span>🗑️</span> Hapus Semua Checklist
               </button>
             </div>
           </div>
@@ -381,16 +496,37 @@ ${markup}
               }
             }}
           />
-        </>
+        </div>
       )}
 
       {/* TAB 2: Rekap Timesheet Driver */}
       {activeTab === "timesheet" && (
-        <>
-          <div className="bg-white rounded-[16px] shadow-md p-6 mb-8 border border-border">
-            <div className="flex gap-4 items-end flex-wrap">
-              <div className="flex-1 min-w-[180px] flex flex-col gap-2">
-                <label className="text-xs font-bold text-text-muted uppercase">Pilih Driver</label>
+        <div className="space-y-6">
+          <div className="bg-white rounded-[16px] shadow-xs p-5 border border-border">
+            <div className="flex items-center justify-between gap-2 mb-4 pb-3 border-b border-border">
+              <div className="flex items-center gap-2">
+                <span className="text-base">📅</span>
+                <h3 className="text-sm font-bold text-text-main">
+                  Filter & Cetak Official Timesheet PDF
+                </h3>
+              </div>
+              {(tsFilterDriver || tsFilterPlate || tsFilterMonth !== "all" || tsFilterDriverDropdown) && (
+                <button
+                  type="button"
+                  onClick={resetTimesheetFilters}
+                  className="text-xs text-primary-blue hover:underline font-semibold cursor-pointer"
+                >
+                  ↺ Reset Filter
+                </button>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              {/* Dropdown Driver (Required for PDF) */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[11px] font-bold text-primary-blue uppercase tracking-wider flex items-center gap-1">
+                  Pilih Driver Cetak PDF <span className="text-rose-500">*</span>
+                </label>
                 <select
                   value={tsFilterDriverDropdown}
                   onChange={(e) => {
@@ -398,18 +534,22 @@ ${markup}
                     setTsFilterDriverDropdown(val);
                     setTsFilterDriver(val);
                   }}
-                  className="w-full border-2 border-border rounded-[12px] px-4 py-3 outline-none text-base focus:border-primary-blue focus:shadow-[0_0_0_4px_hsl(211,100%,92%)] bg-white"
+                  className="w-full border-2 border-primary-blue/30 rounded-[10px] px-3 py-2 outline-none text-xs focus:border-primary-blue focus:ring-2 focus:ring-blue-100 bg-white font-bold text-text-main"
                 >
-                  <option value="">Semua Driver</option>
+                  <option value="">-- Pilih Driver Cetak --</option>
                   {registeredDrivers.map((d) => (
                     <option key={d.nik} value={d.name}>
-                      {d.name}
+                      {d.name} (NIK: {d.nik})
                     </option>
                   ))}
                 </select>
               </div>
-              <div className="flex-1 min-w-[150px] flex flex-col gap-2">
-                <label className="text-xs font-bold text-text-muted uppercase">Cari Nama / NIK</label>
+
+              {/* Cari Nama / NIK */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[11px] font-bold text-text-muted uppercase tracking-wider">
+                  Cari Nama / NIK
+                </label>
                 <input
                   type="text"
                   value={tsFilterDriver}
@@ -417,22 +557,30 @@ ${markup}
                     setTsFilterDriver(e.target.value);
                     setTsFilterDriverDropdown("");
                   }}
-                  placeholder="Nama atau NIK..."
-                  className="w-full border-2 border-border rounded-[12px] px-4 py-3 outline-none text-base focus:border-primary-blue focus:shadow-[0_0_0_4px_hsl(211,100%,92%)]"
+                  placeholder="Ketik Nama atau NIK..."
+                  className="w-full border border-border rounded-[10px] px-3 py-2 outline-none text-xs focus:border-primary-blue focus:ring-2 focus:ring-blue-100 font-medium"
                 />
               </div>
-              <div className="flex-1 min-w-[150px] flex flex-col gap-2">
-                <label className="text-xs font-bold text-text-muted uppercase">Cari Nopol</label>
+
+              {/* Cari Nopol */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[11px] font-bold text-text-muted uppercase tracking-wider">
+                  No. Polisi
+                </label>
                 <input
                   type="text"
                   value={tsFilterPlate}
                   onChange={(e) => setTsFilterPlate(e.target.value)}
-                  placeholder="No Polisi..."
-                  className="w-full border-2 border-border rounded-[12px] px-4 py-3 outline-none text-base focus:border-primary-blue focus:shadow-[0_0_0_4px_hsl(211,100%,92%)]"
+                  placeholder="Contoh: B 1234 PTK"
+                  className="w-full border border-border rounded-[10px] px-3 py-2 outline-none text-xs focus:border-primary-blue focus:ring-2 focus:ring-blue-100 font-medium"
                 />
               </div>
-              <div className="flex-1 min-w-[150px] flex flex-col gap-2">
-                <label className="text-xs font-bold text-text-muted uppercase">Filter Bulan</label>
+
+              {/* Filter Bulan */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[11px] font-bold text-text-muted uppercase tracking-wider">
+                  Periode Bulan
+                </label>
                 <select
                   value={tsFilterMonth}
                   onChange={(e) =>
@@ -440,7 +588,7 @@ ${markup}
                       e.target.value === "all" ? "all" : Number(e.target.value)
                     )
                   }
-                  className="w-full border-2 border-border rounded-[12px] px-4 py-3 outline-none text-base focus:border-primary-blue focus:shadow-[0_0_0_4px_hsl(211,100%,92%)] bg-white"
+                  className="w-full border border-border rounded-[10px] px-3 py-2 outline-none text-xs focus:border-primary-blue focus:ring-2 focus:ring-blue-100 bg-white font-medium"
                 >
                   <option value="all">Semua Bulan</option>
                   {MONTH_NAMES.map((m, i) => (
@@ -451,41 +599,54 @@ ${markup}
                 </select>
               </div>
             </div>
-            <div className="flex gap-2 mt-4 flex-wrap">
+
+            {/* PDF & Excel Action Bar */}
+            <div className="flex items-center justify-between gap-3 mt-4 pt-3 border-t border-border flex-wrap">
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  type="button"
+                  className={`px-4 py-2 rounded-[10px] font-extrabold cursor-pointer shadow-2xs transition-all inline-flex items-center gap-1.5 text-xs ${
+                    tsFilterDriverDropdown
+                      ? "bg-primary-blue text-white hover:bg-blue-700"
+                      : "bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed"
+                  }`}
+                  onClick={() => {
+                    if (!tsFilterDriverDropdown) {
+                      alert(
+                        "⚠️ Harap pilih driver dari dropdown 'Pilih Driver Cetak PDF' sebelum melakukan ekspor."
+                      );
+                      return;
+                    }
+                    handlePrintTimesheetPDF();
+                  }}
+                >
+                  <span>📄</span> Cetak / PDF Official Timesheet
+                </button>
+
+                <button
+                  type="button"
+                  className={`px-3.5 py-2 rounded-[10px] font-bold cursor-pointer shadow-2xs transition-all inline-flex items-center gap-1.5 text-xs ${
+                    tsFilterDriverDropdown
+                      ? "bg-emerald-600 text-white hover:bg-emerald-700"
+                      : "bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed"
+                  }`}
+                  onClick={() => {
+                    if (!tsFilterDriverDropdown) {
+                      alert(
+                        "⚠️ Harap pilih driver dari dropdown 'Pilih Driver Cetak PDF' sebelum melakukan ekspor Excel."
+                      );
+                      return;
+                    }
+                    exportMonthlyLogExcel(filteredLogs);
+                  }}
+                >
+                  <span>📊</span> Ekspor Excel Timesheet
+                </button>
+              </div>
+
               <button
-                className={`px-4 py-3 rounded-[12px] font-semibold cursor-pointer shadow-sm transition-all inline-flex items-center gap-2 text-sm ${
-                  tsFilterDriverDropdown
-                    ? "bg-primary-blue text-white hover:bg-primary-blue-hover"
-                    : "bg-border text-text-muted cursor-not-allowed opacity-60"
-                }`}
-                onClick={() => {
-                  if (!tsFilterDriverDropdown) {
-                    alert("⚠️ Pilih driver terlebih dahulu dari dropdown 'Pilih Driver' sebelum mencetak PDF.");
-                    return;
-                  }
-                  handlePrintTimesheetPDF();
-                }}
-              >
-                <span>📄</span> Cetak / PDF Timesheet
-              </button>
-              <button
-                className={`px-4 py-3 rounded-[12px] font-semibold cursor-pointer shadow-sm transition-all inline-flex items-center gap-2 text-sm ${
-                  tsFilterDriverDropdown
-                    ? "bg-primary-green text-white hover:bg-primary-green-hover"
-                    : "bg-border text-text-muted cursor-not-allowed opacity-60"
-                }`}
-                onClick={() => {
-                  if (!tsFilterDriverDropdown) {
-                    alert("⚠️ Pilih driver terlebih dahulu dari dropdown 'Pilih Driver' sebelum mengekspor Excel.");
-                    return;
-                  }
-                  exportMonthlyLogExcel(filteredLogs);
-                }}
-              >
-                <span>📊</span> Ekspor Timesheet Excel
-              </button>
-              <button
-                className="bg-bg-sidebar text-text-muted border border-border px-4 py-3 rounded-[12px] font-semibold cursor-pointer hover:bg-border hover:text-text-main transition-all inline-flex items-center gap-2 text-sm"
+                type="button"
+                className="text-xs text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 px-3 py-2 rounded-[10px] font-semibold cursor-pointer transition-all inline-flex items-center gap-1"
                 onClick={() => {
                   if (
                     confirm(
@@ -495,291 +656,228 @@ ${markup}
                     clearAllLogs();
                 }}
               >
-                <span>🗑️</span> Hapus Semua Data Timesheet
+                <span>🗑️</span> Hapus Semua Timesheet
               </button>
             </div>
           </div>
 
-          <div className="bg-white rounded-[16px] shadow-md p-6 border border-border">
+          {/* Timesheet Data Table */}
+          <div className="bg-white rounded-[16px] shadow-sm border border-border overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
+              <table className="w-full border-collapse text-left">
                 <thead>
-                  <tr>
-                    <th className="bg-bg-sidebar text-text-muted font-bold uppercase text-xs px-3 py-3 border-b border-border">Tanggal</th>
-                    <th className="bg-bg-sidebar text-text-muted font-bold uppercase text-xs px-3 py-3 border-b border-border">Nama Driver</th>
-                    <th className="bg-bg-sidebar text-text-muted font-bold uppercase text-xs px-3 py-3 border-b border-border">NIK</th>
-                    <th className="bg-bg-sidebar text-text-muted font-bold uppercase text-xs px-3 py-3 border-b border-border">Nopol</th>
-                    <th className="bg-bg-sidebar text-text-muted font-bold uppercase text-xs px-3 py-3 border-b border-border">Jam Kerja</th>
-                    <th className="bg-bg-sidebar text-text-muted font-bold uppercase text-xs px-3 py-3 border-b border-border">KM (Awal - Akhir)</th>
-                    <th className="bg-bg-sidebar text-text-muted font-bold uppercase text-xs px-3 py-3 border-b border-border">Jarak</th>
-                    <th className="bg-bg-sidebar text-text-muted font-bold uppercase text-xs px-3 py-3 border-b border-border">Pemakai</th>
-                    <th className="bg-bg-sidebar text-text-muted font-bold uppercase text-xs px-3 py-3 border-b border-border text-center">TTD</th>
-                    <th className="bg-bg-sidebar text-text-muted font-bold uppercase text-xs px-3 py-3 border-b border-border text-center">Aksi</th>
+                  <tr className="bg-bg-sidebar/80 border-b border-border">
+                    <th className="text-text-muted font-bold uppercase text-[11px] tracking-wider px-4 py-3.5">
+                      Tanggal
+                    </th>
+                    <th className="text-text-muted font-bold uppercase text-[11px] tracking-wider px-4 py-3.5">
+                      Nama Driver & NIK
+                    </th>
+                    <th className="text-text-muted font-bold uppercase text-[11px] tracking-wider px-4 py-3.5">
+                      Nopol
+                    </th>
+                    <th className="text-text-muted font-bold uppercase text-[11px] tracking-wider px-4 py-3.5">
+                      Jam Kerja
+                    </th>
+                    <th className="text-text-muted font-bold uppercase text-[11px] tracking-wider px-4 py-3.5">
+                      KM (Awal → Akhir)
+                    </th>
+                    <th className="text-text-muted font-bold uppercase text-[11px] tracking-wider px-4 py-3.5">
+                      Jarak
+                    </th>
+                    <th className="text-text-muted font-bold uppercase text-[11px] tracking-wider px-4 py-3.5">
+                      Pemakai (User)
+                    </th>
+                    <th className="text-text-muted font-bold uppercase text-[11px] tracking-wider px-4 py-3.5 text-center">
+                      TTD User
+                    </th>
+                    <th className="text-text-muted font-bold uppercase text-[11px] tracking-wider px-4 py-3.5 text-center">
+                      Aksi
+                    </th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-border">
                   {filteredLogs.length === 0 ? (
                     <tr>
-                      <td colSpan={10} className="text-center text-text-muted px-3 py-8">
-                        Belum ada data log timesheet driver.
+                      <td colSpan={9} className="text-center text-text-muted px-4 py-12">
+                        <div className="text-4xl mb-2">📋</div>
+                        <div className="font-semibold text-sm">Belum ada data log timesheet driver.</div>
+                        <div className="text-xs text-text-muted mt-1">
+                          Driver mengisi timesheet melalui menu Rekap Timesheet Harian.
+                        </div>
                       </td>
                     </tr>
                   ) : (
-                    filteredLogs.map((l) => (
-                      <tr key={l.logId} className="hover:bg-bg-main">
-                        <td className="px-3 py-3 border-b border-border text-xs font-semibold">
-                          {formatDateShort(l.logDate)} ({l.logDay})
-                        </td>
-                        <td className="px-3 py-3 border-b border-border text-xs font-bold text-text-main">
-                          {escapeHtml(l.driverName)}
-                        </td>
-                        <td className="px-3 py-3 border-b border-border text-xs text-text-muted">
-                          {l.driverNik || "-"}
-                        </td>
-                        <td className="px-3 py-3 border-b border-border text-xs font-semibold">
-                          {l.licensePlate || "-"}
-                        </td>
-                        <td className="px-3 py-3 border-b border-border text-xs">
-                          {l.workStart} - {l.workEnd}
-                        </td>
-                        <td className="px-3 py-3 border-b border-border text-xs">
-                          {l.kmStart.toLocaleString()} - {l.kmEnd.toLocaleString()}
-                        </td>
-                        <td className="px-3 py-3 border-b border-border text-xs font-bold text-primary-blue">
-                          {(l.kmEnd - l.kmStart).toLocaleString()} KM
-                        </td>
-                        <td className="px-3 py-3 border-b border-border text-xs">
-                          {escapeHtml(l.userName)}
-                        </td>
-                        <td className="px-3 py-3 border-b border-border text-xs text-center">
-                          {l.userSignature ? (
-                            <img
-                              src={l.userSignature}
-                              alt="TTD"
-                              className="max-h-[32px] max-w-[70px] object-contain mx-auto border border-border bg-white p-0.5 rounded"
-                            />
-                          ) : (
-                            <span className="text-text-muted">-</span>
-                          )}
-                        </td>
-                        <td className="px-3 py-3 border-b border-border text-xs text-center">
-                          <div className="flex justify-center gap-1">
-                            <button
-                              type="button"
-                              onClick={() => handleViewTsDetail(l)}
-                              className="bg-blue-100 text-primary-blue hover:bg-primary-blue hover:text-white px-2 py-1 rounded font-semibold text-xs transition-all"
-                            >
-                              Detail
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                if (confirm("Hapus log timesheet ini?")) deleteLog(l.logId);
-                              }}
-                              className="bg-red-100 text-primary-red hover:bg-primary-red hover:text-white px-2 py-1 rounded font-semibold text-xs transition-all"
-                            >
-                              Hapus
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
+                    filteredLogs.map((l) => {
+                      const initial = (l.driverName || "D").charAt(0).toUpperCase();
+                      const dist = Math.max(0, l.kmEnd - l.kmStart);
+                      return (
+                        <tr key={l.logId} className="hover:bg-bg-sidebar/40 transition-colors">
+                          <td className="px-4 py-3.5 text-xs text-text-main font-semibold whitespace-nowrap">
+                            {formatDateShort(l.logDate)}
+                            <span className="block text-[10px] text-text-muted font-normal">
+                              ({l.logDay})
+                            </span>
+                          </td>
+
+                          <td className="px-4 py-3.5">
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-extrabold text-xs shrink-0 border border-emerald-200">
+                                {initial}
+                              </div>
+                              <div>
+                                <div className="font-bold text-xs text-text-main">
+                                  {escapeHtml(l.driverName)}
+                                </div>
+                                <div className="text-[10px] text-text-muted font-mono">
+                                  NIK: {l.driverNik || "-"}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+
+                          <td className="px-4 py-3.5">
+                            <span className="bg-slate-100 text-slate-800 font-mono font-bold text-xs px-2 py-0.5 rounded-[6px] border border-slate-200">
+                              {l.licensePlate || "-"}
+                            </span>
+                          </td>
+
+                          <td className="px-4 py-3.5 text-xs font-medium text-text-main whitespace-nowrap">
+                            {l.workStart} - {l.workEnd}
+                          </td>
+
+                          <td className="px-4 py-3.5 text-xs text-text-main whitespace-nowrap">
+                            {l.kmStart.toLocaleString()} → {l.kmEnd.toLocaleString()}
+                          </td>
+
+                          <td className="px-4 py-3.5 text-xs font-extrabold text-primary-blue whitespace-nowrap">
+                            +{dist.toLocaleString()} KM
+                          </td>
+
+                          <td className="px-4 py-3.5 text-xs font-semibold text-text-main">
+                            {escapeHtml(l.userName)}
+                          </td>
+
+                          <td className="px-4 py-3.5 text-center">
+                            {l.userSignature ? (
+                              <img
+                                src={l.userSignature}
+                                alt="TTD"
+                                className="max-h-[30px] max-w-[65px] object-contain mx-auto border border-border bg-white p-0.5 rounded-[6px] shadow-2xs"
+                              />
+                            ) : (
+                              <span className="text-text-muted text-xs font-medium">-</span>
+                            )}
+                          </td>
+
+                          <td className="px-4 py-3.5 text-center whitespace-nowrap">
+                            <div className="flex items-center justify-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => handleViewTsDetail(l)}
+                                className="bg-bg-sidebar text-text-muted hover:bg-border hover:text-text-main border border-border px-2.5 py-1.5 rounded-[8px] font-semibold text-xs transition-all cursor-pointer"
+                              >
+                                Detail
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (confirm("Hapus log timesheet ini?")) deleteLog(l.logId);
+                                }}
+                                className="bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white border border-rose-200 px-2 py-1.5 rounded-[8px] font-semibold text-xs transition-all cursor-pointer"
+                              >
+                                🗑️
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
                   )}
                 </tbody>
               </table>
             </div>
           </div>
-        </>
-      )}
-
-      {/* Checklist Detail Modal */}
-      <Modal isOpen={detailOpen} onClose={() => setDetailOpen(false)} title={selectedRecord ? `Detail Checklist - ${selectedRecord.driver?.name || ""} (${selectedRecord.vehicle?.licensePlate || "No Plat"})` : ""}>
-        {selectedRecord && (
-          <div className="flex flex-col gap-6">
-            <div className="grid grid-cols-2 gap-4 bg-bg-sidebar p-4 rounded-[12px]">
-              <div className="text-sm">
-                <strong>Nama Driver:</strong> {escapeHtml(selectedRecord.driver?.name || "")}<br />
-                <strong>Kendaraan:</strong> {escapeHtml(selectedRecord.vehicle?.type) || "-"}<br />
-                <strong>Pelat Nomor:</strong> {escapeHtml(selectedRecord.vehicle?.licensePlate) || "-"}<br />
-                <strong>KM Awal:</strong> {(selectedRecord.vehicle?.mileageStart || 0).toLocaleString()} KM<br />
-                <strong>KM Akhir:</strong> {(selectedRecord.vehicle?.mileageEnd || 0).toLocaleString()} KM (Jarak: {((selectedRecord.vehicle?.mileageEnd || 0) - (selectedRecord.vehicle?.mileageStart || 0)).toLocaleString()} KM)
-              </div>
-              <div className="text-sm">
-                <strong>Tanggal:</strong> {formatDateID(selectedRecord.inspectionDate)}<br />
-                <strong>Status BBM:</strong> {selectedRecord.condition?.fuelLevel || 0}%<br />
-                <strong>Catatan Tambahan:</strong><br />
-                1. {escapeHtml(selectedRecord.condition?.notes?.[0]) || "-"}<br />
-                2. {escapeHtml(selectedRecord.condition?.notes?.[1]) || "-"}<br />
-                3. {escapeHtml(selectedRecord.condition?.notes?.[2]) || "-"}
-              </div>
-            </div>
-
-            <div>
-              <h3 className="text-lg font-bold mb-2 border-b border-border pb-1">Kerusakan Body</h3>
-              {(!selectedRecord.condition?.damages || selectedRecord.condition.damages.length === 0) ? (
-                <span className="text-primary-green font-medium">✓ Tidak ada laporan kerusakan fisik (Normal).</span>
-              ) : (
-                <ul className="pl-5 text-primary-red font-medium text-sm">
-                  {selectedRecord.condition.damages.map((d, i) => (
-                    <li key={i}>[Body {d.part.replace("body_", "").replace("_", " ").toUpperCase()}] {escapeHtml(d.description)} (Koordinat: x={d.x}%, y={d.y}%)</li>
-                  ))}
-                </ul>
-              )}
-            </div>
-
-            <div>
-              <h3 className="text-lg font-bold mb-2 border-b border-border pb-1">Perlengkapan yang TIDAK ADA</h3>
-              {(() => {
-                const missing = Object.entries(selectedRecord.checklist || {}).filter(([, item]) => item && item.status === "TDK ADA");
-                return missing.length === 0 ? (
-                  <span className="text-primary-green font-medium">✓ Semua perlengkapan lengkap (ADA).</span>
-                ) : (
-                  <ul className="pl-5 text-primary-red font-medium text-sm">
-                    {missing.map(([num, item]) => (
-                      <li key={num}>{num}. {item.item} ({item.note || "tanpa catatan"})</li>
-                    ))}
-                  </ul>
-                );
-              })()}
-            </div>
-
-            <div>
-              <h3 className="text-lg font-bold mb-2 border-b border-border pb-1">Tanda Tangan Driver</h3>
-              {selectedRecord.signature && (
-                <img src={selectedRecord.signature} alt="TTD" className="max-h-[100px] border border-border bg-white p-1 rounded-[8px]" />
-              )}
-            </div>
-          </div>
-        )}
-        <div className="flex justify-end gap-3 mt-8 pt-4 border-t border-border">
-          <button className="bg-primary-green text-white px-4 py-3 rounded-[12px] font-semibold cursor-pointer shadow-sm hover:bg-primary-green-hover transition-all inline-flex items-center gap-2" onClick={handleDownloadPDF}>
-            <span>📥</span> Unduh PDF
-          </button>
-          <button className="bg-primary-blue text-white px-4 py-3 rounded-[12px] font-semibold cursor-pointer shadow-sm hover:bg-primary-blue-hover transition-all inline-flex items-center gap-2" onClick={handleExportPDF}>
-            <span>📄</span> Cetak PDF
-          </button>
-          <button className="bg-bg-sidebar text-text-muted border border-border px-4 py-3 rounded-[12px] font-semibold cursor-pointer hover:bg-border hover:text-text-main transition-all" onClick={() => setDetailOpen(false)}>
-            Tutup
-          </button>
         </div>
-      </Modal>
-
-      {/* Timesheet Detail Modal */}
-      {tsDetailOpen && selectedLog && (
-        <Modal
-          isOpen={tsDetailOpen}
-          onClose={() => setTsDetailOpen(false)}
-          title={`Detail Log Timesheet - ${selectedLog.driverName}`}
-          maxWidth="500px"
-        >
-          <div className="flex flex-col gap-4 text-left">
-            <div className="bg-bg-sidebar p-4 rounded-[12px] grid grid-cols-2 gap-3 text-xs">
-              <div>
-                <strong>Tanggal:</strong> {formatDateShort(selectedLog.logDate)} ({selectedLog.logDay})<br />
-                <strong>Nama Driver:</strong> {escapeHtml(selectedLog.driverName)}<br />
-                <strong>NIK:</strong> {selectedLog.driverNik || "-"}<br />
-                <strong>No Polisi:</strong> {selectedLog.licensePlate || "-"}
-              </div>
-              <div>
-                <strong>Jam Kerja:</strong> {selectedLog.workStart} - {selectedLog.workEnd}<br />
-                <strong>KM Awal:</strong> {selectedLog.kmStart.toLocaleString()}<br />
-                <strong>KM Akhir:</strong> {selectedLog.kmEnd.toLocaleString()}<br />
-                <strong>Jarak Tempuh:</strong> <span className="text-primary-blue font-bold">{(selectedLog.kmEnd - selectedLog.kmStart).toLocaleString()} KM</span>
-              </div>
-            </div>
-
-            <div className="text-xs">
-              <strong>Pemakai / User:</strong> {escapeHtml(selectedLog.userName)}<br />
-              <strong>Keterangan:</strong> {escapeHtml(selectedLog.remark) || "-"}
-            </div>
-
-            <div>
-              <h4 className="text-xs font-bold text-text-muted uppercase mb-2">
-                Tanda Tangan Digital Driver
-              </h4>
-              {selectedLog.userSignature ? (
-                <div className="border border-border p-2 rounded-[10px] bg-white text-center">
-                  <img
-                    src={selectedLog.userSignature}
-                    alt="TTD"
-                    className="max-h-[120px] object-contain mx-auto"
-                  />
-                </div>
-              ) : (
-                <span className="text-text-muted text-xs font-medium">Belum ada tanda tangan.</span>
-              )}
-            </div>
-
-            <div className="flex justify-end gap-2 pt-3 border-t border-border">
-              <button
-                type="button"
-                className="bg-primary-blue text-white px-4 py-2 rounded-[10px] font-semibold text-xs cursor-pointer shadow-sm hover:bg-primary-blue-hover transition-all inline-flex items-center gap-1.5"
-                onClick={() => handlePrintTimesheetPDF(selectedLog)}
-              >
-                <span>📄</span> Cetak PDF Timesheet
-              </button>
-              <button
-                type="button"
-                className="bg-bg-sidebar text-text-muted border border-border px-4 py-2 rounded-[10px] font-semibold text-xs cursor-pointer hover:bg-border hover:text-text-main transition-all"
-                onClick={() => setTsDetailOpen(false)}
-              >
-                Tutup
-              </button>
-            </div>
-          </div>
-        </Modal>
       )}
+
       {/* TAB 3: Akun Driver Terdaftar */}
       {activeTab === "accounts" && (
-        <div className="bg-white rounded-[16px] shadow-md p-6 border border-border">
-          <div className="flex items-center justify-between mb-5">
+        <div className="bg-white rounded-[16px] shadow-xs p-6 border border-border space-y-4">
+          <div className="flex items-center justify-between flex-wrap gap-3 pb-3 border-b border-border">
             <div>
-              <h2 className="text-lg font-bold text-text-main">👤 Daftar Akun Driver Terdaftar</h2>
-              <p className="text-xs text-text-muted mt-0.5">Akun driver yang telah mendaftar dan dapat login ke sistem. Hapus akun untuk mencabut akses login driver.</p>
+              <h2 className="text-base font-bold text-text-main flex items-center gap-2">
+                <span>👤</span> Daftar Akun Driver Terdaftar (Cloud Synced)
+              </h2>
+              <p className="text-xs text-text-muted mt-0.5">
+                Kelola akun driver yang memiliki hak akses login. Hapus akun untuk mencabut akses login.
+              </p>
             </div>
-            <span className="text-xs font-semibold text-white bg-primary-blue px-3 py-1.5 rounded-full">
-              {registeredDrivers.length} Akun
+            <span className="text-xs font-bold text-primary-blue bg-blue-50 border border-blue-200 px-3 py-1 rounded-full">
+              Total {registeredDrivers.length} Driver
             </span>
           </div>
 
           {registeredDrivers.length === 0 ? (
             <div className="text-center py-12 text-text-muted">
-              <div className="text-5xl mb-3">👤</div>
-              <div className="text-base font-semibold">Belum ada driver terdaftar.</div>
-              <div className="text-xs mt-1">Driver perlu mendaftar melalui portal login driver.</div>
+              <div className="text-4xl mb-2">👤</div>
+              <div className="text-sm font-semibold">Belum ada akun driver terdaftar.</div>
+              <div className="text-xs mt-1">Driver dapat mendaftar dari halaman portal login driver.</div>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
+            <div className="overflow-x-auto rounded-[12px] border border-border">
+              <table className="w-full border-collapse text-left">
                 <thead>
-                  <tr>
-                    <th className="bg-bg-sidebar text-text-muted font-bold uppercase text-xs px-4 py-3 border-b border-border text-left w-8">#</th>
-                    <th className="bg-bg-sidebar text-text-muted font-bold uppercase text-xs px-4 py-3 border-b border-border text-left">Nama Driver</th>
-                    <th className="bg-bg-sidebar text-text-muted font-bold uppercase text-xs px-4 py-3 border-b border-border text-left">NIK</th>
-                    <th className="bg-bg-sidebar text-text-muted font-bold uppercase text-xs px-4 py-3 border-b border-border text-center">Aksi</th>
+                  <tr className="bg-bg-sidebar/80 border-b border-border">
+                    <th className="text-text-muted font-bold uppercase text-[11px] tracking-wider px-4 py-3 w-10 text-center">
+                      #
+                    </th>
+                    <th className="text-text-muted font-bold uppercase text-[11px] tracking-wider px-4 py-3">
+                      Nama Lengkap Driver
+                    </th>
+                    <th className="text-text-muted font-bold uppercase text-[11px] tracking-wider px-4 py-3">
+                      NIK Driver
+                    </th>
+                    <th className="text-text-muted font-bold uppercase text-[11px] tracking-wider px-4 py-3 text-center">
+                      Aksi Pengelolaan
+                    </th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-border">
                   {registeredDrivers.map((driver, idx) => (
-                    <tr key={driver.nik} className="border-b border-border last:border-0 hover:bg-bg-sidebar/40 transition-colors">
-                      <td className="px-4 py-3 text-xs text-text-muted font-semibold">{idx + 1}</td>
+                    <tr key={driver.nik} className="hover:bg-bg-sidebar/40 transition-colors">
+                      <td className="px-4 py-3 text-xs text-text-muted font-bold text-center">
+                        {idx + 1}
+                      </td>
+
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-primary-blue/10 text-primary-blue flex items-center justify-center font-bold text-sm shrink-0">
+                          <div className="w-9 h-9 rounded-full bg-purple-100 text-purple-700 font-extrabold flex items-center justify-center text-xs shrink-0 border border-purple-200">
                             {driver.name.charAt(0).toUpperCase()}
                           </div>
-                          <span className="font-semibold text-sm text-text-main">{driver.name}</span>
+                          <span className="font-bold text-xs text-text-main">
+                            {driver.name}
+                          </span>
                         </div>
                       </td>
+
                       <td className="px-4 py-3">
-                        <span className="text-sm font-mono text-text-muted bg-bg-sidebar px-2 py-0.5 rounded-[6px]">{driver.nik}</span>
+                        <span className="font-mono text-xs font-bold text-slate-700 bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-[6px]">
+                          {driver.nik}
+                        </span>
                       </td>
+
                       <td className="px-4 py-3 text-center">
                         <button
                           type="button"
-                          className="text-xs font-semibold text-primary-red border border-primary-red/30 bg-primary-red/5 px-3 py-1.5 rounded-[8px] cursor-pointer hover:bg-primary-red hover:text-white transition-all"
+                          className="text-xs font-semibold text-rose-600 hover:text-white bg-rose-50 hover:bg-rose-600 border border-rose-200 px-3 py-1.5 rounded-[8px] cursor-pointer transition-all inline-flex items-center gap-1 shadow-2xs"
                           onClick={() => {
-                            if (confirm(`Hapus akun driver "${driver.name}" (NIK: ${driver.nik})? Aksi ini tidak dapat dibatalkan.`))
+                            if (
+                              confirm(
+                                `Hapus akun driver "${driver.name}" (NIK: ${driver.nik})? Aksi ini tidak dapat dibatalkan.`
+                              )
+                            )
                               handleDeleteDriver(driver.nik);
                           }}
                         >
@@ -795,6 +893,218 @@ ${markup}
         </div>
       )}
 
+      {/* Checklist Detail Modal */}
+      <Modal
+        isOpen={detailOpen}
+        onClose={() => setDetailOpen(false)}
+        title={
+          selectedRecord
+            ? `Detail Laporan Checklist - ${selectedRecord.driver?.name || ""} (${selectedRecord.vehicle?.licensePlate || "No Plat"})`
+            : ""
+        }
+      >
+        {selectedRecord && (
+          <div className="space-y-5 text-left text-xs">
+            {/* Header Identity Card */}
+            <div className="bg-bg-sidebar p-4 rounded-[14px] border border-border grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <div>
+                  <span className="text-text-muted">Nama Driver:</span>{" "}
+                  <strong className="text-text-main font-bold">
+                    {escapeHtml(selectedRecord.driver?.name || "")}
+                  </strong>
+                </div>
+                <div>
+                  <span className="text-text-muted">Jenis Kendaraan:</span>{" "}
+                  <strong>{escapeHtml(selectedRecord.vehicle?.type) || "-"}</strong>
+                </div>
+                <div>
+                  <span className="text-text-muted">Plat Nomor:</span>{" "}
+                  <span className="bg-slate-100 text-slate-800 font-mono font-bold px-2 py-0.5 rounded-[4px] border border-slate-200">
+                    {escapeHtml(selectedRecord.vehicle?.licensePlate) || "-"}
+                  </span>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <div>
+                  <span className="text-text-muted">Waktu Inspeksi:</span>{" "}
+                  <strong>{formatDateID(selectedRecord.inspectionDate)}</strong>
+                </div>
+                <div>
+                  <span className="text-text-muted">Odometer:</span>{" "}
+                  <strong>{(selectedRecord.vehicle?.mileageStart || 0).toLocaleString()} → {(selectedRecord.vehicle?.mileageEnd || 0).toLocaleString()} KM</strong>
+                </div>
+                <div>
+                  <span className="text-text-muted">Level BBM:</span>{" "}
+                  <strong className="text-primary-blue font-bold">{selectedRecord.condition?.fuelLevel || 0}%</strong>
+                </div>
+              </div>
+            </div>
+
+            {/* Kerusakan Body Box */}
+            <div className="bg-white p-4 rounded-[14px] border border-border space-y-2">
+              <h4 className="font-bold text-text-main text-xs uppercase tracking-wider flex items-center gap-1.5">
+                <span>🚗</span> Temuan Kerusakan Body (Fisik)
+              </h4>
+              {!selectedRecord.condition?.damages || selectedRecord.condition.damages.length === 0 ? (
+                <div className="bg-emerald-50 text-emerald-700 p-2.5 rounded-[10px] border border-emerald-200 font-semibold text-xs">
+                  ✓ Tidak ada temuan kerusakan fisik (Kondisi Body Mulus).
+                </div>
+              ) : (
+                <ul className="bg-rose-50 text-rose-700 p-3 rounded-[10px] border border-rose-200 space-y-1 text-xs">
+                  {selectedRecord.condition.damages.map((d, i) => (
+                    <li key={i} className="font-semibold">
+                      • [Body {d.part.replace("body_", "").replace("_", " ").toUpperCase()}] {escapeHtml(d.description)}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            {/* Perlengkapan Hilang Box */}
+            <div className="bg-white p-4 rounded-[14px] border border-border space-y-2">
+              <h4 className="font-bold text-text-main text-xs uppercase tracking-wider flex items-center gap-1.5">
+                <span>🧰</span> Kelengkapan Alat (1-27)
+              </h4>
+              {(() => {
+                const missing = Object.entries(selectedRecord.checklist || {}).filter(
+                  ([, item]) => item && item.status === "TDK ADA"
+                );
+                return missing.length === 0 ? (
+                  <div className="bg-emerald-50 text-emerald-700 p-2.5 rounded-[10px] border border-emerald-200 font-semibold text-xs">
+                    ✓ Seluruh 27 item perlengkapan kendaraan LENGKAP (ADA).
+                  </div>
+                ) : (
+                  <ul className="bg-rose-50 text-rose-700 p-3 rounded-[10px] border border-rose-200 space-y-1 text-xs font-semibold">
+                    {missing.map(([num, item]) => (
+                      <li key={num}>
+                        • Item {num}. {item.item} ({item.note || "tanpa keterangan"})
+                      </li>
+                    ))}
+                  </ul>
+                );
+              })()}
+            </div>
+
+            {/* Catatan Driver */}
+            <div className="bg-white p-4 rounded-[14px] border border-border space-y-1">
+              <h4 className="font-bold text-text-main text-xs uppercase tracking-wider mb-1">
+                📝 Catatan Driver
+              </h4>
+              <p className="text-text-muted font-medium">
+                1. {escapeHtml(selectedRecord.condition?.notes?.[0]) || "-"}<br />
+                2. {escapeHtml(selectedRecord.condition?.notes?.[1]) || "-"}<br />
+                3. {escapeHtml(selectedRecord.condition?.notes?.[2]) || "-"}
+              </p>
+            </div>
+
+            {/* Signature Preview */}
+            {selectedRecord.signature && (
+              <div className="bg-white p-3 rounded-[14px] border border-border space-y-1.5">
+                <h4 className="font-bold text-text-main text-xs uppercase tracking-wider">
+                  Tanda Tangan Driver
+                </h4>
+                <img
+                  src={selectedRecord.signature}
+                  alt="TTD"
+                  className="max-h-[90px] border border-border bg-white p-1 rounded-[8px] object-contain"
+                />
+              </div>
+            )}
+          </div>
+        )}
+
+        <div className="flex justify-end gap-2.5 mt-6 pt-4 border-t border-border">
+          <button
+            className="bg-primary-blue text-white px-4 py-2.5 rounded-[10px] font-bold cursor-pointer shadow-2xs hover:bg-blue-700 transition-all inline-flex items-center gap-1.5 text-xs"
+            onClick={handleExportPDF}
+          >
+            <span>📄</span> Cetak PDF Official
+          </button>
+          <button
+            className="bg-bg-sidebar text-text-muted border border-border px-4 py-2.5 rounded-[10px] font-bold cursor-pointer hover:bg-border hover:text-text-main transition-all text-xs"
+            onClick={() => setDetailOpen(false)}
+          >
+            Tutup
+          </button>
+        </div>
+      </Modal>
+
+      {/* Timesheet Detail Modal */}
+      {tsDetailOpen && selectedLog && (
+        <Modal
+          isOpen={tsDetailOpen}
+          onClose={() => setTsDetailOpen(false)}
+          title={`Detail Log Timesheet - ${selectedLog.driverName}`}
+          maxWidth="500px"
+        >
+          <div className="space-y-4 text-left text-xs">
+            <div className="bg-bg-sidebar p-4 rounded-[12px] border border-border grid grid-cols-2 gap-3">
+              <div>
+                <strong className="text-text-muted">Tanggal:</strong> {formatDateShort(selectedLog.logDate)} ({selectedLog.logDay})<br />
+                <strong className="text-text-muted">Nama Driver:</strong> {escapeHtml(selectedLog.driverName)}<br />
+                <strong className="text-text-muted">NIK:</strong> {selectedLog.driverNik || "-"}<br />
+                <strong className="text-text-muted">No Polisi:</strong> {selectedLog.licensePlate || "-"}
+              </div>
+              <div>
+                <strong className="text-text-muted">Jam Kerja:</strong> {selectedLog.workStart} - {selectedLog.workEnd}<br />
+                <strong className="text-text-muted">KM Awal:</strong> {selectedLog.kmStart.toLocaleString()}<br />
+                <strong className="text-text-muted">KM Akhir:</strong> {selectedLog.kmEnd.toLocaleString()}<br />
+                <strong className="text-text-muted">Jarak Tempuh:</strong>{" "}
+                <span className="text-primary-blue font-extrabold">
+                  +{Math.max(0, selectedLog.kmEnd - selectedLog.kmStart).toLocaleString()} KM
+                </span>
+              </div>
+            </div>
+
+            <div className="bg-white p-3 rounded-[12px] border border-border space-y-1">
+              <div>
+                <strong className="text-text-muted">Pemakai / User:</strong>{" "}
+                <span className="font-bold text-text-main">{escapeHtml(selectedLog.userName)}</span>
+              </div>
+              <div>
+                <strong className="text-text-muted">Keterangan Tambahan:</strong>{" "}
+                <span>{escapeHtml(selectedLog.remark) || "-"}</span>
+              </div>
+            </div>
+
+            <div>
+              <h4 className="text-[11px] font-bold text-text-muted uppercase tracking-wider mb-1.5">
+                Tanda Tangan Digital Driver
+              </h4>
+              {selectedLog.userSignature ? (
+                <div className="border border-border p-2 rounded-[10px] bg-white text-center">
+                  <img
+                    src={selectedLog.userSignature}
+                    alt="TTD"
+                    className="max-h-[110px] object-contain mx-auto"
+                  />
+                </div>
+              ) : (
+                <span className="text-text-muted text-xs font-medium">Belum ada tanda tangan.</span>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-2 pt-3 border-t border-border">
+              <button
+                type="button"
+                className="bg-primary-blue text-white px-4 py-2 rounded-[10px] font-bold text-xs cursor-pointer shadow-2xs hover:bg-blue-700 transition-all inline-flex items-center gap-1.5"
+                onClick={() => handlePrintTimesheetPDF(selectedLog)}
+              >
+                <span>📄</span> Cetak PDF Timesheet
+              </button>
+              <button
+                type="button"
+                className="bg-bg-sidebar text-text-muted border border-border px-4 py-2 rounded-[10px] font-bold text-xs cursor-pointer hover:bg-border hover:text-text-main transition-all"
+                onClick={() => setTsDetailOpen(false)}
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }
