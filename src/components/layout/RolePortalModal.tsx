@@ -5,7 +5,7 @@ import Modal from "../ui/Modal";
 import Image from "next/image";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { registerDriverProfile, getRegisteredDrivers } from "@/lib/storage";
+import { useRegisteredDrivers } from "@/hooks/useRegisteredDrivers";
 
 type PortalViewMode = "portal" | "driver-login" | "driver-register" | "admin-pin";
 
@@ -19,6 +19,7 @@ export default function RolePortalModal() {
     nik: contextNik,
   } = useAuth();
   const router = useRouter();
+  const { drivers: registeredDrivers, registerDriver } = useRegisteredDrivers();
 
   const [viewMode, setViewMode] = useState<PortalViewMode>("portal");
   const [driverNameInput, setDriverNameInput] = useState(contextDriverName || "");
@@ -43,7 +44,7 @@ export default function RolePortalModal() {
     setPinError(false);
   };
 
-  const handleRegisterDriver = () => {
+  const handleRegisterDriver = async () => {
     const name = driverNameInput.trim();
     const nik = nikInput.trim();
     if (!name) {
@@ -55,8 +56,8 @@ export default function RolePortalModal() {
       return;
     }
 
-    // Save profile to registered drivers
-    registerDriverProfile(name, nik);
+    // Save profile to registered drivers (syncs to Supabase)
+    await registerDriver(name, nik);
 
     alert(
       `✅ Pendaftaran Akun Driver Berhasil!\n\nDriver: ${name}\nNIK: ${nik}\n\nSilakan masuk melalui halaman 'Masuk Sebagai Driver' untuk login ke akun Anda.`
@@ -73,9 +74,8 @@ export default function RolePortalModal() {
       return;
     }
 
-    // Check registered drivers list
-    const registered = getRegisteredDrivers();
-    const found = registered.find(
+    // Check registered drivers list (from Supabase-synced state)
+    const found = registeredDrivers.find(
       (d) => d.nik.toLowerCase() === nik.toLowerCase()
     );
 

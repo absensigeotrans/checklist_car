@@ -6,8 +6,7 @@ import { useDriverLogs } from "@/hooks/useDriverLogs";
 import { useAuth } from "@/context/AuthContext";
 import type { InspectionRecord, DriverLogEntry } from "@/types";
 import { exportAllToExcel, exportMonthlyLogExcel, preparePrintMarkup, prepareTimesheetPrintMarkup } from "@/lib/export";
-import { getRegisteredDrivers, safeLocalStorageSet } from "@/lib/storage";
-import type { RegisteredDriver } from "@/lib/storage";
+import { useRegisteredDrivers } from "@/hooks/useRegisteredDrivers";
 import { formatDateID, formatDateShort, escapeHtml } from "@/lib/utils";
 import Modal from "../ui/Modal";
 import AdminMetrics from "./AdminMetrics";
@@ -35,8 +34,8 @@ export default function AdminDashboard() {
 
   const [activeTab, setActiveTab] = useState<"checklist" | "timesheet" | "accounts">("checklist");
 
-  // Registered drivers list (mutable for delete)
-  const [registeredDrivers, setRegisteredDrivers] = useState<RegisteredDriver[]>(() => getRegisteredDrivers());
+  // Registered drivers from Supabase (synced across devices)
+  const { drivers: registeredDrivers, deleteDriver } = useRegisteredDrivers();
 
   // Filters for Checklist
   const [filterDriver, setFilterDriver] = useState("");
@@ -54,10 +53,7 @@ export default function AdminDashboard() {
   const [selectedLog, setSelectedLog] = useState<DriverLogEntry | null>(null);
   const [tsDetailOpen, setTsDetailOpen] = useState(false);
 
-  const handleDeleteDriver = (nik: string) => {
-    const updated = registeredDrivers.filter((d) => d.nik !== nik);
-    setRegisteredDrivers(updated);
-    safeLocalStorageSet("ptk_registered_drivers", updated);
+  const handleDeleteDriver = async (nik: string) => {
     // Clear filters if deleted driver was selected
     if (tsFilterDriverDropdown === registeredDrivers.find((d) => d.nik === nik)?.name) {
       setTsFilterDriverDropdown("");
@@ -67,6 +63,7 @@ export default function AdminDashboard() {
       setFilterDriverDropdown("");
       setFilterDriver("");
     }
+    await deleteDriver(nik);
   };
 
   const filteredInspections = useMemo(() => {
