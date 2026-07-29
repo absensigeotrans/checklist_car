@@ -60,6 +60,7 @@ export function exportMonthlyLogExcel(logs: DriverLogEntry[]): void {
 }
 
 export function preparePrintMarkup(rec: InspectionRecord): string {
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
   const dateObj = new Date(rec.inspectionDate);
   const dateFormatted =
     dateObj.toLocaleDateString("id-ID") +
@@ -117,7 +118,7 @@ export function preparePrintMarkup(rec: InspectionRecord): string {
       <!-- Header -->
       <div style="display:flex; align-items:center; border-bottom:2px solid #000; padding-bottom:4px; margin-bottom:6px;">
         <div style="width:70px;">
-          <img src="/logo_pertamina_tk.png" alt="PTK" style="height:36px; width:auto; object-fit:contain;">
+          <img src="${origin}/logo_pertamina_tk.png" alt="PTK" style="height:36px; width:auto; object-fit:contain;">
         </div>
         <div style="flex:1; text-align:center;">
           <h2 style="font-size:0.95rem; font-weight:800; text-transform:uppercase; margin:0; line-height:1.2;">PERTAMINA TRANS KONTINENTAL</h2>
@@ -198,7 +199,7 @@ export function preparePrintMarkup(rec: InspectionRecord): string {
               ${getDamageLines("body_depan")}
             </div>
             <div style="width:45px; height:45px; position:relative; background:#fafafa; border:1px solid #eee; flex-shrink:0;">
-              <img src="/car_front.png" alt="Depan" style="width:100%; height:100%; object-fit:contain;">
+              <img src="${origin}/car_front.png" alt="Depan" style="width:100%; height:100%; object-fit:contain;">
               ${getPointersHtml("body_depan")}
             </div>
           </div>
@@ -210,7 +211,7 @@ export function preparePrintMarkup(rec: InspectionRecord): string {
               ${getDamageLines("body_samping_kiri")}
             </div>
             <div style="width:45px; height:45px; position:relative; background:#fafafa; border:1px solid #eee; flex-shrink:0;">
-              <img src="/car_left.png" alt="Kiri" style="width:100%; height:100%; object-fit:contain;">
+              <img src="${origin}/car_left.png" alt="Kiri" style="width:100%; height:100%; object-fit:contain;">
               ${getPointersHtml("body_samping_kiri")}
             </div>
           </div>
@@ -222,7 +223,7 @@ export function preparePrintMarkup(rec: InspectionRecord): string {
               ${getDamageLines("body_samping_kanan")}
             </div>
             <div style="width:45px; height:45px; position:relative; background:#fafafa; border:1px solid #eee; flex-shrink:0;">
-              <img src="/car_right.png" alt="Kanan" style="width:100%; height:100%; object-fit:contain;">
+              <img src="${origin}/car_right.png" alt="Kanan" style="width:100%; height:100%; object-fit:contain;">
               ${getPointersHtml("body_samping_kanan")}
             </div>
           </div>
@@ -234,7 +235,7 @@ export function preparePrintMarkup(rec: InspectionRecord): string {
               ${getDamageLines("body_belakang")}
             </div>
             <div style="width:45px; height:45px; position:relative; background:#fafafa; border:1px solid #eee; flex-shrink:0;">
-              <img src="/car_rear.png" alt="Belakang" style="width:100%; height:100%; object-fit:contain;">
+              <img src="${origin}/car_rear.png" alt="Belakang" style="width:100%; height:100%; object-fit:contain;">
               ${getPointersHtml("body_belakang")}
             </div>
           </div>
@@ -335,6 +336,7 @@ export function prepareTimesheetPrintMarkup(
   month: number,
   year: number
 ): string {
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
   const daysInMonth = new Date(year, month, 0).getDate();
   let tableRowsHtml = "";
 
@@ -382,7 +384,7 @@ export function prepareTimesheetPrintMarkup(
       <!-- Top Header -->
       <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
         <div style="display:flex; align-items:center; gap:8px;">
-          <img src="/logo_pertamina_tk.png" alt="Pertamina Trans Kontinental" style="height:36px; width:auto; object-fit:contain;">
+          <img src="${origin}/logo_pertamina_tk.png" alt="Pertamina Trans Kontinental" style="height:36px; width:auto; object-fit:contain;">
         </div>
         <div style="font-size:0.75rem; font-weight:bold; text-align:right;">
           Tahun (Year): <span style="border-bottom:1px solid #000; padding:0 12px; display:inline-block;">${year}</span>
