@@ -6,6 +6,8 @@ import { useDriverLogs } from "@/hooks/useDriverLogs";
 import { useAuth } from "@/context/AuthContext";
 import type { InspectionRecord, DriverLogEntry } from "@/types";
 import { exportAllToExcel, exportMonthlyLogExcel, preparePrintMarkup, prepareTimesheetPrintMarkup } from "@/lib/export";
+import { getRegisteredDrivers } from "@/lib/storage";
+import type { RegisteredDriver } from "@/lib/storage";
 import { formatDateID, formatDateShort, escapeHtml } from "@/lib/utils";
 import Modal from "../ui/Modal";
 import AdminMetrics from "./AdminMetrics";
@@ -33,8 +35,12 @@ export default function AdminDashboard() {
 
   const [activeTab, setActiveTab] = useState<"checklist" | "timesheet">("checklist");
 
+  // Registered drivers list
+  const [registeredDrivers] = useState<RegisteredDriver[]>(() => getRegisteredDrivers());
+
   // Filters for Checklist
   const [filterDriver, setFilterDriver] = useState("");
+  const [filterDriverDropdown, setFilterDriverDropdown] = useState("");
   const [filterPlate, setFilterPlate] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const [selectedRecord, setSelectedRecord] = useState<InspectionRecord | null>(null);
@@ -42,6 +48,7 @@ export default function AdminDashboard() {
 
   // Filters for Timesheet
   const [tsFilterDriver, setTsFilterDriver] = useState("");
+  const [tsFilterDriverDropdown, setTsFilterDriverDropdown] = useState("");
   const [tsFilterPlate, setTsFilterPlate] = useState("");
   const [tsFilterMonth, setTsFilterMonth] = useState<number | "all">("all");
   const [selectedLog, setSelectedLog] = useState<DriverLogEntry | null>(null);
@@ -172,6 +179,36 @@ export default function AdminDashboard() {
 
       <AdminMetrics records={records} driverLogs={driverLogs} />
 
+      {/* Registered Drivers Panel */}
+      {registeredDrivers.length > 0 && (
+        <div className="bg-white rounded-[16px] shadow-md p-6 mb-6 border border-border">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-bold text-text-main">
+              Akun Driver Terdaftar
+            </h2>
+            <span className="text-xs font-semibold text-text-muted bg-bg-sidebar px-3 py-1 rounded-full">
+              {registeredDrivers.length} driver
+            </span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
+            {registeredDrivers.map((d) => (
+              <div
+                key={d.nik}
+                className="bg-bg-sidebar border border-border rounded-[10px] px-3 py-2.5 text-sm flex items-center gap-3"
+              >
+                <div className="w-8 h-8 rounded-full bg-primary-blue/10 text-primary-blue flex items-center justify-center font-bold text-xs shrink-0">
+                  {d.name.charAt(0).toUpperCase()}
+                </div>
+                <div className="min-w-0">
+                  <div className="font-bold text-text-main truncate">{d.name}</div>
+                  <div className="text-text-muted text-xs truncate">NIK: {d.nik}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Admin Subtabs */}
       <div className="flex gap-2 border-b-2 border-border mb-6">
         <button
@@ -203,13 +240,35 @@ export default function AdminDashboard() {
         <>
           <div className="bg-white rounded-[16px] shadow-md p-6 mb-8 border border-border">
             <div className="flex gap-4 items-end flex-wrap">
+              <div className="flex-1 min-w-[180px] flex flex-col gap-2">
+                <label className="text-xs font-bold text-text-muted uppercase">Pilih Driver</label>
+                <select
+                  value={filterDriverDropdown}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setFilterDriverDropdown(val);
+                    setFilterDriver(val);
+                  }}
+                  className="w-full border-2 border-border rounded-[12px] px-4 py-3 outline-none text-base focus:border-primary-blue focus:shadow-[0_0_0_4px_hsl(211,100%,92%)] bg-white"
+                >
+                  <option value="">Semua Driver</option>
+                  {registeredDrivers.map((d) => (
+                    <option key={d.nik} value={d.name}>
+                      {d.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <div className="flex-1 min-w-[150px] flex flex-col gap-2">
-                <label className="text-xs font-bold text-text-muted uppercase">Cari Driver</label>
+                <label className="text-xs font-bold text-text-muted uppercase">Cari Nama</label>
                 <input
                   type="text"
                   value={filterDriver}
-                  onChange={(e) => setFilterDriver(e.target.value)}
-                  placeholder="Nama driver..."
+                  onChange={(e) => {
+                    setFilterDriver(e.target.value);
+                    setFilterDriverDropdown("");
+                  }}
+                  placeholder="Ketik nama driver..."
                   className="w-full border-2 border-border rounded-[12px] px-4 py-3 outline-none text-base focus:border-primary-blue focus:shadow-[0_0_0_4px_hsl(211,100%,92%)]"
                 />
               </div>
@@ -284,12 +343,34 @@ export default function AdminDashboard() {
         <>
           <div className="bg-white rounded-[16px] shadow-md p-6 mb-8 border border-border">
             <div className="flex gap-4 items-end flex-wrap">
+              <div className="flex-1 min-w-[180px] flex flex-col gap-2">
+                <label className="text-xs font-bold text-text-muted uppercase">Pilih Driver</label>
+                <select
+                  value={tsFilterDriverDropdown}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setTsFilterDriverDropdown(val);
+                    setTsFilterDriver(val);
+                  }}
+                  className="w-full border-2 border-border rounded-[12px] px-4 py-3 outline-none text-base focus:border-primary-blue focus:shadow-[0_0_0_4px_hsl(211,100%,92%)] bg-white"
+                >
+                  <option value="">Semua Driver</option>
+                  {registeredDrivers.map((d) => (
+                    <option key={d.nik} value={d.name}>
+                      {d.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <div className="flex-1 min-w-[150px] flex flex-col gap-2">
-                <label className="text-xs font-bold text-text-muted uppercase">Cari Driver / NIK</label>
+                <label className="text-xs font-bold text-text-muted uppercase">Cari Nama / NIK</label>
                 <input
                   type="text"
                   value={tsFilterDriver}
-                  onChange={(e) => setTsFilterDriver(e.target.value)}
+                  onChange={(e) => {
+                    setTsFilterDriver(e.target.value);
+                    setTsFilterDriverDropdown("");
+                  }}
                   placeholder="Nama atau NIK..."
                   className="w-full border-2 border-border rounded-[12px] px-4 py-3 outline-none text-base focus:border-primary-blue focus:shadow-[0_0_0_4px_hsl(211,100%,92%)]"
                 />
