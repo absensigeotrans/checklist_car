@@ -1,0 +1,30 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: 'Outfit', sans-serif;
+    @apply bg-bg-main text-text-main min-h-screen flex flex-col;
+  }
+
+  input, select, textarea, button {
+    font-family: 'Outfit', sans-serif;
+  }
+
+  input[type="text"]:focus,
+  input[type="number"]:focus,
+  input[type="date"]:focus,
+  input[type="time"]:focus,
+  input[type="password"]:focus,
+  select:focus {
+    @apply border-primary-blue;
+    box-shadow: 0 0 0 4px hsl(211, 100%, 92%);
+  }
+}

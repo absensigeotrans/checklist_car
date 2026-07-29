@@ -24,11 +24,17 @@
         <span>Berita Acara Checklist Kendaraan</span>
       </div>
     </div>
-    <div class="nav-tabs">
-      <button class="nav-tab active" onclick="trySwitchView('driver-form')">Isi Checklist</button>
-      <button class="nav-tab" onclick="trySwitchView('driver-log-form')">Log Sheet Driver</button>
-      <button class="nav-tab" onclick="trySwitchView('driver-progress')">Progres Driver</button>
-      <button class="nav-tab" onclick="trySwitchView('admin-dashboard')">Panel Admin</button>
+
+    <div style="display: flex; align-items: center; gap: 1rem;">
+      <div id="userHeaderProfile" class="user-header-profile">
+        <!-- Dynamically populated profile badge -->
+      </div>
+      <div class="nav-tabs" id="mainNavTabs">
+        <button class="nav-tab active" id="tab-driver-form" onclick="trySwitchView('driver-form')">Isi Checklist</button>
+        <button class="nav-tab" id="tab-driver-log-form" onclick="trySwitchView('driver-log-form')">Log Sheet Driver</button>
+        <button class="nav-tab" id="tab-driver-progress" onclick="trySwitchView('driver-progress')">Progres Driver</button>
+        <button class="nav-tab" id="tab-admin-dashboard" onclick="trySwitchView('admin-dashboard')">Panel Admin</button>
+      </div>
     </div>
   </header>
 
@@ -39,6 +45,16 @@
     <section id="driver-form" class="view-section active">
       <form id="checklistForm" onsubmit="handleFormSubmit(event)">
         
+        <!-- Checkpoint Info Banner for Checklist -->
+        <div id="inspectionCheckpointInfoBanner" class="checkpoint-banner" style="display: none; margin-bottom: 1rem;">
+          <div style="font-weight: 700; font-size: 0.95rem; color: var(--primary-blue); display: flex; align-items: center; gap: 0.5rem;">
+            <span>📍</span> Checkpoint NIK Dimuat Otomatis!
+          </div>
+          <div id="inspectionCheckpointInfoText" style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">
+            <!-- Injected dynamically -->
+          </div>
+        </div>
+
         <!-- Section A: Driver & Vehicle Info -->
         <div class="card">
           <div class="card-title">
@@ -47,7 +63,7 @@
           <div class="form-grid">
             <div class="form-group">
               <label for="driverNik">NIK Driver *</label>
-              <input type="text" id="driverNik" required placeholder="Masukkan NIK Driver" maxlength="50" list="driverNikDatalist">
+              <input type="text" id="driverNik" required placeholder="Masukkan NIK Driver..." maxlength="50" list="driverNikDatalist" oninput="loadInspectionCheckpoint(this.value)" onchange="loadInspectionCheckpoint(this.value)">
             </div>
             <div class="form-group">
               <label for="driverName">Nama Driver *</label>
@@ -501,12 +517,6 @@
             <div class="form-group" style="margin: 0; max-width: 100px;">
               <input type="number" id="progressFilterYear" value="2026" onchange="renderDriverProgressView()">
             </div>
-            <button type="button" class="btn btn-success" style="padding: 0.6rem 1rem; font-size: 0.85rem;" onclick="downloadDriverProgressLogPDF()">
-              <span>📥</span> Unduh PDF
-            </button>
-            <button type="button" class="btn btn-primary" style="padding: 0.6rem 1rem; font-size: 0.85rem;" onclick="printDriverProgressLogPDF()">
-              <span>📄</span> Cetak PDF
-            </button>
             <button type="button" class="btn btn-secondary" style="padding: 0.6rem 1rem; font-size: 0.85rem;" onclick="clearDriverProgressNik()">
               <span>🔒</span> Ganti / Keluar NIK
             </button>
@@ -607,6 +617,63 @@
     </section>
 
   </main>
+
+  <!-- Role Portal Modal (Masuk Sebagai Driver vs Admin) -->
+  <div class="modal-backdrop" id="rolePortalModal">
+    <div class="modal-content" style="max-width: 580px; text-align: center; padding: 2.5rem 2rem;">
+      <div style="margin-bottom: 1.5rem;">
+        <img src="logo_pertamina_tk.png" alt="Pertamina Trans Kontinental" style="height: 60px; width: auto; object-fit: contain; margin-bottom: 0.75rem;">
+        <h2 style="font-size: 1.6rem; font-weight: 800; color: var(--text-main);">Selamat Datang</h2>
+        <p style="font-size: 0.95rem; color: var(--text-muted); margin-top: 0.25rem;">Pilih jenis akses Anda untuk melanjutkan ke aplikasi PTK Digital Checklist</p>
+      </div>
+
+      <div class="role-portal-grid">
+        <!-- Card 1: Driver -->
+        <div class="role-card" onclick="selectRole('driver')">
+          <div class="role-card-icon" style="background-color: hsl(211, 100%, 94%); color: var(--primary-blue);">🚚</div>
+          <h3>Masuk Sebagai Driver</h3>
+          <p>Isi checklist harian, log perjalanan, dan pantau progres kilometer Anda.</p>
+          <button type="button" class="btn btn-primary" style="margin-top: 1rem; width: 100%; justify-content: center;">
+            Akses Driver ➔
+          </button>
+        </div>
+
+        <!-- Card 2: Admin -->
+        <div class="role-card" onclick="selectRole('admin')">
+          <div class="role-card-icon" style="background-color: hsl(354, 85%, 94%); color: var(--primary-red);">🔒</div>
+          <h3>Masuk Sebagai Admin</h3>
+          <p>Panel kontrol admin untuk memantau armada, verifikasi PIN, dan ekspor laporan Excel/PDF.</p>
+          <button type="button" class="btn btn-danger" style="margin-top: 1rem; width: 100%; justify-content: center;">
+            Akses Admin ➔
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Driver NIK Account Onboarding Modal -->
+  <div class="modal-backdrop" id="driverNikAccountModal">
+    <div class="modal-content" style="max-width: 440px; text-align: center;">
+      <div class="modal-header">
+        <h2 style="font-size: 1.25rem;">🔑 Masukkan NIK Driver Anda</h2>
+        <button class="close-modal" onclick="closeDriverNikAccountModal()">&times;</button>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 1.25rem; padding: 0.5rem 0; text-align: left;">
+        <p style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.5;">
+          NIK digunakan sebagai <strong>ID Akun Anda</strong> untuk menyimpan riwayat perjalanan, checklist, dan checkpoint kilometer harian secara otomatis tanpa password.
+        </p>
+        <div class="form-group">
+          <label for="inputAccountNik">NIK Driver *</label>
+          <input type="text" id="inputAccountNik" placeholder="Ketik NIK atau pilih dari daftar..." list="driverNikDatalist" onkeydown="if(event.key==='Enter') submitDriverNikAccount()">
+        </div>
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.25rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+        <button type="button" class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="submitDriverNikAccount()">
+          <span>🚀</span> Masuk ke Akun Driver
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- Admin PIN Modal -->
   <div class="modal-backdrop" id="adminPinModal">
@@ -942,28 +1009,37 @@
           
           if (response.ok) {
             const data = await response.json();
-            const serverDb = data.map(row => ({
-              inspectionId: row.id,
-              inspectionDate: row.inspection_date,
-              driver: {
-                name: row.driver_name || "",
-                nik: row.driver_nik || ""
-              },
-              vehicle: {
-                type: row.vehicle_type || "",
-                licensePlate: row.license_plate || "",
-                mileageStart: row.mileage_start || 0,
-                mileageEnd: row.mileage_end || 0
-              },
-              checklist: row.checklist || {},
-              condition: {
-                damages: row.damages || [],
-                fuelLevel: row.fuel_level || 50,
-                notes: row.notes || ["", "", ""]
-              },
-              signature: row.signature || "",
-              attentionNeeded: row.attention_needed || false
-            }));
+            const serverDb = data.map(row => {
+              let name = row.driver_name || "";
+              let nik = row.driver_nik || "";
+              const match = name.match(/^(.+) \(NIK: (.+)\)$/);
+              if (match) {
+                name = match[1].trim();
+                nik = match[2].trim();
+              }
+              return {
+                inspectionId: row.id,
+                inspectionDate: row.inspection_date,
+                driver: {
+                  name: name,
+                  nik: nik
+                },
+                vehicle: {
+                  type: row.vehicle_type || "",
+                  licensePlate: row.license_plate || "",
+                  mileageStart: row.mileage_start || 0,
+                  mileageEnd: row.mileage_end || 0
+                },
+                checklist: row.checklist || {},
+                condition: {
+                  damages: row.damages || [],
+                  fuelLevel: row.fuel_level || 50,
+                  notes: row.notes || ["", "", ""]
+                },
+                signature: row.signature || "",
+                attentionNeeded: row.attention_needed || false
+              };
+            });
             
             // Pertahankan data lokal yang belum tersinkronisasi ke server (unsynced)
             const serverIds = new Set(serverDb.map(r => r.inspectionId));
@@ -1027,8 +1103,11 @@
       const inputHash = simpleHash(input.value);
       if (inputHash === ADMIN_PIN_HASH) {
         isAdminAuthenticated = true;
+        currentUserRole = 'admin';
         sessionStorage.setItem("ptk_admin_auth", "true");
+        safeLocalStorageSet("ptk_user_role", 'admin');
         closePinModal();
+        updateHeaderProfileUI();
         switchView('admin-dashboard');
       } else {
         errMsg.style.display = "block";
@@ -1039,9 +1118,151 @@
 
     function logoutAdmin() {
       isAdminAuthenticated = false;
+      currentUserRole = null;
       sessionStorage.removeItem("ptk_admin_auth");
       sessionStorage.removeItem("ptk_active_view");
+      try { localStorage.removeItem("ptk_user_role"); } catch(e){}
+      updateHeaderProfileUI();
+      openRolePortalModal();
+    }
+
+    // Global User Role & NIK Session Management
+    let currentUserRole = (function() {
+      const stored = safeLocalStorageGet("ptk_user_role");
+      return (stored && typeof stored === 'string') ? stored.replace(/"/g, '') : null;
+    })();
+
+    function openRolePortalModal() {
+      const modal = document.getElementById("rolePortalModal");
+      if (modal) modal.classList.add("active");
+    }
+
+    function closeRolePortalModal() {
+      const modal = document.getElementById("rolePortalModal");
+      if (modal) modal.classList.remove("active");
+    }
+
+    function selectRole(role) {
+      closeRolePortalModal();
+      if (role === 'admin') {
+        if (isAdminAuthenticated) {
+          currentUserRole = 'admin';
+          safeLocalStorageSet("ptk_user_role", 'admin');
+          updateHeaderProfileUI();
+          switchView('admin-dashboard');
+        } else {
+          openPinModal();
+        }
+      } else if (role === 'driver') {
+        currentUserRole = 'driver';
+        safeLocalStorageSet("ptk_user_role", 'driver');
+        
+        const savedNik = safeLocalStorageGet("ptk_active_driver_nik");
+        const activeNikStr = (savedNik && typeof savedNik === 'string') ? savedNik.replace(/"/g, '').trim() : '';
+
+        if (!activeNikStr) {
+          openDriverNikAccountModal();
+        } else {
+          updateHeaderProfileUI();
+          switchView('driver-form');
+        }
+      }
+    }
+
+    function openDriverNikAccountModal() {
+      populateDriverNikDatalist();
+      const modal = document.getElementById("driverNikAccountModal");
+      const input = document.getElementById("inputAccountNik");
+      if (input) input.value = "";
+      if (modal) modal.classList.add("active");
+      setTimeout(() => input && input.focus(), 150);
+    }
+
+    function closeDriverNikAccountModal() {
+      const modal = document.getElementById("driverNikAccountModal");
+      if (modal) modal.classList.remove("active");
+    }
+
+    function submitDriverNikAccount() {
+      const input = document.getElementById("inputAccountNik");
+      const nik = (input ? input.value : "").trim();
+      if (!nik) {
+        alert("Harap masukkan NIK Driver Anda terlebih dahulu!");
+        if (input) input.focus();
+        return;
+      }
+
+      currentUserRole = 'driver';
+      safeLocalStorageSet("ptk_user_role", 'driver');
+      safeLocalStorageSet("ptk_active_driver_nik", nik);
+
+      closeDriverNikAccountModal();
+      updateHeaderProfileUI();
       switchView('driver-form');
+    }
+
+    function switchDriverAccount() {
+      openDriverNikAccountModal();
+    }
+
+    function switchRolePortal() {
+      openRolePortalModal();
+    }
+
+    function updateHeaderProfileUI() {
+      const container = document.getElementById("userHeaderProfile");
+      const savedNik = safeLocalStorageGet("ptk_active_driver_nik");
+      const activeNikStr = (savedNik && typeof savedNik === 'string') ? savedNik.replace(/"/g, '').trim() : '';
+
+      const tabAdmin = document.getElementById("tab-admin-dashboard");
+      const tabChk = document.getElementById("tab-driver-form");
+      const tabLog = document.getElementById("tab-driver-log-form");
+      const tabProg = document.getElementById("tab-driver-progress");
+
+      if (currentUserRole === 'admin' && isAdminAuthenticated) {
+        // Admin View Header
+        if (container) {
+          container.innerHTML = `
+            <div class="profile-pill" style="border-color: var(--primary-red); color: var(--primary-red);">
+              <span>🔒 Admin Panel</span>
+              <button type="button" class="profile-pill-action" onclick="logoutAdmin()" style="color: var(--primary-red);">Keluar</button>
+            </div>
+          `;
+        }
+        if (tabAdmin) tabAdmin.style.display = "block";
+        if (tabChk) tabChk.style.display = "none";
+        if (tabLog) tabLog.style.display = "none";
+        if (tabProg) tabProg.style.display = "none";
+      } else if (currentUserRole === 'driver') {
+        // Driver View Header
+        if (container) {
+          container.innerHTML = `
+            <div class="profile-pill">
+              <span>👤 Akun NIK: <strong style="color: var(--primary-blue);">${escapeHtml(activeNikStr || 'Belum Set')}</strong></span>
+              <button type="button" class="profile-pill-action" onclick="switchDriverAccount()">Ganti NIK</button>
+              <span style="opacity: 0.3;">|</span>
+              <button type="button" class="profile-pill-action" onclick="switchRolePortal()">Ganti Role</button>
+            </div>
+          `;
+        }
+        if (tabAdmin) tabAdmin.style.display = "none";
+        if (tabChk) tabChk.style.display = "block";
+        if (tabLog) tabLog.style.display = "block";
+        if (tabProg) tabProg.style.display = "block";
+      } else {
+        // Default Header (No role selected)
+        if (container) {
+          container.innerHTML = `
+            <button type="button" class="btn btn-secondary" style="padding: 0.35rem 0.85rem; font-size: 0.85rem;" onclick="openRolePortalModal()">
+              <span>🚪</span> Pilih Akses
+            </button>
+          `;
+        }
+        if (tabAdmin) tabAdmin.style.display = "block";
+        if (tabChk) tabChk.style.display = "block";
+        if (tabLog) tabLog.style.display = "block";
+        if (tabProg) tabProg.style.display = "block";
+      }
     }
 
     // Page Tab Switcher
@@ -1061,8 +1282,21 @@
       );
       if (activeTabBtn) activeTabBtn.classList.add("active");
 
+      // Restore saved active NIK globally across tabs
+      const savedNik = safeLocalStorageGet("ptk_active_driver_nik");
+      const activeNikStr = (savedNik && typeof savedNik === 'string') ? savedNik.replace(/"/g, '').trim() : '';
+
       if (viewId === 'driver-form') {
         populateDriverNikDatalist();
+        const input = document.getElementById("driverNik");
+        if (input) {
+          if (activeNikStr && !input.value) {
+            input.value = activeNikStr;
+          }
+          if (input.value) {
+            loadInspectionCheckpoint(input.value);
+          }
+        }
       }
 
       if (viewId === 'driver-log-form') {
@@ -1074,17 +1308,22 @@
           dateInput.value = todayStr;
           autoFillDriverLogDay(todayStr);
         }
-        const currentNik = document.getElementById("driverLogNik")?.value;
-        if (currentNik) {
-          loadDriverCheckpoint(currentNik);
+        const input = document.getElementById("driverLogNik");
+        if (input) {
+          if (activeNikStr && !input.value) {
+            input.value = activeNikStr;
+          }
+          if (input.value) {
+            loadDriverCheckpoint(input.value);
+          }
         }
       }
 
       if (viewId === 'driver-progress') {
         populateDriverNikDatalist();
-        const savedNik = sessionStorage.getItem("ptk_driver_progress_nik");
-        if (savedNik) {
-          showDriverProgressDashboard(savedNik);
+        const savedProgressNik = sessionStorage.getItem("ptk_driver_progress_nik") || activeNikStr;
+        if (savedProgressNik) {
+          showDriverProgressDashboard(savedProgressNik);
         } else {
           showDriverNikAuthCard();
         }
@@ -1536,8 +1775,8 @@
             body: JSON.stringify({
               id: inspectionId,
               inspection_date: inspectionDate,
+              driver_name: driverNik ? `${driverName} (NIK: ${driverNik})` : driverName,
               driver_nik: driverNik,
-              driver_name: driverName,
               vehicle_type: vehicleType,
               license_plate: licensePlate,
               mileage_start: kmStart,
@@ -1582,6 +1821,17 @@
       // Auto set date string
       const now = new Date();
       document.getElementById("inspectionDateStr").value = now.toLocaleDateString("id-ID") + " " + now.toLocaleTimeString("id-ID");
+
+      // Auto-restore active NIK and refresh checkpoint KM Awal
+      const savedNik = safeLocalStorageGet("ptk_active_driver_nik");
+      const activeNikStr = (savedNik && typeof savedNik === 'string') ? savedNik.replace(/"/g, '').trim() : '';
+      if (activeNikStr) {
+        const input = document.getElementById("driverNik");
+        if (input) {
+          input.value = activeNikStr;
+          loadInspectionCheckpoint(activeNikStr);
+        }
+      }
     }
 
     // Admin Dashboard List & Filtering
@@ -2614,6 +2864,11 @@
           map.set(l.driverNik, l.driverName);
         }
       });
+      db.forEach(rec => {
+        if (rec.driver && rec.driver.nik && !map.has(rec.driver.nik)) {
+          map.set(rec.driver.nik, rec.driver.name);
+        }
+      });
       datalist.innerHTML = "";
       map.forEach((name, nik) => {
         const option = document.createElement("option");
@@ -2623,7 +2878,102 @@
       });
     }
 
-    function loadDriverCheckpoint(nik) {
+    // Auto-Checkpoint for Driver Inspection Checklist Form
+    async function loadInspectionCheckpoint(nik) {
+      const trimmedNik = (nik || "").trim();
+      const banner = document.getElementById("inspectionCheckpointInfoBanner");
+      const bannerText = document.getElementById("inspectionCheckpointInfoText");
+
+      if (!trimmedNik) {
+        if (banner) banner.style.display = "none";
+        return;
+      }
+
+      // Remember active NIK globally
+      try { localStorage.setItem("ptk_active_driver_nik", trimmedNik); } catch(e){}
+
+      // 1. Check local db array (inspections) & driverLogs
+      let lastInspection = db.find(r => r.driver && (r.driver.nik === trimmedNik || (r.driver.name && r.driver.name.includes(`NIK: ${trimmedNik}`))));
+      let lastLog = driverLogs.find(l => l.driverNik === trimmedNik);
+
+      let foundName = "";
+      let foundType = "";
+      let foundPlate = "";
+      let foundKmEnd = 0;
+      let lastDateStr = "";
+
+      if (lastInspection) {
+        foundName = lastInspection.driver?.name || "";
+        foundType = lastInspection.vehicle?.type || "";
+        foundPlate = lastInspection.vehicle?.licensePlate || "";
+        foundKmEnd = lastInspection.vehicle?.mileageEnd || 0;
+        lastDateStr = new Date(lastInspection.inspectionDate).toLocaleDateString("id-ID");
+      } else if (lastLog) {
+        foundName = lastLog.driverName || "";
+        foundPlate = lastLog.licensePlate || "";
+        foundKmEnd = lastLog.kmEnd || 0;
+        lastDateStr = lastLog.date || "";
+      }
+
+      // If found in local cache, apply immediately
+      if (foundName || foundKmEnd) {
+        applyInspectionCheckpointData(foundName, foundType, foundPlate, foundKmEnd, lastDateStr, banner, bannerText);
+        return;
+      }
+
+      // 2. Fetch from Supabase Cloud if available
+      if (SUPABASE_URL && SUPABASE_KEY && !SUPABASE_URL.includes("YOUR_SUPABASE")) {
+        try {
+          const res = await fetch(`${SUPABASE_URL}/rest/v1/inspections?or=(driver_nik.eq.${encodeURIComponent(trimmedNik)},driver_name.ilike.*NIK: ${encodeURIComponent(trimmedNik)}*)&order=inspection_date.desc&limit=1`, {
+            headers: {
+              'apikey': SUPABASE_KEY,
+              'Authorization': `Bearer ${SUPABASE_KEY}`
+            }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.length > 0) {
+              const row = data[0];
+              let name = row.driver_name || "";
+              const match = name.match(/^(.+) \(NIK: (.+)\)$/);
+              if (match) name = match[1].trim();
+
+              applyInspectionCheckpointData(
+                name,
+                row.vehicle_type || "",
+                row.license_plate || "",
+                row.mileage_end || 0,
+                new Date(row.inspection_date).toLocaleDateString("id-ID"),
+                banner,
+                bannerText
+              );
+              return;
+            }
+          }
+        } catch (e) {
+          console.warn("Supabase inspection checkpoint fetch error:", e);
+        }
+      }
+
+      // If new NIK (no previous records found)
+      if (banner) banner.style.display = "none";
+    }
+
+    function applyInspectionCheckpointData(name, type, plate, kmEnd, lastDateStr, banner, bannerText) {
+      if (name) document.getElementById("driverName").value = name;
+      if (type) document.getElementById("vehicleType").value = type;
+      if (plate) document.getElementById("licensePlate").value = plate;
+      if (kmEnd !== undefined && kmEnd !== null) {
+        document.getElementById("mileageStart").value = kmEnd;
+      }
+
+      if (banner && bannerText) {
+        bannerText.innerHTML = `Driver <strong>${escapeHtml(name || 'Terdaftar')}</strong> (${escapeHtml(plate || '-')}) | Inspeksi terakhir: <strong>${lastDateStr || '-'}</strong> | Checkpoint KM Awal diset ke: <strong>${kmEnd.toLocaleString()} KM</strong>`;
+        banner.style.display = "block";
+      }
+    }
+
+    async function loadDriverCheckpoint(nik) {
       const trimmedNik = (nik || "").trim();
       const banner = document.getElementById("checkpointInfoBanner");
       const bannerText = document.getElementById("checkpointInfoText");
@@ -2633,32 +2983,81 @@
         return;
       }
 
-      // Find most recent log entry for this driverNik
-      const lastLog = driverLogs.find(l => l.driverNik === trimmedNik);
+      try { localStorage.setItem("ptk_active_driver_nik", trimmedNik); } catch(e){}
+
+      // Find most recent log entry or inspection
+      let lastLog = driverLogs.find(l => l.driverNik === trimmedNik);
+      let lastInspection = db.find(r => r.driver && (r.driver.nik === trimmedNik || (r.driver.name && r.driver.name.includes(`NIK: ${trimmedNik}`))));
+
+      let foundName = "";
+      let foundPlate = "";
+      let foundKmEnd = 0;
+      let lastDateStr = "";
 
       if (lastLog) {
-        // Auto fill Name, Plate, KM Start = last log's KM End
-        document.getElementById("driverLogName").value = lastLog.driverName || "";
-        document.getElementById("driverLogPlate").value = lastLog.licensePlate || "";
-        document.getElementById("driverLogKmStart").value = lastLog.kmEnd !== undefined ? lastLog.kmEnd : "";
+        foundName = lastLog.driverName || "";
+        foundPlate = lastLog.licensePlate || "";
+        foundKmEnd = lastLog.kmEnd || 0;
+        lastDateStr = lastLog.date || "";
+      } else if (lastInspection) {
+        foundName = lastInspection.driver?.name || "";
+        foundPlate = lastInspection.vehicle?.licensePlate || "";
+        foundKmEnd = lastInspection.vehicle?.mileageEnd || 0;
+        lastDateStr = new Date(lastInspection.inspectionDate).toLocaleDateString("id-ID");
+      }
 
-        // Default date to today
-        const todayStr = new Date().toISOString().split('T')[0];
+      if (foundName || foundKmEnd) {
+        applyDriverLogCheckpointData(foundName, foundPlate, foundKmEnd, lastDateStr, banner, bannerText);
+        return;
+      }
+
+      // Check Supabase if local is empty
+      if (SUPABASE_URL && SUPABASE_KEY && !SUPABASE_URL.includes("YOUR_SUPABASE")) {
+        try {
+          const res = await fetch(`${SUPABASE_URL}/rest/v1/driver_logs?driver_nik=eq.${encodeURIComponent(trimmedNik)}&order=log_date.desc&limit=1`, {
+            headers: {
+              'apikey': SUPABASE_KEY,
+              'Authorization': `Bearer ${SUPABASE_KEY}`
+            }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.length > 0) {
+              const r = data[0];
+              applyDriverLogCheckpointData(
+                r.driver_name || "",
+                r.license_plate || "",
+                r.km_end || 0,
+                r.log_date || "",
+                banner,
+                bannerText
+              );
+              return;
+            }
+          }
+        } catch (e) {}
+      }
+
+      if (banner) banner.style.display = "none";
+      const todayStr = new Date().toISOString().split('T')[0];
+      if (!document.getElementById("driverLogDate").value) {
         document.getElementById("driverLogDate").value = todayStr;
         autoFillDriverLogDay(todayStr);
+      }
+    }
 
-        if (banner && bannerText) {
-          bannerText.innerHTML = `Driver <strong>${escapeHtml(lastLog.driverName)}</strong> (${escapeHtml(lastLog.licensePlate)}) | Log terakhir tanggal <strong>${lastLog.date || '-'}</strong> | Checkpoint KM Awal diset ke: <strong>${lastLog.kmEnd || 0} KM</strong>`;
-          banner.style.display = "block";
-        }
-      } else {
-        // Driver NIK is new
-        if (banner) banner.style.display = "none";
-        const todayStr = new Date().toISOString().split('T')[0];
-        if (!document.getElementById("driverLogDate").value) {
-          document.getElementById("driverLogDate").value = todayStr;
-          autoFillDriverLogDay(todayStr);
-        }
+    function applyDriverLogCheckpointData(name, plate, kmEnd, lastDateStr, banner, bannerText) {
+      if (name) document.getElementById("driverLogName").value = name;
+      if (plate) document.getElementById("driverLogPlate").value = plate;
+      if (kmEnd !== undefined && kmEnd !== null) document.getElementById("driverLogKmStart").value = kmEnd;
+
+      const todayStr = new Date().toISOString().split('T')[0];
+      document.getElementById("driverLogDate").value = todayStr;
+      autoFillDriverLogDay(todayStr);
+
+      if (banner && bannerText) {
+        bannerText.innerHTML = `Driver <strong>${escapeHtml(name)}</strong> (${escapeHtml(plate)}) | Log terakhir: <strong>${lastDateStr || '-'}</strong> | Checkpoint KM Awal diset ke: <strong>${kmEnd.toLocaleString()} KM</strong>`;
+        banner.style.display = "block";
       }
     }
 
@@ -3647,7 +4046,8 @@
     }
 
     function renderDriverProgressView() {
-      const nik = sessionStorage.getItem("ptk_driver_progress_nik") || "";
+      const savedNik = sessionStorage.getItem("ptk_driver_progress_nik") || safeLocalStorageGet("ptk_active_driver_nik") || "";
+      const nik = (typeof savedNik === 'string') ? savedNik.replace(/"/g, '').trim() : '';
       if (!nik) return;
 
       const selMonth = parseInt(document.getElementById("progressFilterMonth").value) || (new Date().getMonth() + 1);
@@ -3657,7 +4057,12 @@
       const report = generateMonthlyLogReport(nik, selMonth, selYear);
 
       const driverName = report.driverName;
-      const matchingChk = db.find(r => (r.driver?.nik || "").trim().toLowerCase() === nik.trim().toLowerCase());
+      const matchingChk = db.find(r => {
+        const rNik = (r.driver?.nik || "").trim().toLowerCase();
+        const rName = (r.driver?.name || "").trim().toLowerCase();
+        const searchNik = nik.trim().toLowerCase();
+        return rNik === searchNik || rName.includes(`nik: ${searchNik}`);
+      });
       const driverPlate = report.rows.find(r => r.licensePlate)?.licensePlate || matchingChk?.vehicle?.licensePlate || "-";
 
       document.getElementById("progressDriverName").textContent = driverName;
@@ -3687,10 +4092,14 @@
         const searchNik = nik.trim().toLowerCase();
         const searchName = driverName.trim().toLowerCase();
 
-        const isMatch = (rNik && rNik === searchNik) || (rName && rName === searchName);
+        const isNikMatch = searchNik && (rNik === searchNik || rName.includes(`nik: ${searchNik}`) || rName.includes(searchNik));
+        const isNameMatch = searchName && (rName === searchName || rName.includes(searchName) || searchName.includes(rName));
+
+        const isMatch = isNikMatch || isNameMatch;
         if (!isMatch) return false;
 
         const d = new Date(r.inspectionDate);
+        if (isNaN(d.getTime())) return false;
         return d.getFullYear() === selYear && (d.getMonth() + 1) === selMonth;
       });
 
@@ -3936,16 +4345,25 @@
       initSignaturePad();
       resetForm();
 
-      // Restore active view if authenticated
+      // Initialize Role & Profile UI State
+      updateHeaderProfileUI();
+
       const savedView = sessionStorage.getItem("ptk_active_view") || 'driver-form';
-      if (savedView === 'admin-dashboard' && isAdminAuthenticated) {
+      const savedNik = safeLocalStorageGet("ptk_active_driver_nik");
+      const activeNikStr = (savedNik && typeof savedNik === 'string') ? savedNik.replace(/"/g, '').trim() : '';
+
+      if (!currentUserRole) {
+        openRolePortalModal();
+      } else if (currentUserRole === 'admin' && isAdminAuthenticated) {
         switchView('admin-dashboard');
-      } else if (savedView === 'driver-log-form') {
-        switchView('driver-log-form');
-      } else if (savedView === 'driver-progress') {
-        switchView('driver-progress');
+      } else if (currentUserRole === 'driver') {
+        if (!activeNikStr) {
+          openDriverNikAccountModal();
+        } else {
+          switchView(savedView && savedView !== 'admin-dashboard' ? savedView : 'driver-form');
+        }
       } else {
-        switchView('driver-form');
+        openRolePortalModal();
       }
     };
   </script>
