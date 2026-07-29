@@ -352,14 +352,31 @@ export function prepareTimesheetPrintMarkup(
     const plate = matchedLog ? escapeHtml(matchedLog.licensePlate) : "";
     const workStart = matchedLog ? escapeHtml(matchedLog.workStart) : "";
     const workEnd = matchedLog ? escapeHtml(matchedLog.workEnd) : "";
-    const kmStart =
-      matchedLog && matchedLog.kmStart ? matchedLog.kmStart.toLocaleString() : "";
-    const kmEnd =
-      matchedLog && matchedLog.kmEnd ? matchedLog.kmEnd.toLocaleString() : "";
-    const kmTotal =
-      matchedLog && matchedLog.kmEnd && matchedLog.kmStart && matchedLog.kmEnd >= matchedLog.kmStart
-        ? (matchedLog.kmEnd - matchedLog.kmStart).toLocaleString()
-        : "";
+    let kmStartStr = "";
+    let kmEndStr = "";
+    let kmTotalStr = "";
+
+    if (matchedLog) {
+      const startNum = Number(matchedLog.kmStart);
+      const endNum = Number(matchedLog.kmEnd);
+
+      const hasStart =
+        matchedLog.kmStart !== "" &&
+        matchedLog.kmStart !== null &&
+        matchedLog.kmStart !== undefined &&
+        !isNaN(startNum);
+      const hasEnd =
+        matchedLog.kmEnd !== "" &&
+        matchedLog.kmEnd !== null &&
+        matchedLog.kmEnd !== undefined &&
+        !isNaN(endNum);
+
+      if (hasStart) kmStartStr = startNum.toLocaleString();
+      if (hasEnd) kmEndStr = endNum.toLocaleString();
+      if (hasStart && hasEnd) {
+        kmTotalStr = Math.max(0, endNum - startNum).toLocaleString();
+      }
+    }
     const userName = matchedLog ? escapeHtml(matchedLog.userName) : "";
     const userSig =
       matchedLog && matchedLog.userSignature
@@ -374,9 +391,9 @@ export function prepareTimesheetPrintMarkup(
         <td style="border:1px solid #000; padding:0px 2px; text-align:center;">${plate}</td>
         <td style="border:1px solid #000; padding:0px 2px; text-align:center;">${workStart}</td>
         <td style="border:1px solid #000; padding:0px 2px; text-align:center;">${workEnd}</td>
-        <td style="border:1px solid #000; padding:0px 2px; text-align:center;">${kmStart}</td>
-        <td style="border:1px solid #000; padding:0px 2px; text-align:center;">${kmEnd}</td>
-        <td style="border:1px solid #000; padding:0px 2px; text-align:center; font-weight:bold;">${kmTotal}</td>
+        <td style="border:1px solid #000; padding:0px 2px; text-align:center;">${kmStartStr}</td>
+        <td style="border:1px solid #000; padding:0px 2px; text-align:center;">${kmEndStr}</td>
+        <td style="border:1px solid #000; padding:0px 2px; text-align:center; font-weight:bold;">${kmTotalStr}</td>
         <td style="border:1px solid #000; padding:0px 2px; text-align:center;">${userName}</td>
         <td style="border:1px solid #000; padding:0px 2px; text-align:center; vertical-align:middle;">${userSig}</td>
         <td style="border:1px solid #000; padding:0px 2px; text-align:left;">${remark}</td>
