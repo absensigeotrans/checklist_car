@@ -114,15 +114,19 @@ export default function AdminDashboard() {
 
   const handlePrintTimesheetPDF = (logToPrint?: DriverLogEntry) => {
     const targetLog = logToPrint || selectedLog;
-    const name = targetLog ? targetLog.driverName : (tsFilterDriver || "Driver");
-    const nik = targetLog ? targetLog.driverNik : "";
+    const name = targetLog ? targetLog.driverName : (tsFilterDriverDropdown || tsFilterDriver || "Driver");
+    const nik = targetLog ? targetLog.driverNik : (registeredDrivers.find((d) => d.name === tsFilterDriverDropdown)?.nik || "");
     const m = tsFilterMonth === "all" ? (new Date().getMonth() + 1) : tsFilterMonth;
     const y = new Date().getFullYear();
 
     const logsForDriver = driverLogs.filter((l) => {
       const isMatch = targetLog
         ? l.driverNik === targetLog.driverNik || l.driverName === targetLog.driverName
-        : true;
+        : (tsFilterDriverDropdown
+            ? l.driverName === tsFilterDriverDropdown
+            : tsFilterDriver
+              ? l.driverName.toLowerCase().includes(tsFilterDriver.toLowerCase()) || l.driverNik.toLowerCase().includes(tsFilterDriver.toLowerCase())
+              : true);
       const dateObj = new Date(l.logDate);
       return isMatch && dateObj.getMonth() + 1 === m && dateObj.getFullYear() === y;
     });
@@ -135,15 +139,44 @@ export default function AdminDashboard() {
       y
     );
 
+    const fileName = `Timesheet_${name.replace(/\s+/g, "_")}_${String(m).padStart(2, "0")}_${y}`;
+
     const win = window.open("", "_blank");
     if (win) {
-      win.document.write(`<html><head><title>Timesheet PDF - ${name}</title><style>@media print{@page{size:A4 portrait;margin:4mm;}}</style></head><body>${markup}</body></html>`);
+      win.document.write(`
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8"/>
+  <title>${fileName}</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 0; background: white; }
+    @media print {
+      @page { size: A4 landscape; margin: 6mm; }
+      body { margin: 0; }
+    }
+  </style>
+</head>
+<body>
+${markup}
+<script>
+  window.onload = function() {
+    window.focus();
+    setTimeout(function() {
+      window.print();
+      window.onafterprint = function() { window.close(); };
+      // Fallback: close after 2s if onafterprint not fired
+      setTimeout(function() { window.close(); }, 2000);
+    }, 400);
+  };
+<\/script>
+</body>
+</html>`);
       win.document.close();
-      setTimeout(() => {
-        win.print();
-      }, 300);
     }
   };
+
 
   const handleDownloadPDF = () => {
     if (!selectedRecord) return;
