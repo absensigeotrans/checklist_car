@@ -163,7 +163,7 @@ export default function AdminDashboard() {
     * { box-sizing: border-box; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
     body { margin: 0; padding: 0; background: white; }
     @media print {
-      @page { size: A4 landscape; margin: 6mm; }
+      @page { size: A4 landscape; margin: 3mm; }
       body { margin: 0; }
     }
   </style>
