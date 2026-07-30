@@ -79,12 +79,22 @@ export function preparePrintMarkup(rec: InspectionRecord, highlightMode = false)
     const note = escapeHtml(item.note || "");
     const bgStyle = highlightMode && isMissing ? "background-color:#fee2e2; color:#991b1b;" : "";
     const rowHtml = `
-      <tr style="height:21px; ${bgStyle}">
-        <td style="border:1px solid #000; text-align:center; font-size:10px; line-height:1; vertical-align:middle; padding:2px;">${i}</td>
-        <td style="border:1px solid #000; padding:2px 5px; font-size:9.5px; line-height:1.1; vertical-align:middle; text-transform:uppercase;">${escapeHtml(item.item)}</td>
-        <td style="border:1px solid #000; text-align:center; font-weight:bold; font-size:11px; line-height:1; vertical-align:middle; ${highlightMode && item.status === "ADA" ? "color:#15803d;" : ""}">${statusAda}</td>
-        <td style="border:1px solid #000; text-align:center; font-weight:bold; font-size:11px; line-height:1; vertical-align:middle; ${highlightMode && isMissing ? "color:#dc2626;" : ""}">${statusTdk}</td>
-        <td style="border:1px solid #000; padding:2px 4px; font-size:9px; line-height:1.1; vertical-align:middle; ${highlightMode && isMissing ? "font-weight:bold;" : ""}">${note}</td>
+      <tr style="${bgStyle}">
+        <td style="border:1px solid #000; padding:0; vertical-align:middle; text-align:center;">
+          <div style="display:flex; align-items:center; justify-content:center; min-height:22px; font-size:10px; font-weight:bold; padding:2px 0;">${i}</div>
+        </td>
+        <td style="border:1px solid #000; padding:0; vertical-align:middle;">
+          <div style="display:flex; align-items:center; min-height:22px; font-size:9.5px; line-height:1.1; text-transform:uppercase; padding:2px 6px;">${escapeHtml(item.item)}</div>
+        </td>
+        <td style="border:1px solid #000; padding:0; vertical-align:middle; text-align:center;">
+          <div style="display:flex; align-items:center; justify-content:center; min-height:22px; font-size:12px; font-weight:bold; padding:2px 0; ${highlightMode && item.status === "ADA" ? "color:#15803d;" : ""}">${statusAda}</div>
+        </td>
+        <td style="border:1px solid #000; padding:0; vertical-align:middle; text-align:center;">
+          <div style="display:flex; align-items:center; justify-content:center; min-height:22px; font-size:12px; font-weight:bold; padding:2px 0; ${highlightMode && isMissing ? "color:#dc2626;" : ""}">${statusTdk}</div>
+        </td>
+        <td style="border:1px solid #000; padding:0; vertical-align:middle;">
+          <div style="display:flex; align-items:center; min-height:22px; font-size:9px; line-height:1.1; padding:2px 4px; ${highlightMode && isMissing ? "font-weight:bold;" : ""}">${note}</div>
+        </td>
       </tr>`;
     if (i <= 14) leftTableRows += rowHtml;
     else rightTableRows += rowHtml;
@@ -133,16 +143,28 @@ export function preparePrintMarkup(rec: InspectionRecord, highlightMode = false)
       <!-- Top Meta Box -->
       <table style="width:100%; border-collapse:collapse; border:1px solid #000; margin-bottom:8px; font-size:11px; text-align:center;">
         <tr style="background-color:#f0f0f0; font-weight:bold;">
-          <td style="border:1px solid #000; width:25%; padding:4px 6px; vertical-align:middle;">Nama Driver</td>
-          <td style="border:1px solid #000; width:45%; padding:4px 6px; vertical-align:middle;">Jenis Kendaraan / Nopol Kendaraan</td>
-          <td style="border:1px solid #000; width:30%; padding:4px 6px; vertical-align:middle;">Kilometer Kendaraan (Awal / Akhir)</td>
+          <td style="border:1px solid #000; width:25%; padding:0; vertical-align:middle;">
+            <div style="display:flex; align-items:center; justify-content:center; min-height:26px; padding:2px 4px; font-size:11px; font-weight:bold;">Nama Driver</div>
+          </td>
+          <td style="border:1px solid #000; width:45%; padding:0; vertical-align:middle;">
+            <div style="display:flex; align-items:center; justify-content:center; min-height:26px; padding:2px 4px; font-size:11px; font-weight:bold;">Jenis Kendaraan / Nopol Kendaraan</div>
+          </td>
+          <td style="border:1px solid #000; width:30%; padding:0; vertical-align:middle;">
+            <div style="display:flex; align-items:center; justify-content:center; min-height:26px; padding:2px 4px; font-size:11px; font-weight:bold;">Kilometer Kendaraan (Awal / Akhir)</div>
+          </td>
         </tr>
-        <tr style="font-weight:bold; height:28px;">
-          <td style="border:1px solid #000; padding:4px 6px; vertical-align:middle;">${escapeHtml(rec.driver.name)}</td>
-          <td style="border:1px solid #000; padding:4px 6px; vertical-align:middle;">${escapeHtml(rec.vehicle.type || "-")} / ${escapeHtml(rec.vehicle.licensePlate || "-")}</td>
-          <td style="border:1px solid #000; padding:4px 6px; vertical-align:middle; line-height:1.2;">
-            Awal: ${rec.vehicle.mileageStart ? rec.vehicle.mileageStart.toLocaleString() : "0"}<br/>
-            Akhir: ${rec.vehicle.mileageEnd ? rec.vehicle.mileageEnd.toLocaleString() : "0"} KM
+        <tr style="font-weight:bold;">
+          <td style="border:1px solid #000; padding:0; vertical-align:middle;">
+            <div style="display:flex; align-items:center; justify-content:center; min-height:30px; padding:4px; font-size:12px;">${escapeHtml(rec.driver.name)}</div>
+          </td>
+          <td style="border:1px solid #000; padding:0; vertical-align:middle;">
+            <div style="display:flex; align-items:center; justify-content:center; min-height:30px; padding:4px; font-size:12px;">${escapeHtml(rec.vehicle.type || "-")} / ${escapeHtml(rec.vehicle.licensePlate || "-")}</div>
+          </td>
+          <td style="border:1px solid #000; padding:0; vertical-align:middle;">
+            <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; min-height:30px; padding:4px; font-size:10px; line-height:1.2;">
+              <div>Awal: ${rec.vehicle.mileageStart ? rec.vehicle.mileageStart.toLocaleString() : "0"}</div>
+              <div>Akhir: ${rec.vehicle.mileageEnd ? rec.vehicle.mileageEnd.toLocaleString() : "0"} KM</div>
+            </div>
           </td>
         </tr>
       </table>
@@ -154,14 +176,26 @@ export function preparePrintMarkup(rec: InspectionRecord, highlightMode = false)
         <table style="width:100%; border-collapse:collapse; border:1px solid #000; font-size:10px;">
           <thead>
             <tr style="background-color:#e0e0e0; font-weight:bold; text-align:center;">
-              <th colspan="5" style="border:1px solid #000; padding:4px 2px; vertical-align:middle;">PERLENGKAPAN KENDARAAN (1-14)</th>
+              <th colspan="5" style="border:1px solid #000; padding:0; vertical-align:middle;">
+                <div style="display:flex; align-items:center; justify-content:center; min-height:24px; padding:2px 4px; font-size:10px; font-weight:bold;">PERLENGKAPAN KENDARAAN (1-14)</div>
+              </th>
             </tr>
             <tr style="background-color:#f5f5f5; font-weight:bold; text-align:center;">
-              <th style="border:1px solid #000; width:7%; padding:3px 2px; vertical-align:middle;">NO</th>
-              <th style="border:1px solid #000; width:48%; padding:3px 4px; text-align:left; vertical-align:middle;">PERLENGKAPAN</th>
-              <th style="border:1px solid #000; width:12%; padding:3px 2px; vertical-align:middle;">ADA</th>
-              <th style="border:1px solid #000; width:12%; padding:3px 2px; vertical-align:middle;">TDK ADA</th>
-              <th style="border:1px solid #000; width:21%; padding:3px 2px; vertical-align:middle;">KET</th>
+              <th style="border:1px solid #000; width:7%; padding:0; vertical-align:middle;">
+                <div style="display:flex; align-items:center; justify-content:center; min-height:24px; font-size:10px; font-weight:bold;">NO</div>
+              </th>
+              <th style="border:1px solid #000; width:48%; padding:0; text-align:left; vertical-align:middle;">
+                <div style="display:flex; align-items:center; min-height:24px; padding:0 6px; font-size:10px; font-weight:bold;">PERLENGKAPAN</div>
+              </th>
+              <th style="border:1px solid #000; width:12%; padding:0; vertical-align:middle;">
+                <div style="display:flex; align-items:center; justify-content:center; min-height:24px; font-size:10px; font-weight:bold;">ADA</div>
+              </th>
+              <th style="border:1px solid #000; width:12%; padding:0; vertical-align:middle;">
+                <div style="display:flex; align-items:center; justify-content:center; min-height:24px; font-size:10px; font-weight:bold;">TDK ADA</div>
+              </th>
+              <th style="border:1px solid #000; width:21%; padding:0; vertical-align:middle;">
+                <div style="display:flex; align-items:center; justify-content:center; min-height:24px; font-size:10px; font-weight:bold;">KET</div>
+              </th>
             </tr>
           </thead>
           <tbody>${leftTableRows}</tbody>
@@ -171,14 +205,26 @@ export function preparePrintMarkup(rec: InspectionRecord, highlightMode = false)
         <table style="width:100%; border-collapse:collapse; border:1px solid #000; font-size:10px;">
           <thead>
             <tr style="background-color:#e0e0e0; font-weight:bold; text-align:center;">
-              <th colspan="5" style="border:1px solid #000; padding:4px 2px; vertical-align:middle;">PERLENGKAPAN KENDARAAN (15-27)</th>
+              <th colspan="5" style="border:1px solid #000; padding:0; vertical-align:middle;">
+                <div style="display:flex; align-items:center; justify-content:center; min-height:24px; padding:2px 4px; font-size:10px; font-weight:bold;">PERLENGKAPAN KENDARAAN (15-27)</div>
+              </th>
             </tr>
             <tr style="background-color:#f5f5f5; font-weight:bold; text-align:center;">
-              <th style="border:1px solid #000; width:7%; padding:3px 2px; vertical-align:middle;">NO</th>
-              <th style="border:1px solid #000; width:48%; padding:3px 4px; text-align:left; vertical-align:middle;">PERLENGKAPAN</th>
-              <th style="border:1px solid #000; width:12%; padding:3px 2px; vertical-align:middle;">ADA</th>
-              <th style="border:1px solid #000; width:12%; padding:3px 2px; vertical-align:middle;">TDK ADA</th>
-              <th style="border:1px solid #000; width:21%; padding:3px 2px; vertical-align:middle;">KET</th>
+              <th style="border:1px solid #000; width:7%; padding:0; vertical-align:middle;">
+                <div style="display:flex; align-items:center; justify-content:center; min-height:24px; font-size:10px; font-weight:bold;">NO</div>
+              </th>
+              <th style="border:1px solid #000; width:48%; padding:0; text-align:left; vertical-align:middle;">
+                <div style="display:flex; align-items:center; min-height:24px; padding:0 6px; font-size:10px; font-weight:bold;">PERLENGKAPAN</div>
+              </th>
+              <th style="border:1px solid #000; width:12%; padding:0; vertical-align:middle;">
+                <div style="display:flex; align-items:center; justify-content:center; min-height:24px; font-size:10px; font-weight:bold;">ADA</div>
+              </th>
+              <th style="border:1px solid #000; width:12%; padding:0; vertical-align:middle;">
+                <div style="display:flex; align-items:center; justify-content:center; min-height:24px; font-size:10px; font-weight:bold;">TDK ADA</div>
+              </th>
+              <th style="border:1px solid #000; width:21%; padding:0; vertical-align:middle;">
+                <div style="display:flex; align-items:center; justify-content:center; min-height:24px; font-size:10px; font-weight:bold;">KET</div>
+              </th>
             </tr>
           </thead>
           <tbody>${rightTableRows}</tbody>
@@ -277,12 +323,14 @@ export function preparePrintMarkup(rec: InspectionRecord, highlightMode = false)
       <!-- Footer Signatures Grid -->
       <table style="width:100%; border-collapse:collapse; border:1px solid #000; font-size:10px; text-align:center; table-layout:fixed;">
         <tr>
-          <td style="border:1px solid #000; width:26%; padding:4px 6px; height:65px; vertical-align:top; text-align:left;">
-            <div style="font-weight:bold; font-size:10px;">Tanggal Pemeriksaan:</div>
-            <div style="margin-top:16px; font-weight:bold; font-size:10px;">${dateFormatted}</div>
+          <td style="border:1px solid #000; width:26%; padding:0; vertical-align:top; text-align:left;">
+            <div style="padding:6px; min-height:65px; box-sizing:border-box;">
+              <div style="font-weight:bold; font-size:10px;">Tanggal Pemeriksaan:</div>
+              <div style="margin-top:14px; font-weight:bold; font-size:10px;">${dateFormatted}</div>
+            </div>
           </td>
-          <td style="border:1px solid #000; width:28%; padding:4px 6px; height:65px; text-align:left;">
-            <div style="display:flex; flex-direction:column; justify-content:space-between; height:100%;">
+          <td style="border:1px solid #000; width:28%; padding:0; vertical-align:top; text-align:left;">
+            <div style="padding:6px; min-height:65px; display:flex; flex-direction:column; justify-content:space-between; box-sizing:border-box;">
               <div>
                 <strong style="font-size:10px;">Nama & Tanda Tangan Driver:</strong>
                 ${
@@ -291,19 +339,19 @@ export function preparePrintMarkup(rec: InspectionRecord, highlightMode = false)
                     : ""
                 }
               </div>
-              <div style="font-weight:bold; font-size:10px; margin-top:auto; padding-bottom:2px;">( ${escapeHtml(rec.driver.name)} )</div>
+              <div style="font-weight:bold; font-size:10px; margin-top:6px;">( ${escapeHtml(rec.driver.name)} )</div>
             </div>
           </td>
-          <td style="border:1px solid #000; width:23%; padding:4px 6px; height:65px; text-align:left;">
-            <div style="display:flex; flex-direction:column; justify-content:space-between; height:100%;">
+          <td style="border:1px solid #000; width:23%; padding:0; vertical-align:top; text-align:left;">
+            <div style="padding:6px; min-height:65px; display:flex; flex-direction:column; justify-content:space-between; box-sizing:border-box;">
               <strong style="font-size:10px;">Mengetahui Koordinator:</strong>
-              <div style="font-size:10px; margin-top:auto; padding-bottom:2px;">( ______________ )</div>
+              <div style="font-size:10px; margin-top:6px;">( ______________ )</div>
             </div>
           </td>
-          <td style="border:1px solid #000; width:23%; padding:4px 6px; height:65px; text-align:left;">
-            <div style="display:flex; flex-direction:column; justify-content:space-between; height:100%;">
+          <td style="border:1px solid #000; width:23%; padding:0; vertical-align:top; text-align:left;">
+            <div style="padding:6px; min-height:65px; display:flex; flex-direction:column; justify-content:space-between; box-sizing:border-box;">
               <strong style="font-size:10px;">Mengetahui Asset Mgt:</strong>
-              <div style="font-size:10px; margin-top:auto; padding-bottom:2px;">( ______________ )</div>
+              <div style="font-size:10px; margin-top:6px;">( ______________ )</div>
             </div>
           </td>
         </tr>
@@ -557,6 +605,7 @@ export async function downloadChecklistPDFDirect(
         allowTaint: true,
         logging: false,
         letterRendering: true,
+        windowWidth: 1024,
       },
       jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
     };
