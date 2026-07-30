@@ -79,12 +79,12 @@ export function preparePrintMarkup(rec: InspectionRecord, highlightMode = false)
     const note = escapeHtml(item.note || "");
     const bgStyle = highlightMode && isMissing ? "background-color:#fee2e2; color:#991b1b;" : "";
     const rowHtml = `
-      <tr style="height:18px; ${bgStyle}">
-        <td style="border:1px solid #000; text-align:center; font-size:0.6rem;">${i}</td>
-        <td style="border:1px solid #000; padding:1px 3px; font-size:0.58rem; text-transform:uppercase;">${escapeHtml(item.item)}</td>
-        <td style="border:1px solid #000; text-align:center; font-weight:bold; font-size:0.65rem; ${highlightMode && item.status === "ADA" ? "color:#15803d;" : ""}">${statusAda}</td>
-        <td style="border:1px solid #000; text-align:center; font-weight:bold; font-size:0.65rem; ${highlightMode && isMissing ? "color:#dc2626;" : ""}">${statusTdk}</td>
-        <td style="border:1px solid #000; padding:1px 3px; font-size:0.55rem; ${highlightMode && isMissing ? "font-weight:bold;" : ""}">${note}</td>
+      <tr style="height:21px; ${bgStyle}">
+        <td style="border:1px solid #000; text-align:center; font-size:10px; line-height:1; vertical-align:middle; padding:2px;">${i}</td>
+        <td style="border:1px solid #000; padding:2px 5px; font-size:9.5px; line-height:1.1; vertical-align:middle; text-transform:uppercase;">${escapeHtml(item.item)}</td>
+        <td style="border:1px solid #000; text-align:center; font-weight:bold; font-size:11px; line-height:1; vertical-align:middle; ${highlightMode && item.status === "ADA" ? "color:#15803d;" : ""}">${statusAda}</td>
+        <td style="border:1px solid #000; text-align:center; font-weight:bold; font-size:11px; line-height:1; vertical-align:middle; ${highlightMode && isMissing ? "color:#dc2626;" : ""}">${statusTdk}</td>
+        <td style="border:1px solid #000; padding:2px 4px; font-size:9px; line-height:1.1; vertical-align:middle; ${highlightMode && isMissing ? "font-weight:bold;" : ""}">${note}</td>
       </tr>`;
     if (i <= 14) leftTableRows += rowHtml;
     else rightTableRows += rowHtml;
@@ -115,32 +115,32 @@ export function preparePrintMarkup(rec: InspectionRecord, highlightMode = false)
   const isF = fuel > 87.5;
 
   return `
-    <div class="official-inspection-print" style="width:100%; max-width:850px; margin:0 auto; background-color:white; color:black; padding:8px 12px; font-family:Arial,sans-serif; border:1px solid #000; box-sizing:border-box;">
+    <div class="official-inspection-print" style="width:100%; max-width:820px; margin:0 auto; background-color:white; color:black; padding:10px 14px; font-family:Arial,sans-serif; border:1px solid #000; box-sizing:border-box;">
       
       <!-- Header -->
-      <div style="display:flex; align-items:center; border-bottom:2px solid #000; padding-bottom:4px; margin-bottom:6px;">
-        <div style="width:70px;">
+      <div style="display:flex; align-items:center; border-bottom:2px solid #000; padding-bottom:6px; margin-bottom:8px;">
+        <div style="width:75px;">
           <img src="${origin}/logo_pertamina_tk.png" alt="PTK" style="height:36px; width:auto; object-fit:contain;">
         </div>
         <div style="flex:1; text-align:center;">
-          <h2 style="font-size:0.95rem; font-weight:800; text-transform:uppercase; margin:0; line-height:1.2;">PERTAMINA TRANS KONTINENTAL</h2>
-          <h2 style="font-size:0.95rem; font-weight:800; text-transform:uppercase; margin:0; line-height:1.2;">INSPECTION CHECK LIST</h2>
-          <h3 style="font-size:0.75rem; font-weight:700; margin:1px 0 0 0; text-decoration:underline; line-height:1.2;">Berita Acara Check List Kendaraan</h3>
+          <h2 style="font-size:15px; font-weight:800; text-transform:uppercase; margin:0; line-height:1.2;">PERTAMINA TRANS KONTINENTAL</h2>
+          <h2 style="font-size:15px; font-weight:800; text-transform:uppercase; margin:0; line-height:1.2;">INSPECTION CHECK LIST</h2>
+          <h3 style="font-size:12px; font-weight:700; margin:3px 0 0 0; text-decoration:underline; line-height:1.2;">Berita Acara Check List Kendaraan</h3>
         </div>
-        <div style="width:70px;"></div>
+        <div style="width:75px;"></div>
       </div>
 
       <!-- Top Meta Box -->
-      <table style="width:100%; border-collapse:collapse; border:1px solid #000; margin-bottom:6px; font-size:0.68rem; text-align:center;">
+      <table style="width:100%; border-collapse:collapse; border:1px solid #000; margin-bottom:8px; font-size:11px; text-align:center;">
         <tr style="background-color:#f0f0f0; font-weight:bold;">
-          <td style="border:1px solid #000; width:25%; padding:3px;">Nama Driver</td>
-          <td style="border:1px solid #000; width:45%; padding:3px;">Jenis Kendaraan / Nopol Kendaraan</td>
-          <td style="border:1px solid #000; width:30%; padding:3px;">Kilometer Kendaraan (Awal / Akhir)</td>
+          <td style="border:1px solid #000; width:25%; padding:4px 6px; vertical-align:middle;">Nama Driver</td>
+          <td style="border:1px solid #000; width:45%; padding:4px 6px; vertical-align:middle;">Jenis Kendaraan / Nopol Kendaraan</td>
+          <td style="border:1px solid #000; width:30%; padding:4px 6px; vertical-align:middle;">Kilometer Kendaraan (Awal / Akhir)</td>
         </tr>
-        <tr style="font-weight:bold; height:24px;">
-          <td style="border:1px solid #000; padding:3px;">${escapeHtml(rec.driver.name)}</td>
-          <td style="border:1px solid #000; padding:3px;">${escapeHtml(rec.vehicle.type || "-")} / ${escapeHtml(rec.vehicle.licensePlate || "-")}</td>
-          <td style="border:1px solid #000; padding:3px; line-height:1.2;">
+        <tr style="font-weight:bold; height:28px;">
+          <td style="border:1px solid #000; padding:4px 6px; vertical-align:middle;">${escapeHtml(rec.driver.name)}</td>
+          <td style="border:1px solid #000; padding:4px 6px; vertical-align:middle;">${escapeHtml(rec.vehicle.type || "-")} / ${escapeHtml(rec.vehicle.licensePlate || "-")}</td>
+          <td style="border:1px solid #000; padding:4px 6px; vertical-align:middle; line-height:1.2;">
             Awal: ${rec.vehicle.mileageStart ? rec.vehicle.mileageStart.toLocaleString() : "0"}<br/>
             Akhir: ${rec.vehicle.mileageEnd ? rec.vehicle.mileageEnd.toLocaleString() : "0"} KM
           </td>
@@ -148,37 +148,37 @@ export function preparePrintMarkup(rec: InspectionRecord, highlightMode = false)
       </table>
 
       <!-- 2 Columns Checklist Grid -->
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:6px;">
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px;">
         
         <!-- Left Table (1-14) -->
-        <table style="width:100%; border-collapse:collapse; border:1px solid #000; font-size:0.6rem;">
+        <table style="width:100%; border-collapse:collapse; border:1px solid #000; font-size:10px;">
           <thead>
             <tr style="background-color:#e0e0e0; font-weight:bold; text-align:center;">
-              <th colspan="5" style="border:1px solid #000; padding:2px;">PERLENGKAPAN KENDARAAN (1-14)</th>
+              <th colspan="5" style="border:1px solid #000; padding:4px 2px; vertical-align:middle;">PERLENGKAPAN KENDARAAN (1-14)</th>
             </tr>
             <tr style="background-color:#f5f5f5; font-weight:bold; text-align:center;">
-              <th style="border:1px solid #000; width:7%; padding:2px;">NO</th>
-              <th style="border:1px solid #000; width:48%; padding:2px; text-align:left;">PERLENGKAPAN</th>
-              <th style="border:1px solid #000; width:12%; padding:2px;">ADA</th>
-              <th style="border:1px solid #000; width:12%; padding:2px;">TDK ADA</th>
-              <th style="border:1px solid #000; width:21%; padding:2px;">KET</th>
+              <th style="border:1px solid #000; width:7%; padding:3px 2px; vertical-align:middle;">NO</th>
+              <th style="border:1px solid #000; width:48%; padding:3px 4px; text-align:left; vertical-align:middle;">PERLENGKAPAN</th>
+              <th style="border:1px solid #000; width:12%; padding:3px 2px; vertical-align:middle;">ADA</th>
+              <th style="border:1px solid #000; width:12%; padding:3px 2px; vertical-align:middle;">TDK ADA</th>
+              <th style="border:1px solid #000; width:21%; padding:3px 2px; vertical-align:middle;">KET</th>
             </tr>
           </thead>
           <tbody>${leftTableRows}</tbody>
         </table>
 
         <!-- Right Table (15-27) -->
-        <table style="width:100%; border-collapse:collapse; border:1px solid #000; font-size:0.6rem;">
+        <table style="width:100%; border-collapse:collapse; border:1px solid #000; font-size:10px;">
           <thead>
             <tr style="background-color:#e0e0e0; font-weight:bold; text-align:center;">
-              <th colspan="5" style="border:1px solid #000; padding:2px;">PERLENGKAPAN KENDARAAN (15-27)</th>
+              <th colspan="5" style="border:1px solid #000; padding:4px 2px; vertical-align:middle;">PERLENGKAPAN KENDARAAN (15-27)</th>
             </tr>
             <tr style="background-color:#f5f5f5; font-weight:bold; text-align:center;">
-              <th style="border:1px solid #000; width:7%; padding:2px;">NO</th>
-              <th style="border:1px solid #000; width:48%; padding:2px; text-align:left;">PERLENGKAPAN</th>
-              <th style="border:1px solid #000; width:12%; padding:2px;">ADA</th>
-              <th style="border:1px solid #000; width:12%; padding:2px;">TDK ADA</th>
-              <th style="border:1px solid #000; width:21%; padding:2px;">KET</th>
+              <th style="border:1px solid #000; width:7%; padding:3px 2px; vertical-align:middle;">NO</th>
+              <th style="border:1px solid #000; width:48%; padding:3px 4px; text-align:left; vertical-align:middle;">PERLENGKAPAN</th>
+              <th style="border:1px solid #000; width:12%; padding:3px 2px; vertical-align:middle;">ADA</th>
+              <th style="border:1px solid #000; width:12%; padding:3px 2px; vertical-align:middle;">TDK ADA</th>
+              <th style="border:1px solid #000; width:21%; padding:3px 2px; vertical-align:middle;">KET</th>
             </tr>
           </thead>
           <tbody>${rightTableRows}</tbody>
@@ -187,56 +187,56 @@ export function preparePrintMarkup(rec: InspectionRecord, highlightMode = false)
       </div>
 
       <!-- Physical Condition Box -->
-      <div style="border:1px solid #000; margin-bottom:6px; padding:4px 6px;">
-        <div style="font-size:0.7rem; font-weight:bold; text-align:center; text-transform:uppercase; border-bottom:1px solid #000; padding-bottom:2px; margin-bottom:4px; background-color:#f0f0f0;">
+      <div style="border:1px solid #000; margin-bottom:8px; padding:6px 8px;">
+        <div style="font-size:11px; font-weight:bold; text-align:center; text-transform:uppercase; border-bottom:1px solid #000; padding-bottom:3px; margin-bottom:6px; background-color:#f0f0f0;">
           KONDISI KENDARAAN (FISIK)
         </div>
 
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:0.62rem; line-height:1.2;">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; font-size:10px; line-height:1.25;">
           
           <!-- 1. Body Depan -->
-          <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:1px dashed #ccc; padding-bottom:3px;">
-            <div style="flex:1;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:1px dashed #ccc; padding-bottom:4px;">
+            <div style="flex:1; padding-right:4px;">
               <strong>1. Body Depan</strong><br/>
               ${getDamageLines("body_depan")}
             </div>
-            <div style="width:45px; height:45px; position:relative; background:#fafafa; border:1px solid #eee; flex-shrink:0;">
+            <div style="width:48px; height:48px; position:relative; background:#fafafa; border:1px solid #eee; flex-shrink:0;">
               <img src="${origin}/car_front.png" alt="Depan" style="width:100%; height:100%; object-fit:contain;">
               ${getPointersHtml("body_depan")}
             </div>
           </div>
 
           <!-- 2. Body Samping Kiri -->
-          <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:1px dashed #ccc; padding-bottom:3px;">
-            <div style="flex:1;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:1px dashed #ccc; padding-bottom:4px;">
+            <div style="flex:1; padding-right:4px;">
               <strong>2. Body Samping Kiri</strong><br/>
               ${getDamageLines("body_samping_kiri")}
             </div>
-            <div style="width:45px; height:45px; position:relative; background:#fafafa; border:1px solid #eee; flex-shrink:0;">
+            <div style="width:48px; height:48px; position:relative; background:#fafafa; border:1px solid #eee; flex-shrink:0;">
               <img src="${origin}/car_left.png" alt="Kiri" style="width:100%; height:100%; object-fit:contain;">
               ${getPointersHtml("body_samping_kiri")}
             </div>
           </div>
 
           <!-- 3. Body Samping Kanan -->
-          <div style="display:flex; justify-content:space-between; align-items:flex-start; padding-top:2px;">
-            <div style="flex:1;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; padding-top:4px;">
+            <div style="flex:1; padding-right:4px;">
               <strong>3. Body Samping Kanan</strong><br/>
               ${getDamageLines("body_samping_kanan")}
             </div>
-            <div style="width:45px; height:45px; position:relative; background:#fafafa; border:1px solid #eee; flex-shrink:0;">
+            <div style="width:48px; height:48px; position:relative; background:#fafafa; border:1px solid #eee; flex-shrink:0;">
               <img src="${origin}/car_right.png" alt="Kanan" style="width:100%; height:100%; object-fit:contain;">
               ${getPointersHtml("body_samping_kanan")}
             </div>
           </div>
 
           <!-- 4. Body Belakang -->
-          <div style="display:flex; justify-content:space-between; align-items:flex-start; padding-top:2px;">
-            <div style="flex:1;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; padding-top:4px;">
+            <div style="flex:1; padding-right:4px;">
               <strong>4. Body Belakang</strong><br/>
               ${getDamageLines("body_belakang")}
             </div>
-            <div style="width:45px; height:45px; position:relative; background:#fafafa; border:1px solid #eee; flex-shrink:0;">
+            <div style="width:48px; height:48px; position:relative; background:#fafafa; border:1px solid #eee; flex-shrink:0;">
               <img src="${origin}/car_rear.png" alt="Belakang" style="width:100%; height:100%; object-fit:contain;">
               ${getPointersHtml("body_belakang")}
             </div>
@@ -245,7 +245,7 @@ export function preparePrintMarkup(rec: InspectionRecord, highlightMode = false)
         </div>
 
         <!-- Fuel Gauge Bar -->
-        <div style="border-top:1px solid #000; margin-top:4px; padding-top:3px; display:flex; justify-content:space-between; align-items:center; font-size:0.65rem;">
+        <div style="border-top:1px solid #000; margin-top:6px; padding-top:4px; display:flex; justify-content:space-between; align-items:center; font-size:10px;">
           <div><strong>Level Bahan Bakar:</strong> ${rec.condition.fuelLevel}%</div>
           <div style="font-weight:bold; letter-spacing:2px;">
             <span style="${isE ? "color:red; text-decoration:underline;" : "color:#666;"}">E</span>
@@ -263,7 +263,7 @@ export function preparePrintMarkup(rec: InspectionRecord, highlightMode = false)
       </div>
 
       <!-- Notes & Attention Box -->
-      <div style="font-size:0.62rem; line-height:1.25; margin-bottom:6px;">
+      <div style="font-size:10px; line-height:1.3; margin-bottom:8px;">
         <strong>Perhatian !</strong><br/>
         1. Perlengkapan/kondisi mobil harus jelas perinciannya.<br/>
         2. Driver bertanggung jawab atas kelengkapan dan alat-alat kendaraan yang ada.<br/>
@@ -275,28 +275,36 @@ export function preparePrintMarkup(rec: InspectionRecord, highlightMode = false)
       </div>
 
       <!-- Footer Signatures Grid -->
-      <table style="width:100%; border-collapse:collapse; border:1px solid #000; font-size:0.65rem; text-align:center; table-layout:fixed;">
-        <tr style="height:55px;">
-          <td style="border:1px solid #000; width:26%; padding:2px; vertical-align:top; text-align:left;">
-            <strong>Tanggal Pemeriksaan Kendaraan:</strong><br/>
-            <div style="margin-top:14px; font-weight:bold;">${dateFormatted}</div>
+      <table style="width:100%; border-collapse:collapse; border:1px solid #000; font-size:10px; text-align:center; table-layout:fixed;">
+        <tr>
+          <td style="border:1px solid #000; width:26%; padding:4px 6px; height:65px; vertical-align:top; text-align:left;">
+            <div style="font-weight:bold; font-size:10px;">Tanggal Pemeriksaan:</div>
+            <div style="margin-top:16px; font-weight:bold; font-size:10px;">${dateFormatted}</div>
           </td>
-          <td style="border:1px solid #000; width:28%; padding:2px; vertical-align:top; text-align:left; position:relative;">
-            <strong>Nama & Tanda Tangan Driver:</strong><br/>
-            ${
-              rec.signature
-                ? `<img src="${rec.signature}" alt="TTD" style="max-height:28px; max-width:80px; object-fit:contain; margin-top:2px;"/>`
-                : ""
-            }
-            <div style="position:absolute; bottom:2px; left:4px; font-weight:bold;">( ${escapeHtml(rec.driver.name)} )</div>
+          <td style="border:1px solid #000; width:28%; padding:4px 6px; height:65px; text-align:left;">
+            <div style="display:flex; flex-direction:column; justify-content:space-between; height:100%;">
+              <div>
+                <strong style="font-size:10px;">Nama & Tanda Tangan Driver:</strong>
+                ${
+                  rec.signature
+                    ? `<div style="margin-top:2px;"><img src="${rec.signature}" alt="TTD" style="max-height:26px; max-width:80px; object-fit:contain;"/></div>`
+                    : ""
+                }
+              </div>
+              <div style="font-weight:bold; font-size:10px; margin-top:auto; padding-bottom:2px;">( ${escapeHtml(rec.driver.name)} )</div>
+            </div>
           </td>
-          <td style="border:1px solid #000; width:23%; padding:2px; vertical-align:top; text-align:left; position:relative;">
-            <strong>Mengetahui Koordinator Kendaraan:</strong><br/>
-            <div style="position:absolute; bottom:2px; left:4px;">( ______________ )</div>
+          <td style="border:1px solid #000; width:23%; padding:4px 6px; height:65px; text-align:left;">
+            <div style="display:flex; flex-direction:column; justify-content:space-between; height:100%;">
+              <strong style="font-size:10px;">Mengetahui Koordinator:</strong>
+              <div style="font-size:10px; margin-top:auto; padding-bottom:2px;">( ______________ )</div>
+            </div>
           </td>
-          <td style="border:1px solid #000; width:23%; padding:2px; vertical-align:top; text-align:left; position:relative;">
-            <strong>Mengetahui Asset Management:</strong><br/>
-            <div style="position:absolute; bottom:2px; left:4px;">( ______________ )</div>
+          <td style="border:1px solid #000; width:23%; padding:4px 6px; height:65px; text-align:left;">
+            <div style="display:flex; flex-direction:column; justify-content:space-between; height:100%;">
+              <strong style="font-size:10px;">Mengetahui Asset Mgt:</strong>
+              <div style="font-size:10px; margin-top:auto; padding-bottom:2px;">( ______________ )</div>
+            </div>
           </td>
         </tr>
       </table>
@@ -543,7 +551,13 @@ export async function downloadChecklistPDFDirect(
       margin: [5, 5, 5, 5],
       filename: fileName,
       image: { type: "jpeg", quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true, allowTaint: true, logging: false },
+      html2canvas: {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        logging: false,
+        letterRendering: true,
+      },
       jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
     };
 
