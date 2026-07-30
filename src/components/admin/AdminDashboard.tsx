@@ -531,16 +531,16 @@ ${markup}
                   <option value="">-- Pilih Driver Cetak --</option>
                   {registeredDrivers.map((d) => (
                     <option key={d.nik} value={d.name}>
-                      {d.name} (NIK: {d.nik})
+                      {d.name} (NIP: {d.nik})
                     </option>
                   ))}
                 </select>
               </div>
 
-              {/* Cari Nama / NIK */}
+              {/* Cari Nama / NIP */}
               <div className="flex flex-col gap-1.5">
                 <label className="text-[11px] font-bold text-text-muted uppercase tracking-wider">
-                  Cari Nama / NIK
+                  Cari Nama / NIP
                 </label>
                 <input
                   type="text"
@@ -549,7 +549,7 @@ ${markup}
                     setTsFilterDriver(e.target.value);
                     setTsFilterDriverDropdown("");
                   }}
-                  placeholder="Ketik Nama atau NIK..."
+                  placeholder="Ketik Nama atau NIP..."
                   className="w-full border border-border rounded-[10px] px-3 py-2 outline-none text-xs focus:border-primary-blue focus:ring-2 focus:ring-blue-100 font-medium"
                 />
               </div>
@@ -663,7 +663,7 @@ ${markup}
                       Tanggal
                     </th>
                     <th className="text-text-muted font-bold uppercase text-[11px] tracking-wider px-4 py-3.5">
-                      Nama Driver & NIK
+                      Nama Driver & NIP
                     </th>
                     <th className="text-text-muted font-bold uppercase text-[11px] tracking-wider px-4 py-3.5">
                       Nopol
@@ -722,7 +722,7 @@ ${markup}
                                   {escapeHtml(l.driverName)}
                                 </div>
                                 <div className="text-[10px] text-text-muted font-mono">
-                                  NIK: {l.driverNik || "-"}
+                                  NIP: {l.driverNik || "-"}
                                 </div>
                               </div>
                             </div>
@@ -829,7 +829,7 @@ ${markup}
                       Nama Lengkap Driver
                     </th>
                     <th className="text-text-muted font-bold uppercase text-[11px] tracking-wider px-4 py-3">
-                      NIK Driver
+                      NIP Driver
                     </th>
                     <th className="text-text-muted font-bold uppercase text-[11px] tracking-wider px-4 py-3 text-center">
                       Aksi Pengelolaan
@@ -867,7 +867,7 @@ ${markup}
                           onClick={() => {
                             if (
                               confirm(
-                                `Hapus akun driver "${driver.name}" (NIK: ${driver.nik})? Aksi ini tidak dapat dibatalkan.`
+                                `Hapus akun driver "${driver.name}" (NIP: ${driver.nik})? Aksi ini tidak dapat dibatalkan.`
                               )
                             )
                               handleDeleteDriver(driver.nik);
@@ -1084,7 +1084,7 @@ ${markup}
               <div>
                 <strong className="text-text-muted">Tanggal:</strong> {formatDateShort(selectedLog.logDate)} ({selectedLog.logDay})<br />
                 <strong className="text-text-muted">Nama Driver:</strong> {escapeHtml(selectedLog.driverName)}<br />
-                <strong className="text-text-muted">NIK:</strong> {selectedLog.driverNik || "-"}<br />
+                <strong className="text-text-muted">NIP:</strong> {selectedLog.driverNik || "-"}<br />
                 <strong className="text-text-muted">No Polisi:</strong> {selectedLog.licensePlate || "-"}
               </div>
               <div>

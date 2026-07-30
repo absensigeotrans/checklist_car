@@ -52,7 +52,7 @@ export default function RolePortalModal() {
       return;
     }
     if (!nik) {
-      alert("Harap masukkan NIK Driver Anda!");
+      alert("Harap masukkan NIP (Nomor Induk Pegawai) Driver Anda!");
       return;
     }
 
@@ -60,17 +60,17 @@ export default function RolePortalModal() {
     await registerDriver(name, nik);
 
     alert(
-      `✅ Pendaftaran Akun Driver Berhasil!\n\nDriver: ${name}\nNIK: ${nik}\n\nSilakan masuk melalui halaman 'Masuk Sebagai Driver' untuk login ke akun Anda.`
+      `✅ Pendaftaran Akun Driver Berhasil!\n\nDriver: ${name}\nNIP: ${nik}\n\nSilakan masuk melalui halaman 'Masuk Sebagai Driver' untuk login ke akun Anda.`
     );
 
-    // Switch view mode to Login Driver with NIK prefilled
+    // Switch view mode to Login Driver with NIP prefilled
     setViewMode("driver-login");
   };
 
   const handleLoginDriver = () => {
     const nik = nikInput.trim();
     if (!nik) {
-      alert("Harap masukkan NIK Driver Anda untuk login!");
+      alert("Harap masukkan NIP (Nomor Induk Pegawai) Driver Anda untuk login!");
       return;
     }
 
@@ -81,14 +81,14 @@ export default function RolePortalModal() {
 
     if (!found) {
       alert(
-        `❌ NIK Driver "${nik}" belum terdaftar dalam sistem!\n\nSilakan daftarkan NIK & Nama Driver Anda terlebih dahulu melalui menu 'Daftar NIK & Nama Driver'.`
+        `❌ NIP Driver "${nik}" belum terdaftar dalam sistem!\n\nSilakan daftarkan NIP & Nama Driver Anda terlebih dahulu melalui menu 'Daftar NIP & Nama Driver'.`
       );
-      // Automatically switch to registration view with prefilled NIK
+      // Automatically switch to registration view with prefilled NIP
       setViewMode("driver-register");
       return;
     }
 
-    // NIK is registered! Successfully login with registered profile
+    // NIP is registered! Successfully login with registered profile
     setDriverProfile(found.name, found.nik);
     setShowRolePortal(false);
     router.push("/driver");
@@ -157,7 +157,7 @@ export default function RolePortalModal() {
               </button>
             </div>
 
-            {/* Card 2: Registrasi NIK & Nama Driver */}
+            {/* Card 2: Registrasi NIP & Nama Driver */}
             <div
               className="bg-white border-2 border-border rounded-[16px] p-5 flex flex-col items-center text-center cursor-pointer hover:-translate-y-1 hover:border-primary-green hover:shadow-lg transition-all"
               onClick={handleOpenRegister}
@@ -166,10 +166,10 @@ export default function RolePortalModal() {
                 📝
               </div>
               <h3 className="text-base font-bold text-text-main mb-1.5">
-                Daftar NIK & Nama Driver
+                Daftar NIP & Nama Driver
               </h3>
               <p className="text-xs text-text-muted flex-1">
-                Daftarkan NIK & Nama Driver baru sebagai modal awal akun Anda.
+                Daftarkan NIP & Nama Driver baru sebagai modal awal akun Anda.
               </p>
               <button
                 type="button"
@@ -217,7 +217,7 @@ export default function RolePortalModal() {
           </div>
           <h2 className="text-xl font-bold mb-2">Formulir Pendaftaran Driver</h2>
           <p className="text-xs text-text-muted mb-5 text-left">
-            Masukkan <strong>Nama Driver</strong> dan <strong>NIK Driver</strong> Anda untuk mendaftarkan akun baru.
+            Masukkan <strong>Nama Driver</strong> dan <strong>NIP (Nomor Induk Pegawai) Driver</strong> Anda untuk mendaftarkan akun baru.
           </p>
           <div className="flex flex-col gap-4 text-left">
             <div className="flex flex-col gap-1.5">
@@ -235,14 +235,14 @@ export default function RolePortalModal() {
             </div>
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-bold text-text-muted uppercase tracking-wide">
-                NIK Driver *
+                Masukan NIP (Nomor Induk Pegawai) *
               </label>
               <input
                 type="text"
                 value={nikInput}
                 onChange={(e) => setNikInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleRegisterDriver()}
-                placeholder="Masukkan NIK Driver..."
+                placeholder="Masukan NIP Driver..."
                 className="w-full border-2 border-border rounded-[12px] px-4 py-3 outline-none focus:border-primary-green focus:shadow-[0_0_0_4px_hsl(145,63%,92%)] text-base"
               />
             </div>
@@ -269,19 +269,19 @@ export default function RolePortalModal() {
           </div>
           <h2 className="text-xl font-bold mb-2">Masuk Akun Driver</h2>
           <p className="text-xs text-text-muted mb-5 text-left">
-            Masukkan <strong>NIK Driver</strong> Anda yang sudah terdaftar untuk masuk ke akun aplikasi.
+            Masukkan <strong>NIP (Nomor Induk Pegawai) Driver</strong> Anda yang sudah terdaftar untuk masuk ke akun aplikasi.
           </p>
           <div className="flex flex-col gap-4 text-left">
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-bold text-text-muted uppercase tracking-wide">
-                NIK Driver *
+                Masukan NIP (Nomor Induk Pegawai) *
               </label>
               <input
                 type="text"
                 value={nikInput}
                 onChange={(e) => setNikInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleLoginDriver()}
-                placeholder="Masukkan NIK Driver Anda..."
+                placeholder="Masukan NIP Driver Anda..."
                 className="w-full border-2 border-border rounded-[12px] px-4 py-3 outline-none focus:border-primary-blue focus:shadow-[0_0_0_4px_hsl(211,100%,92%)] text-base"
                 autoFocus
               />

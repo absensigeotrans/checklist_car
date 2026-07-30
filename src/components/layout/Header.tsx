@@ -56,7 +56,7 @@ export default function Header() {
                 👤 <strong>{driverName || "Driver"}</strong>
                 {nik ? (
                   <span className="text-text-muted text-xs font-medium ml-1">
-                    • NIK: <strong className="text-primary-blue">{nik}</strong>
+                    • NIP: <strong className="text-primary-blue">{nik}</strong>
                   </span>
                 ) : null}
               </span>

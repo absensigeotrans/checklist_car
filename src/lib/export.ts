@@ -478,7 +478,7 @@ export function prepareTimesheetPrintMarkup(
           <div style="border-bottom:1px solid #000; min-height:14px; width:100%; font-weight:normal; margin-top:1px;">${escapeHtml(driverName)}</div>
         </div>
         <div style="width:48%;">
-          NIK Driver (Driver's NIK): 
+          NIP Driver (Driver's NIP): 
           <div style="border-bottom:1px solid #000; min-height:14px; width:100%; font-weight:normal; margin-top:1px;">${escapeHtml(driverNik)}</div>
         </div>
       </div>

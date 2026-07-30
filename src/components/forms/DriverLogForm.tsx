@@ -96,8 +96,8 @@ export default function DriverLogForm() {
         </div>
         <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-6">
           <div className="flex flex-col gap-2">
-            <label className="text-xs font-bold text-text-muted uppercase tracking-wide">NIK Driver *</label>
-            <input type="text" value={nik} onChange={(e) => setNik(e.target.value)} placeholder="Ketik NIK..." maxLength={50} required className="w-full border-2 border-border rounded-[12px] px-4 py-3 outline-none focus:border-primary-blue focus:shadow-[0_0_0_4px_hsl(211,100%,92%)]" />
+            <label className="text-xs font-bold text-text-muted uppercase tracking-wide">Masukan NIP (Nomor Induk Pegawai) *</label>
+            <input type="text" value={nik} onChange={(e) => setNik(e.target.value)} placeholder="Masukan NIP..." maxLength={50} required className="w-full border-2 border-border rounded-[12px] px-4 py-3 outline-none focus:border-primary-blue focus:shadow-[0_0_0_4px_hsl(211,100%,92%)]" />
           </div>
           <div className="flex flex-col gap-2">
             <label className="text-xs font-bold text-text-muted uppercase tracking-wide">Nama Driver *</label>
