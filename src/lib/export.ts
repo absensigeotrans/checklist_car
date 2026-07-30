@@ -59,7 +59,7 @@ export function exportMonthlyLogExcel(logs: DriverLogEntry[]): void {
   XLSX.writeFile(wb, "PTK_LogSheet_Driver.xlsx");
 }
 
-export function preparePrintMarkup(rec: InspectionRecord): string {
+export function preparePrintMarkup(rec: InspectionRecord, highlightMode = false): string {
   const origin = typeof window !== "undefined" ? window.location.origin : "";
   const dateObj = new Date(rec.inspectionDate);
   const dateFormatted =
@@ -75,14 +75,16 @@ export function preparePrintMarkup(rec: InspectionRecord): string {
     if (!item) continue;
     const statusAda = item.status === "ADA" ? "✓" : "";
     const statusTdk = item.status === "TDK ADA" ? "✓" : "";
+    const isMissing = item.status === "TDK ADA";
     const note = escapeHtml(item.note || "");
+    const bgStyle = highlightMode && isMissing ? "background-color:#fee2e2; color:#991b1b;" : "";
     const rowHtml = `
-      <tr style="height:18px;">
+      <tr style="height:18px; ${bgStyle}">
         <td style="border:1px solid #000; text-align:center; font-size:0.6rem;">${i}</td>
         <td style="border:1px solid #000; padding:1px 3px; font-size:0.58rem; text-transform:uppercase;">${escapeHtml(item.item)}</td>
-        <td style="border:1px solid #000; text-align:center; font-weight:bold; font-size:0.65rem;">${statusAda}</td>
-        <td style="border:1px solid #000; text-align:center; font-weight:bold; font-size:0.65rem;">${statusTdk}</td>
-        <td style="border:1px solid #000; padding:1px 3px; font-size:0.55rem;">${note}</td>
+        <td style="border:1px solid #000; text-align:center; font-weight:bold; font-size:0.65rem; ${highlightMode && item.status === "ADA" ? "color:#15803d;" : ""}">${statusAda}</td>
+        <td style="border:1px solid #000; text-align:center; font-weight:bold; font-size:0.65rem; ${highlightMode && isMissing ? "color:#dc2626;" : ""}">${statusTdk}</td>
+        <td style="border:1px solid #000; padding:1px 3px; font-size:0.55rem; ${highlightMode && isMissing ? "font-weight:bold;" : ""}">${note}</td>
       </tr>`;
     if (i <= 14) leftTableRows += rowHtml;
     else rightTableRows += rowHtml;
@@ -93,7 +95,7 @@ export function preparePrintMarkup(rec: InspectionRecord): string {
       .filter((d) => d.part === part)
       .map(
         (d) =>
-          `<svg style="position:absolute;left:calc(${d.x}% - 6px);top:calc(${d.y}% - 6px);width:12px;height:12px;z-index:100;overflow:visible;" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" fill="#ff0000" stroke="#ffffff" stroke-width="2"/></svg>`
+          `<svg style="position:absolute;left:calc(${d.x}% - 6px);top:calc(${d.y}% - 6px);width:12px;height:12px;z-index:100;overflow:visible;" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" fill="#ff0000" stroke="#ffffff" stroke-width="2"/><circle cx="10" cy="10" r="12" fill="none" stroke="#ff0000" stroke-width="1.5" opacity="0.6"/></svg>`
       )
       .join("");
 
@@ -482,3 +484,84 @@ export function prepareTimesheetPrintMarkup(
   `;
 }
 
+export async function downloadChecklistPDFDirect(
+  rec: InspectionRecord,
+  element?: HTMLElement | null
+): Promise<void> {
+  if (typeof window === "undefined") return;
+  try {
+    let html2pdfModule: any;
+    try {
+      html2pdfModule = require("html2pdf.js");
+    } catch {
+      html2pdfModule = await import("html2pdf.js");
+    }
+    const html2pdf = html2pdfModule?.default || (window as any).html2pdf || html2pdfModule;
+
+    if (typeof html2pdf !== "function") {
+      throw new Error("html2pdf module function is not available.");
+    }
+
+    let target: HTMLElement;
+    let tempContainer: HTMLElement | null = null;
+
+    if (element) {
+      target = element;
+    } else {
+      const markup = preparePrintMarkup(rec, false);
+      tempContainer = document.createElement("div");
+      tempContainer.style.position = "fixed";
+      tempContainer.style.left = "0";
+      tempContainer.style.top = "0";
+      tempContainer.style.width = "850px";
+      tempContainer.style.zIndex = "-9999";
+      tempContainer.style.opacity = "0.01";
+      tempContainer.style.pointerEvents = "none";
+      tempContainer.style.backgroundColor = "#ffffff";
+      tempContainer.innerHTML = markup;
+      document.body.appendChild(tempContainer);
+      target = (tempContainer.firstElementChild as HTMLElement) || tempContainer;
+
+      // Wait for images to load if dynamically appended
+      const images = Array.from(target.querySelectorAll("img"));
+      await Promise.all(
+        images.map((img) => {
+          if (img.complete) return Promise.resolve();
+          return new Promise((resolve) => {
+            img.onload = resolve;
+            img.onerror = resolve;
+          });
+        })
+      );
+    }
+
+    const safeDriver = (rec.driver?.name || "Driver").replace(/\s+/g, "_");
+    const safePlate = (rec.vehicle?.licensePlate || "NoPol").replace(/\s+/g, "_");
+    const fileName = `Checklist_${safeDriver}_${safePlate}.pdf`;
+
+    const opt = {
+      margin: [5, 5, 5, 5],
+      filename: fileName,
+      image: { type: "jpeg", quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, allowTaint: true, logging: false },
+      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+    };
+
+    await html2pdf().set(opt).from(target).save();
+
+    if (tempContainer && document.body.contains(tempContainer)) {
+      document.body.removeChild(tempContainer);
+    }
+  } catch (err) {
+    console.error("PDF generation error:", err);
+    alert("Terjadi kendala saat unduh PDF otomatis. Membuka jendela cetak sebagai alternatif...");
+    const win = window.open("", "_blank");
+    if (win) {
+      const safeDriver = (rec.driver?.name || "Driver").replace(/\s+/g, "_");
+      const safePlate = (rec.vehicle?.licensePlate || "NoPol").replace(/\s+/g, "_");
+      const fileName = `Checklist_${safeDriver}_${safePlate}`;
+      win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>${fileName}</title><style>* { box-sizing: border-box; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } body { margin: 0; padding: 0; background: white; } @media print { @page { size: A4 portrait; margin: 5mm; } body { margin: 0; } }</style></head><body>${preparePrintMarkup(rec, false)}<script>window.onload=function(){window.focus();setTimeout(function(){window.print();window.onafterprint=function(){window.close();};setTimeout(function(){window.close();},2000);},400);};<\/script></body></html>`);
+      win.document.close();
+    }
+  }
+}

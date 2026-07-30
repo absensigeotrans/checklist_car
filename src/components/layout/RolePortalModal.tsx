@@ -147,6 +147,10 @@ export default function RolePortalModal() {
               </p>
               <button
                 type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleOpenLogin();
+                }}
                 className="bg-primary-blue text-white text-sm px-4 py-2.5 rounded-[12px] font-semibold cursor-pointer mt-4 w-full justify-center shadow-sm hover:bg-primary-blue-hover transition-all"
               >
                 Akses Driver ➔
@@ -169,6 +173,10 @@ export default function RolePortalModal() {
               </p>
               <button
                 type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleOpenRegister();
+                }}
                 className="bg-primary-green text-white text-sm px-4 py-2.5 rounded-[12px] font-semibold cursor-pointer mt-4 w-full justify-center shadow-sm hover:bg-primary-green-hover transition-all"
               >
                 Daftar Driver ➔
@@ -191,6 +199,10 @@ export default function RolePortalModal() {
               </p>
               <button
                 type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleOpenAdmin();
+                }}
                 className="bg-primary-red text-white text-sm px-4 py-2.5 rounded-[12px] font-semibold cursor-pointer mt-4 w-full justify-center shadow-sm hover:bg-primary-red-hover transition-all"
               >
                 Akses Admin ➔

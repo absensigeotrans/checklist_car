@@ -10,12 +10,14 @@ import {
   exportMonthlyLogExcel,
   preparePrintMarkup,
   prepareTimesheetPrintMarkup,
+  downloadChecklistPDFDirect,
 } from "@/lib/export";
 import { useRegisteredDrivers } from "@/hooks/useRegisteredDrivers";
 import { formatDateID, formatDateShort, escapeHtml } from "@/lib/utils";
 import Modal from "../ui/Modal";
 import AdminMetrics from "./AdminMetrics";
 import ChecklistLogsTable from "./ChecklistLogsTable";
+import ChecklistPDFPreview from "./ChecklistPDFPreview";
 
 const MONTH_NAMES = [
   "Januari",
@@ -49,6 +51,7 @@ export default function AdminDashboard() {
   const [filterStatus, setFilterStatus] = useState("all");
   const [selectedRecord, setSelectedRecord] = useState<InspectionRecord | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [detailModalTab, setDetailModalTab] = useState<"summary" | "pdf">("summary");
 
   // Filters for Timesheet
   const [tsFilterDriver, setTsFilterDriver] = useState("");
@@ -104,10 +107,11 @@ export default function AdminDashboard() {
     });
   }, [driverLogs, tsFilterDriver, tsFilterPlate, tsFilterMonth]);
 
-  const handleViewDetail = (id: string) => {
+  const handleViewDetail = (id: string, initialTab: "summary" | "pdf" = "summary") => {
     const rec = records.find((r) => r.inspectionId === id);
     if (rec) {
       setSelectedRecord(rec);
+      setDetailModalTab(initialTab);
       setDetailOpen(true);
     }
   };
@@ -481,20 +485,8 @@ ${markup}
             onDelete={(id) => {
               if (confirm("Hapus data pemeriksaan ini?")) deleteRecord(id);
             }}
-            onDownloadPDF={(id) => {
-              const rec = records.find((r) => r.inspectionId === id);
-              if (rec) {
-                setSelectedRecord(rec);
-                setTimeout(handleDownloadPDF, 100);
-              }
-            }}
-            onExportPDF={(id) => {
-              const rec = records.find((r) => r.inspectionId === id);
-              if (rec) {
-                setSelectedRecord(rec);
-                setTimeout(handleExportPDF, 100);
-              }
-            }}
+            onDownloadPDF={(id) => handleViewDetail(id, "pdf")}
+            onExportPDF={(id) => handleViewDetail(id, "pdf")}
           />
         </div>
       )}
@@ -897,6 +889,7 @@ ${markup}
       <Modal
         isOpen={detailOpen}
         onClose={() => setDetailOpen(false)}
+        maxWidth="960px"
         title={
           selectedRecord
             ? `Detail Laporan Checklist - ${selectedRecord.driver?.name || ""} (${selectedRecord.vehicle?.licensePlate || "No Plat"})`
@@ -904,131 +897,178 @@ ${markup}
         }
       >
         {selectedRecord && (
-          <div className="space-y-5 text-left text-xs">
-            {/* Header Identity Card */}
-            <div className="bg-bg-sidebar p-4 rounded-[14px] border border-border grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <div>
-                  <span className="text-text-muted">Nama Driver:</span>{" "}
-                  <strong className="text-text-main font-bold">
-                    {escapeHtml(selectedRecord.driver?.name || "")}
-                  </strong>
-                </div>
-                <div>
-                  <span className="text-text-muted">Jenis Kendaraan:</span>{" "}
-                  <strong>{escapeHtml(selectedRecord.vehicle?.type) || "-"}</strong>
-                </div>
-                <div>
-                  <span className="text-text-muted">Plat Nomor:</span>{" "}
-                  <span className="bg-slate-100 text-slate-800 font-mono font-bold px-2 py-0.5 rounded-[4px] border border-slate-200">
-                    {escapeHtml(selectedRecord.vehicle?.licensePlate) || "-"}
-                  </span>
-                </div>
-              </div>
+          <div className="space-y-4">
+            {/* Modal Segmented Tab Navigation */}
+            <div className="bg-bg-sidebar/90 p-1.5 rounded-[12px] border border-border flex gap-1.5">
+              <button
+                type="button"
+                className={`flex-1 py-2 px-4 rounded-[10px] font-bold text-xs cursor-pointer transition-all inline-flex items-center justify-center gap-2 ${
+                  detailModalTab === "summary"
+                    ? "bg-white text-primary-blue shadow-2xs border border-border"
+                    : "text-text-muted hover:text-text-main hover:bg-white/50"
+                }`}
+                onClick={() => setDetailModalTab("summary")}
+              >
+                <span>📌</span> Ringkasan Rinci Temuan
+              </button>
 
-              <div className="space-y-1">
-                <div>
-                  <span className="text-text-muted">Waktu Inspeksi:</span>{" "}
-                  <strong>{formatDateID(selectedRecord.inspectionDate)}</strong>
-                </div>
-                <div>
-                  <span className="text-text-muted">Odometer:</span>{" "}
-                  <strong>{(selectedRecord.vehicle?.mileageStart || 0).toLocaleString()} → {(selectedRecord.vehicle?.mileageEnd || 0).toLocaleString()} KM</strong>
-                </div>
-                <div>
-                  <span className="text-text-muted">Level BBM:</span>{" "}
-                  <strong className="text-primary-blue font-bold">{selectedRecord.condition?.fuelLevel || 0}%</strong>
-                </div>
-              </div>
+              <button
+                type="button"
+                className={`flex-1 py-2 px-4 rounded-[10px] font-bold text-xs cursor-pointer transition-all inline-flex items-center justify-center gap-2 ${
+                  detailModalTab === "pdf"
+                    ? "bg-white text-primary-blue shadow-2xs border border-border"
+                    : "text-text-muted hover:text-text-main hover:bg-white/50"
+                }`}
+                onClick={() => setDetailModalTab("pdf")}
+              >
+                <span>📄</span> Preview Dokumen PDF Resmi
+              </button>
             </div>
 
-            {/* Kerusakan Body Box */}
-            <div className="bg-white p-4 rounded-[14px] border border-border space-y-2">
-              <h4 className="font-bold text-text-main text-xs uppercase tracking-wider flex items-center gap-1.5">
-                <span>🚗</span> Temuan Kerusakan Body (Fisik)
-              </h4>
-              {!selectedRecord.condition?.damages || selectedRecord.condition.damages.length === 0 ? (
-                <div className="bg-emerald-50 text-emerald-700 p-2.5 rounded-[10px] border border-emerald-200 font-semibold text-xs">
-                  ✓ Tidak ada temuan kerusakan fisik (Kondisi Body Mulus).
-                </div>
-              ) : (
-                <ul className="bg-rose-50 text-rose-700 p-3 rounded-[10px] border border-rose-200 space-y-1 text-xs">
-                  {selectedRecord.condition.damages.map((d, i) => (
-                    <li key={i} className="font-semibold">
-                      • [Body {d.part.replace("body_", "").replace("_", " ").toUpperCase()}] {escapeHtml(d.description)}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-
-            {/* Perlengkapan Hilang Box */}
-            <div className="bg-white p-4 rounded-[14px] border border-border space-y-2">
-              <h4 className="font-bold text-text-main text-xs uppercase tracking-wider flex items-center gap-1.5">
-                <span>🧰</span> Kelengkapan Alat (1-27)
-              </h4>
-              {(() => {
-                const missing = Object.entries(selectedRecord.checklist || {}).filter(
-                  ([, item]) => item && item.status === "TDK ADA"
-                );
-                return missing.length === 0 ? (
-                  <div className="bg-emerald-50 text-emerald-700 p-2.5 rounded-[10px] border border-emerald-200 font-semibold text-xs">
-                    ✓ Seluruh 27 item perlengkapan kendaraan LENGKAP (ADA).
+            {/* TAB 1: Ringkasan Rinci */}
+            {detailModalTab === "summary" && (
+              <div className="space-y-5 text-left text-xs">
+                {/* Header Identity Card */}
+                <div className="bg-bg-sidebar p-4 rounded-[14px] border border-border grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <div>
+                      <span className="text-text-muted">Nama Driver:</span>{" "}
+                      <strong className="text-text-main font-bold">
+                        {escapeHtml(selectedRecord.driver?.name || "")}
+                      </strong>
+                    </div>
+                    <div>
+                      <span className="text-text-muted">Jenis Kendaraan:</span>{" "}
+                      <strong>{escapeHtml(selectedRecord.vehicle?.type) || "-"}</strong>
+                    </div>
+                    <div>
+                      <span className="text-text-muted">Plat Nomor:</span>{" "}
+                      <span className="bg-slate-100 text-slate-800 font-mono font-bold px-2 py-0.5 rounded-[4px] border border-slate-200">
+                        {escapeHtml(selectedRecord.vehicle?.licensePlate) || "-"}
+                      </span>
+                    </div>
                   </div>
-                ) : (
-                  <ul className="bg-rose-50 text-rose-700 p-3 rounded-[10px] border border-rose-200 space-y-1 text-xs font-semibold">
-                    {missing.map(([num, item]) => (
-                      <li key={num}>
-                        • Item {num}. {item.item} ({item.note || "tanpa keterangan"})
-                      </li>
-                    ))}
-                  </ul>
-                );
-              })()}
-            </div>
 
-            {/* Catatan Driver */}
-            <div className="bg-white p-4 rounded-[14px] border border-border space-y-1">
-              <h4 className="font-bold text-text-main text-xs uppercase tracking-wider mb-1">
-                📝 Catatan Driver
-              </h4>
-              <p className="text-text-muted font-medium">
-                1. {escapeHtml(selectedRecord.condition?.notes?.[0]) || "-"}<br />
-                2. {escapeHtml(selectedRecord.condition?.notes?.[1]) || "-"}<br />
-                3. {escapeHtml(selectedRecord.condition?.notes?.[2]) || "-"}
-              </p>
-            </div>
+                  <div className="space-y-1">
+                    <div>
+                      <span className="text-text-muted">Waktu Inspeksi:</span>{" "}
+                      <strong>{formatDateID(selectedRecord.inspectionDate)}</strong>
+                    </div>
+                    <div>
+                      <span className="text-text-muted">Odometer:</span>{" "}
+                      <strong>
+                        {(selectedRecord.vehicle?.mileageStart || 0).toLocaleString()} →{" "}
+                        {(selectedRecord.vehicle?.mileageEnd || 0).toLocaleString()} KM
+                      </strong>
+                    </div>
+                    <div>
+                      <span className="text-text-muted">Level BBM:</span>{" "}
+                      <strong className="text-primary-blue font-bold">
+                        {selectedRecord.condition?.fuelLevel || 0}%
+                      </strong>
+                    </div>
+                  </div>
+                </div>
 
-            {/* Signature Preview */}
-            {selectedRecord.signature && (
-              <div className="bg-white p-3 rounded-[14px] border border-border space-y-1.5">
-                <h4 className="font-bold text-text-main text-xs uppercase tracking-wider">
-                  Tanda Tangan Driver
-                </h4>
-                <img
-                  src={selectedRecord.signature}
-                  alt="TTD"
-                  className="max-h-[90px] border border-border bg-white p-1 rounded-[8px] object-contain"
-                />
+                {/* Kerusakan Body Box */}
+                <div className="bg-white p-4 rounded-[14px] border border-border space-y-2">
+                  <h4 className="font-bold text-text-main text-xs uppercase tracking-wider flex items-center gap-1.5">
+                    <span>🚗</span> Temuan Kerusakan Body (Fisik)
+                  </h4>
+                  {!selectedRecord.condition?.damages || selectedRecord.condition.damages.length === 0 ? (
+                    <div className="bg-emerald-50 text-emerald-700 p-2.5 rounded-[10px] border border-emerald-200 font-semibold text-xs">
+                      ✓ Tidak ada temuan kerusakan fisik (Kondisi Body Mulus).
+                    </div>
+                  ) : (
+                    <ul className="bg-rose-50 text-rose-700 p-3 rounded-[10px] border border-rose-200 space-y-1 text-xs">
+                      {selectedRecord.condition.damages.map((d, i) => (
+                        <li key={i} className="font-semibold">
+                          • [Body {d.part.replace("body_", "").replace("_", " ").toUpperCase()}] {escapeHtml(d.description)}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
+                {/* Perlengkapan Hilang Box */}
+                <div className="bg-white p-4 rounded-[14px] border border-border space-y-2">
+                  <h4 className="font-bold text-text-main text-xs uppercase tracking-wider flex items-center gap-1.5">
+                    <span>🧰</span> Kelengkapan Alat (1-27)
+                  </h4>
+                  {(() => {
+                    const missing = Object.entries(selectedRecord.checklist || {}).filter(
+                      ([, item]) => item && item.status === "TDK ADA"
+                    );
+                    return missing.length === 0 ? (
+                      <div className="bg-emerald-50 text-emerald-700 p-2.5 rounded-[10px] border border-emerald-200 font-semibold text-xs">
+                        ✓ Seluruh 27 item perlengkapan kendaraan LENGKAP (ADA).
+                      </div>
+                    ) : (
+                      <ul className="bg-rose-50 text-rose-700 p-3 rounded-[10px] border border-rose-200 space-y-1 text-xs font-semibold">
+                        {missing.map(([num, item]) => (
+                          <li key={num}>
+                            • Item {num}. {item.item} ({item.note || "tanpa keterangan"})
+                          </li>
+                        ))}
+                      </ul>
+                    );
+                  })()}
+                </div>
+
+                {/* Catatan Driver */}
+                <div className="bg-white p-4 rounded-[14px] border border-border space-y-1">
+                  <h4 className="font-bold text-text-main text-xs uppercase tracking-wider mb-1">
+                    📝 Catatan Driver
+                  </h4>
+                  <p className="text-text-muted font-medium">
+                    1. {escapeHtml(selectedRecord.condition?.notes?.[0]) || "-"}<br />
+                    2. {escapeHtml(selectedRecord.condition?.notes?.[1]) || "-"}<br />
+                    3. {escapeHtml(selectedRecord.condition?.notes?.[2]) || "-"}
+                  </p>
+                </div>
+
+                {/* Signature Preview */}
+                {selectedRecord.signature && (
+                  <div className="bg-white p-3 rounded-[14px] border border-border space-y-1.5">
+                    <h4 className="font-bold text-text-main text-xs uppercase tracking-wider">
+                      Tanda Tangan Driver
+                    </h4>
+                    <img
+                      src={selectedRecord.signature}
+                      alt="TTD"
+                      className="max-h-[90px] border border-border bg-white p-1 rounded-[8px] object-contain"
+                    />
+                  </div>
+                )}
+
+                <div className="flex justify-end gap-2.5 pt-4 border-t border-border">
+                  <button
+                    type="button"
+                    className="bg-primary-blue text-white px-4 py-2.5 rounded-[10px] font-bold cursor-pointer shadow-2xs hover:bg-blue-700 transition-all inline-flex items-center gap-1.5 text-xs"
+                    onClick={() => setDetailModalTab("pdf")}
+                  >
+                    <span>📄</span> Lihat Preview PDF Dokumen
+                  </button>
+                  <button
+                    type="button"
+                    className="bg-bg-sidebar text-text-muted border border-border px-4 py-2.5 rounded-[10px] font-bold cursor-pointer hover:bg-border hover:text-text-main transition-all text-xs"
+                    onClick={() => setDetailOpen(false)}
+                  >
+                    Tutup
+                  </button>
+                </div>
               </div>
+            )}
+
+            {/* TAB 2: Preview Dokumen PDF Resmi */}
+            {detailModalTab === "pdf" && (
+              <ChecklistPDFPreview
+                record={selectedRecord}
+                onPrintWindow={handleDownloadPDF}
+              />
             )}
           </div>
         )}
-
-        <div className="flex justify-end gap-2.5 mt-6 pt-4 border-t border-border">
-          <button
-            className="bg-primary-blue text-white px-4 py-2.5 rounded-[10px] font-bold cursor-pointer shadow-2xs hover:bg-blue-700 transition-all inline-flex items-center gap-1.5 text-xs"
-            onClick={handleExportPDF}
-          >
-            <span>📄</span> Cetak PDF Official
-          </button>
-          <button
-            className="bg-bg-sidebar text-text-muted border border-border px-4 py-2.5 rounded-[10px] font-bold cursor-pointer hover:bg-border hover:text-text-main transition-all text-xs"
-            onClick={() => setDetailOpen(false)}
-          >
-            Tutup
-          </button>
-        </div>
       </Modal>
 
       {/* Timesheet Detail Modal */}
