@@ -445,23 +445,45 @@ export function prepareTimesheetPrintMarkup(
     const userName = matchedLog ? escapeHtml(matchedLog.userName) : "";
     const userSig =
       matchedLog && matchedLog.userSignature
-        ? `<img src="${matchedLog.userSignature}" alt="TTD" style="max-height:13px; max-width:48px; object-fit:contain; display:block; margin:0 auto;"/>`
+        ? `<img src="${matchedLog.userSignature}" alt="TTD" style="max-height:14px; max-width:55px; object-fit:contain; display:block; margin:0 auto;"/>`
         : "";
     const remark = matchedLog ? escapeHtml(matchedLog.remark) : "";
 
     tableRowsHtml += `
-      <tr style="height:15px;">
-        <td style="border:1px solid #000; padding:1px 2px; text-align:center; font-weight:bold; font-size:8px; vertical-align:middle; line-height:1;">${d}</td>
-        <td style="border:1px solid #000; padding:1px 2px; text-align:center; font-size:8px; vertical-align:middle; line-height:1;">${dayName}</td>
-        <td style="border:1px solid #000; padding:1px 2px; text-align:center; font-size:8px; vertical-align:middle; line-height:1;">${plate}</td>
-        <td style="border:1px solid #000; padding:1px 2px; text-align:center; font-size:8px; vertical-align:middle; line-height:1;">${workStart}</td>
-        <td style="border:1px solid #000; padding:1px 2px; text-align:center; font-size:8px; vertical-align:middle; line-height:1;">${workEnd}</td>
-        <td style="border:1px solid #000; padding:1px 2px; text-align:center; font-size:8px; vertical-align:middle; line-height:1;">${kmStartStr}</td>
-        <td style="border:1px solid #000; padding:1px 2px; text-align:center; font-size:8px; vertical-align:middle; line-height:1;">${kmEndStr}</td>
-        <td style="border:1px solid #000; padding:1px 2px; text-align:center; font-weight:bold; font-size:8px; vertical-align:middle; line-height:1;">${kmTotalStr}</td>
-        <td style="border:1px solid #000; padding:1px 3px; text-align:center; font-size:8px; vertical-align:middle; line-height:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${userName}</td>
-        <td style="border:1px solid #000; padding:0px 2px; text-align:center; vertical-align:middle;">${userSig}</td>
-        <td style="border:1px solid #000; padding:1px 3px; text-align:left; font-size:8px; vertical-align:middle; line-height:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${remark}</td>
+      <tr>
+        <td style="border-right:1px solid #000; border-bottom:1px solid #000; padding:0; vertical-align:middle; text-align:center;">
+          <div style="display:flex; align-items:center; justify-content:center; min-height:17px; font-weight:bold; font-size:8px; line-height:1.2; padding:1px 0;">${d}</div>
+        </td>
+        <td style="border-right:1px solid #000; border-bottom:1px solid #000; padding:0; vertical-align:middle; text-align:center;">
+          <div style="display:flex; align-items:center; justify-content:center; min-height:17px; font-size:8px; line-height:1.2; padding:1px 0;">${dayName}</div>
+        </td>
+        <td style="border-right:1px solid #000; border-bottom:1px solid #000; padding:0; vertical-align:middle; text-align:center;">
+          <div style="display:flex; align-items:center; justify-content:center; min-height:17px; font-size:8px; line-height:1.2; padding:1px 0;">${plate}</div>
+        </td>
+        <td style="border-right:1px solid #000; border-bottom:1px solid #000; padding:0; vertical-align:middle; text-align:center;">
+          <div style="display:flex; align-items:center; justify-content:center; min-height:17px; font-size:8px; line-height:1.2; padding:1px 0;">${workStart}</div>
+        </td>
+        <td style="border-right:1px solid #000; border-bottom:1px solid #000; padding:0; vertical-align:middle; text-align:center;">
+          <div style="display:flex; align-items:center; justify-content:center; min-height:17px; font-size:8px; line-height:1.2; padding:1px 0;">${workEnd}</div>
+        </td>
+        <td style="border-right:1px solid #000; border-bottom:1px solid #000; padding:0; vertical-align:middle; text-align:center;">
+          <div style="display:flex; align-items:center; justify-content:center; min-height:17px; font-size:8px; line-height:1.2; padding:1px 0;">${kmStartStr}</div>
+        </td>
+        <td style="border-right:1px solid #000; border-bottom:1px solid #000; padding:0; vertical-align:middle; text-align:center;">
+          <div style="display:flex; align-items:center; justify-content:center; min-height:17px; font-size:8px; line-height:1.2; padding:1px 0;">${kmEndStr}</div>
+        </td>
+        <td style="border-right:1px solid #000; border-bottom:1px solid #000; padding:0; vertical-align:middle; text-align:center;">
+          <div style="display:flex; align-items:center; justify-content:center; min-height:17px; font-weight:bold; font-size:8px; line-height:1.2; padding:1px 0;">${kmTotalStr}</div>
+        </td>
+        <td style="border-right:1px solid #000; border-bottom:1px solid #000; padding:0; vertical-align:middle;">
+          <div style="display:flex; align-items:center; justify-content:center; min-height:17px; font-size:8px; line-height:1.2; padding:1px 3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${userName}</div>
+        </td>
+        <td style="border-right:1px solid #000; border-bottom:1px solid #000; padding:0; vertical-align:middle; text-align:center;">
+          <div style="display:flex; align-items:center; justify-content:center; min-height:17px; padding:1px 2px;">${userSig}</div>
+        </td>
+        <td style="border-right:1px solid #000; border-bottom:1px solid #000; padding:0; vertical-align:middle;">
+          <div style="display:flex; align-items:center; justify-content:flex-start; min-height:17px; font-size:8px; line-height:1.2; padding:1px 4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${remark}</div>
+        </td>
       </tr>`;
   }
 
@@ -469,50 +491,135 @@ export function prepareTimesheetPrintMarkup(
     <div class="official-timesheet-print" style="width:1060px; margin:0 auto; background-color:#ffffff; color:#000000; padding:8px 12px; font-family:Arial,Helvetica,sans-serif; box-sizing:border-box;">
       
       <!-- Top Header -->
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; padding-bottom:3px; border-bottom:1.5px solid #000000;">
-        <div style="display:flex; align-items:center; gap:10px;">
-          <img src="${origin}/logo_pertamina_tk.png" alt="Pertamina Trans Kontinental" style="height:28px; width:auto; object-fit:contain; display:block;">
-          <div style="font-size:12px; font-weight:bold; text-transform:uppercase; letter-spacing:0.5px; line-height:1.2;">DRIVER DAILY TIMESHEET / REKAP HARIAN</div>
-        </div>
-        <div style="font-size:10px; font-weight:bold; text-align:right; line-height:1.2;">
-          Tahun: <span style="border-bottom:1px solid #000; padding:0 6px; display:inline-block;">${year}</span>
-          &nbsp;&nbsp;&nbsp;&nbsp;
-          Bulan: <span style="border-bottom:1px solid #000; padding:0 6px; display:inline-block;">${MONTH_NAMES[month - 1]}</span>
-        </div>
-      </div>
+      <table style="width:100%; border-collapse:separate; border-spacing:0; margin-bottom:6px; padding-bottom:4px; border-bottom:2px solid #000000;">
+        <tr>
+          <td style="vertical-align:middle; text-align:left;">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <img src="${origin}/logo_pertamina_tk.png" alt="Pertamina Trans Kontinental" style="height:28px; width:auto; object-fit:contain; display:block;">
+              <div style="font-size:12.5px; font-weight:bold; text-transform:uppercase; letter-spacing:0.5px; line-height:1.2;">DRIVER DAILY TIMESHEET / REKAP HARIAN</div>
+            </div>
+          </td>
+          <td style="vertical-align:middle; text-align:right; font-size:10px; font-weight:bold; white-space:nowrap;">
+            <div style="display:inline-flex; align-items:center; gap:16px;">
+              <div>
+                Tahun:&nbsp;<span style="display:inline-block; border-bottom:1.5px solid #000; min-width:40px; text-align:center; padding:0 4px; line-height:1.2;">${year}</span>
+              </div>
+              <div>
+                Bulan:&nbsp;<span style="display:inline-block; border-bottom:1.5px solid #000; min-width:65px; text-align:center; padding:0 4px; line-height:1.2;">${MONTH_NAMES[month - 1]}</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+      </table>
 
       <!-- Driver Metadata -->
-      <div style="display:flex; justify-content:space-between; font-size:9.5px; font-weight:bold; margin-bottom:5px;">
-        <div style="width:48%; display:flex; align-items:center; gap:4px;">
-          <span>Nama Driver (Driver's Name):</span>
-          <span style="border-bottom:1px solid #000; flex:1; font-weight:normal; padding-left:4px;">${escapeHtml(driverName)}</span>
-        </div>
-        <div style="width:48%; display:flex; align-items:center; gap:4px;">
-          <span>NIP Driver (Driver's NIP):</span>
-          <span style="border-bottom:1px solid #000; flex:1; font-weight:normal; padding-left:4px;">${escapeHtml(driverNik || "-")}</span>
-        </div>
-      </div>
+      <table style="width:100%; border-collapse:separate; border-spacing:0; font-size:9.5px; font-weight:bold; margin-bottom:6px;">
+        <tr>
+          <td style="width:48%; padding:0; vertical-align:middle;">
+            <div style="display:flex; align-items:center;">
+              <span style="white-space:nowrap;">Nama Driver (Driver's Name):&nbsp;</span>
+              <span style="flex:1; border-bottom:1.5px solid #000; font-weight:normal; padding-left:4px; min-height:15px; display:flex; align-items:center; line-height:1.2;">${escapeHtml(driverName)}</span>
+            </div>
+          </td>
+          <td style="width:4%;"></td>
+          <td style="width:48%; padding:0; vertical-align:middle;">
+            <div style="display:flex; align-items:center;">
+              <span style="white-space:nowrap;">NIP Driver (Driver's NIP):&nbsp;</span>
+              <span style="flex:1; border-bottom:1.5px solid #000; font-weight:normal; padding-left:4px; min-height:15px; display:flex; align-items:center; line-height:1.2;">${escapeHtml(driverNik || "-")}</span>
+            </div>
+          </td>
+        </tr>
+      </table>
 
       <!-- Timesheet Grid Table -->
-      <table style="width:100%; border-collapse:collapse; border:1px solid #000000; font-size:8px; table-layout:fixed; line-height:1.1;">
+      <table style="width:100%; border-collapse:separate; border-spacing:0; border-top:1px solid #000000; border-left:1px solid #000000; font-size:8px; table-layout:fixed; line-height:1.1;">
+        <colgroup>
+          <col style="width:3.5%;" />
+          <col style="width:6.0%;" />
+          <col style="width:9.5%;" />
+          <col style="width:5.5%;" />
+          <col style="width:5.5%;" />
+          <col style="width:7.0%;" />
+          <col style="width:7.0%;" />
+          <col style="width:6.0%;" />
+          <col style="width:14.5%;" />
+          <col style="width:13.0%;" />
+          <col style="width:22.5%;" />
+        </colgroup>
         <thead>
           <tr style="background-color:#f1f5f9; text-align:center; font-weight:bold;">
-            <th rowspan="2" style="border:1px solid #000; width:3.5%; padding:2px 1px; vertical-align:middle; font-size:7.5px;">Tgl<br/><span style="font-weight:normal;font-size:6.5px;">(Date)</span></th>
-            <th rowspan="2" style="border:1px solid #000; width:5.5%; padding:2px 1px; vertical-align:middle; font-size:7.5px;">Hari<br/><span style="font-weight:normal;font-size:6.5px;">(Day)</span></th>
-            <th rowspan="2" style="border:1px solid #000; width:9.0%; padding:2px 1px; vertical-align:middle; font-size:7.5px;">No Polisi<br/><span style="font-weight:normal;font-size:6.5px;">(Plate No)</span></th>
-            <th colspan="2" style="border:1px solid #000; width:11.0%; padding:2px 1px; vertical-align:middle; font-size:7.5px;">Jam Kerja<br/><span style="font-weight:normal;font-size:6.5px;">(Working Hour)</span></th>
-            <th colspan="3" style="border:1px solid #000; width:20.5%; padding:2px 1px; vertical-align:middle; font-size:7.5px;">Kilometer<br/><span style="font-weight:normal;font-size:6.5px;">(KM)</span></th>
-            <th colspan="2" style="border:1px solid #000; width:28.5%; padding:2px 1px; vertical-align:middle; font-size:7.5px;">Pemakai<br/><span style="font-weight:normal;font-size:6.5px;">(User)</span></th>
-            <th rowspan="2" style="border:1px solid #000; width:22.0%; padding:2px 2px; vertical-align:middle; font-size:7.5px;">Keterangan<br/><span style="font-weight:normal;font-size:6.5px;">(Remark)</span></th>
+            <th rowspan="2" style="border-right:1px solid #000; border-bottom:1px solid #000; padding:0; vertical-align:middle;">
+              <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:28px; font-size:7.5px; padding:2px 1px;">
+                <span>Tgl</span><span style="font-weight:normal;font-size:6.5px;">(Date)</span>
+              </div>
+            </th>
+            <th rowspan="2" style="border-right:1px solid #000; border-bottom:1px solid #000; padding:0; vertical-align:middle;">
+              <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:28px; font-size:7.5px; padding:2px 1px;">
+                <span>Hari</span><span style="font-weight:normal;font-size:6.5px;">(Day)</span>
+              </div>
+            </th>
+            <th rowspan="2" style="border-right:1px solid #000; border-bottom:1px solid #000; padding:0; vertical-align:middle;">
+              <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:28px; font-size:7.5px; padding:2px 1px;">
+                <span>No Polisi</span><span style="font-weight:normal;font-size:6.5px;">(Plate No)</span>
+              </div>
+            </th>
+            <th colspan="2" style="border-right:1px solid #000; border-bottom:1px solid #000; padding:0; vertical-align:middle;">
+              <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:14px; font-size:7.5px; padding:1px;">
+                <span>Jam Kerja</span><span style="font-weight:normal;font-size:6.5px;">(Working Hour)</span>
+              </div>
+            </th>
+            <th colspan="3" style="border-right:1px solid #000; border-bottom:1px solid #000; padding:0; vertical-align:middle;">
+              <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:14px; font-size:7.5px; padding:1px;">
+                <span>Kilometer</span><span style="font-weight:normal;font-size:6.5px;">(KM)</span>
+              </div>
+            </th>
+            <th colspan="2" style="border-right:1px solid #000; border-bottom:1px solid #000; padding:0; vertical-align:middle;">
+              <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:14px; font-size:7.5px; padding:1px;">
+                <span>Pemakai</span><span style="font-weight:normal;font-size:6.5px;">(User)</span>
+              </div>
+            </th>
+            <th rowspan="2" style="border-right:1px solid #000; border-bottom:1px solid #000; padding:0; vertical-align:middle;">
+              <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:28px; font-size:7.5px; padding:2px 1px;">
+                <span>Keterangan</span><span style="font-weight:normal;font-size:6.5px;">(Remark)</span>
+              </div>
+            </th>
           </tr>
           <tr style="background-color:#f1f5f9; text-align:center; font-weight:bold;">
-            <th style="border:1px solid #000; width:5.5%; padding:2px 1px; vertical-align:middle; font-size:7px;">Awal<br/><span style="font-weight:normal;font-size:6px;">(Start)</span></th>
-            <th style="border:1px solid #000; width:5.5%; padding:2px 1px; vertical-align:middle; font-size:7px;">Akhir<br/><span style="font-weight:normal;font-size:6px;">(Finish)</span></th>
-            <th style="border:1px solid #000; width:7.0%; padding:2px 1px; vertical-align:middle; font-size:7px;">Awal<br/><span style="font-weight:normal;font-size:6px;">(Start)</span></th>
-            <th style="border:1px solid #000; width:7.0%; padding:2px 1px; vertical-align:middle; font-size:7px;">Akhir<br/><span style="font-weight:normal;font-size:6px;">(Finish)</span></th>
-            <th style="border:1px solid #000; width:6.5%; padding:2px 1px; vertical-align:middle; font-size:7px;">Jumlah<br/><span style="font-weight:normal;font-size:6px;">(Total)</span></th>
-            <th style="border:1px solid #000; width:14.5%; padding:2px 1px; vertical-align:middle; font-size:7px;">Nama<br/><span style="font-weight:normal;font-size:6px;">(Name)</span></th>
-            <th style="border:1px solid #000; width:14.0%; padding:2px 1px; vertical-align:middle; font-size:7px;">Tanda Tangan<br/><span style="font-weight:normal;font-size:6px;">(Signature)</span></th>
+            <th style="border-right:1px solid #000; border-bottom:1px solid #000; padding:0; vertical-align:middle;">
+              <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:14px; font-size:7px; padding:1px;">
+                <span>Awal</span><span style="font-weight:normal;font-size:6px;">(Start)</span>
+              </div>
+            </th>
+            <th style="border-right:1px solid #000; border-bottom:1px solid #000; padding:0; vertical-align:middle;">
+              <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:14px; font-size:7px; padding:1px;">
+                <span>Akhir</span><span style="font-weight:normal;font-size:6px;">(Finish)</span>
+              </div>
+            </th>
+            <th style="border-right:1px solid #000; border-bottom:1px solid #000; padding:0; vertical-align:middle;">
+              <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:14px; font-size:7px; padding:1px;">
+                <span>Awal</span><span style="font-weight:normal;font-size:6px;">(Start)</span>
+              </div>
+            </th>
+            <th style="border-right:1px solid #000; border-bottom:1px solid #000; padding:0; vertical-align:middle;">
+              <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:14px; font-size:7px; padding:1px;">
+                <span>Akhir</span><span style="font-weight:normal;font-size:6px;">(Finish)</span>
+              </div>
+            </th>
+            <th style="border-right:1px solid #000; border-bottom:1px solid #000; padding:0; vertical-align:middle;">
+              <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:14px; font-size:7px; padding:1px;">
+                <span>Jumlah</span><span style="font-weight:normal;font-size:6px;">(Total)</span>
+              </div>
+            </th>
+            <th style="border-right:1px solid #000; border-bottom:1px solid #000; padding:0; vertical-align:middle;">
+              <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:14px; font-size:7px; padding:1px;">
+                <span>Nama</span><span style="font-weight:normal;font-size:6px;">(Name)</span>
+              </div>
+            </th>
+            <th style="border-right:1px solid #000; border-bottom:1px solid #000; padding:0; vertical-align:middle;">
+              <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:14px; font-size:7px; padding:1px;">
+                <span>Tanda Tangan</span><span style="font-weight:normal;font-size:6px;">(Signature)</span>
+              </div>
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -521,26 +628,26 @@ export function prepareTimesheetPrintMarkup(
       </table>
 
       <!-- Bottom 3 Sign-off Boxes -->
-      <table style="width:100%; border-collapse:collapse; margin-top:5px; border:1px solid #000; font-size:8px; text-align:center; table-layout:fixed;">
+      <table style="width:100%; border-collapse:separate; border-spacing:0; margin-top:6px; border-top:1px solid #000000; border-left:1px solid #000000; font-size:8px; text-align:center; table-layout:fixed;">
         <tr>
-          <td style="border:1px solid #000; width:33.33%; padding:3px 6px; height:42px; vertical-align:top;">
+          <td style="border-right:1px solid #000; border-bottom:1px solid #000; width:33.33%; padding:4px 6px; height:44px; vertical-align:top; text-align:left;">
             <strong style="display:block; font-size:8.5px; margin-bottom:1px;">Dibuat Oleh:</strong>
           </td>
-          <td style="border:1px solid #000; width:33.33%; padding:3px 6px; height:42px; vertical-align:top;">
+          <td style="border-right:1px solid #000; border-bottom:1px solid #000; width:33.33%; padding:4px 6px; height:44px; vertical-align:top; text-align:left;">
             <strong style="display:block; font-size:8.5px; margin-bottom:1px;">Disetujui Oleh:</strong>
           </td>
-          <td style="border:1px solid #000; width:33.33%; padding:3px 6px; height:42px; vertical-align:top;">
+          <td style="border-right:1px solid #000; border-bottom:1px solid #000; width:33.33%; padding:4px 6px; height:44px; vertical-align:top; text-align:left;">
             <strong style="display:block; font-size:8.5px; margin-bottom:1px;">Diterima Oleh:</strong>
           </td>
         </tr>
         <tr>
-          <td style="border:1px solid #000; padding:2px 6px; text-align:left; font-size:8.5px; height:16px; vertical-align:middle;">
+          <td style="border-right:1px solid #000; border-bottom:1px solid #000; padding:2px 6px; text-align:left; font-size:8.5px; height:18px; vertical-align:middle;">
             Nama: <strong>${escapeHtml(driverName)}</strong>
           </td>
-          <td style="border:1px solid #000; padding:2px 6px; text-align:left; font-size:8.5px; height:16px; vertical-align:middle;">
+          <td style="border-right:1px solid #000; border-bottom:1px solid #000; padding:2px 6px; text-align:left; font-size:8.5px; height:18px; vertical-align:middle;">
             Nama:
           </td>
-          <td style="border:1px solid #000; padding:2px 6px; text-align:left; font-size:8.5px; height:16px; vertical-align:middle;">
+          <td style="border-right:1px solid #000; border-bottom:1px solid #000; padding:2px 6px; text-align:left; font-size:8.5px; height:18px; vertical-align:middle;">
             Nama:
           </td>
         </tr>
