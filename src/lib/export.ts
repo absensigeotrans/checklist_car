@@ -40,23 +40,32 @@ export function exportAllToExcel(records: InspectionRecord[]): void {
   XLSX.writeFile(wb, "PTK_Checklist_Laporan_Semua.xlsx");
 }
 
-export function exportMonthlyLogExcel(logs: DriverLogEntry[]): void {
-  if (logs.length === 0) return;
-  const rows = logs.map((l) => ({
+export function exportMonthlyLogExcel(
+  logs: DriverLogEntry[],
+  customFileName?: string
+): void {
+  if (logs.length === 0) {
+    alert("Tidak ada data log timesheet untuk diekspor.");
+    return;
+  }
+  const rows = logs.map((l, idx) => ({
+    No: idx + 1,
     Tanggal: l.logDate,
     Hari: l.logDay,
+    "Nama Driver": l.driverName,
+    "NIP Driver": l.driverNik || "-",
     Nopol: l.licensePlate,
     "Jam Kerja": `${l.workStart} - ${l.workEnd}`,
     "KM Awal": l.kmStart,
     "KM Akhir": l.kmEnd,
-    Jarak: l.kmEnd - l.kmStart,
+    "Total Jarak (KM)": Math.max(0, l.kmEnd - l.kmStart),
     Pemakai: l.userName,
-    Keterangan: l.remark,
+    Keterangan: l.remark || "-",
   }));
   const ws = XLSX.utils.json_to_sheet(rows);
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Driver Logs");
-  XLSX.writeFile(wb, "PTK_LogSheet_Driver.xlsx");
+  XLSX.utils.book_append_sheet(wb, ws, "Timesheet Driver");
+  XLSX.writeFile(wb, customFileName || "PTK_Timesheet_Driver.xlsx");
 }
 
 export function preparePrintMarkup(rec: InspectionRecord, highlightMode = false): string {
@@ -628,3 +637,104 @@ export async function downloadChecklistPDFDirect(
     }
   }
 }
+
+export async function downloadTimesheetPDFDirect(
+  logs: DriverLogEntry[],
+  driverName: string,
+  driverNik: string,
+  month: number,
+  year: number
+): Promise<void> {
+  if (typeof window === "undefined") return;
+  try {
+    let html2pdfModule: any;
+    try {
+      html2pdfModule = require("html2pdf.js");
+    } catch {
+      html2pdfModule = await import("html2pdf.js");
+    }
+    const html2pdf =
+      html2pdfModule?.default || (window as any).html2pdf || html2pdfModule;
+
+    if (typeof html2pdf !== "function") {
+      throw new Error("html2pdf module function is not available.");
+    }
+
+    const markup = prepareTimesheetPrintMarkup(
+      logs,
+      driverName,
+      driverNik,
+      month,
+      year
+    );
+
+    const tempContainer = document.createElement("div");
+    tempContainer.style.position = "fixed";
+    tempContainer.style.left = "0";
+    tempContainer.style.top = "0";
+    tempContainer.style.width = "1050px";
+    tempContainer.style.zIndex = "-9999";
+    tempContainer.style.opacity = "0.01";
+    tempContainer.style.pointerEvents = "none";
+    tempContainer.style.backgroundColor = "#ffffff";
+    tempContainer.innerHTML = markup;
+    document.body.appendChild(tempContainer);
+    const target =
+      (tempContainer.firstElementChild as HTMLElement) || tempContainer;
+
+    // Wait for images (such as signatures and logo) to load
+    const images = Array.from(target.querySelectorAll("img"));
+    await Promise.all(
+      images.map((img) => {
+        if (img.complete) return Promise.resolve();
+        return new Promise((resolve) => {
+          img.onload = resolve;
+          img.onerror = resolve;
+        });
+      })
+    );
+
+    const safeDriver = (driverName || "Driver").replace(/\s+/g, "_");
+    const fileName = `Timesheet_${safeDriver}_${String(month).padStart(2, "0")}_${year}.pdf`;
+
+    const opt = {
+      margin: [4, 4, 4, 4],
+      filename: fileName,
+      image: { type: "jpeg", quality: 0.98 },
+      html2canvas: {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        logging: false,
+        letterRendering: true,
+        windowWidth: 1100,
+      },
+      jsPDF: { unit: "mm", format: "a4", orientation: "landscape" },
+    };
+
+    await html2pdf().set(opt).from(target).save();
+
+    if (tempContainer && document.body.contains(tempContainer)) {
+      document.body.removeChild(tempContainer);
+    }
+  } catch (err) {
+    console.error("PDF generation error:", err);
+    alert(
+      "Terjadi kendala saat unduh PDF otomatis. Membuka jendela cetak sebagai alternatif..."
+    );
+    const markup = prepareTimesheetPrintMarkup(
+      logs,
+      driverName,
+      driverNik,
+      month,
+      year
+    );
+    const fileName = `Timesheet_${driverName.replace(/\s+/g, "_")}_${String(month).padStart(2, "0")}_${year}`;
+    const win = window.open("", "_blank");
+    if (win) {
+      win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>${fileName}</title><style>* { box-sizing: border-box; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } body { margin: 0; padding: 0; background: white; } @media print { @page { size: A4 landscape; margin: 3mm; } body { margin: 0; } }</style></head><body>${markup}<script>window.onload=function(){window.focus();setTimeout(function(){window.print();window.onafterprint=function(){window.close();};setTimeout(function(){window.close();},2000);},400);};<\/script></body></html>`);
+      win.document.close();
+    }
+  }
+}
+

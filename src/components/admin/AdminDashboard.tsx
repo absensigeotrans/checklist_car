@@ -11,6 +11,7 @@ import {
   preparePrintMarkup,
   prepareTimesheetPrintMarkup,
   downloadChecklistPDFDirect,
+  downloadTimesheetPDFDirect,
 } from "@/lib/export";
 import { useRegisteredDrivers } from "@/hooks/useRegisteredDrivers";
 import { formatDateID, formatDateShort, escapeHtml } from "@/lib/utils";
@@ -60,6 +61,7 @@ export default function AdminDashboard() {
   const [tsFilterMonth, setTsFilterMonth] = useState<number | "all">("all");
   const [selectedLog, setSelectedLog] = useState<DriverLogEntry | null>(null);
   const [tsDetailOpen, setTsDetailOpen] = useState(false);
+  const [isDownloadingTsPdf, setIsDownloadingTsPdf] = useState(false);
 
   const handleDeleteDriver = async (nik: string) => {
     // Clear filters if deleted driver was selected
@@ -82,30 +84,42 @@ export default function AdminDashboard() {
       const matchesPlate = (rec.vehicle?.licensePlate || "")
         .toLowerCase()
         .includes(filterPlate.toLowerCase());
-      let matchesStatus = true;
-      if (filterStatus === "normal") matchesStatus = !rec.attentionNeeded;
-      else if (filterStatus === "attention") matchesStatus = rec.attentionNeeded;
+      const matchesStatus =
+        filterStatus === "all"
+          ? true
+          : filterStatus === "defect"
+          ? rec.attentionNeeded
+          : !rec.attentionNeeded;
       return matchesDriver && matchesPlate && matchesStatus;
     });
   }, [records, filterDriver, filterPlate, filterStatus]);
 
   const filteredLogs = useMemo(() => {
     return driverLogs.filter((log) => {
-      const matchesDriver =
-        (log.driverName || "").toLowerCase().includes(tsFilterDriver.toLowerCase()) ||
-        (log.driverNik || "").toLowerCase().includes(tsFilterDriver.toLowerCase());
-      const matchesPlate = (log.licensePlate || "")
+      // Priority 1: Dropdown match
+      if (tsFilterDriverDropdown) {
+        if (log.driverName !== tsFilterDriverDropdown) return false;
+      } else if (tsFilterDriver) {
+        // Priority 2: Text search match
+        const matchesDriver =
+          log.driverName.toLowerCase().includes(tsFilterDriver.toLowerCase()) ||
+          log.driverNik.toLowerCase().includes(tsFilterDriver.toLowerCase());
+        if (!matchesDriver) return false;
+      }
+
+      const matchesPlate = log.licensePlate
         .toLowerCase()
         .includes(tsFilterPlate.toLowerCase());
 
-      let matchesMonth = true;
-      if (tsFilterMonth !== "all") {
-        const d = new Date(log.logDate);
-        matchesMonth = d.getMonth() + 1 === tsFilterMonth;
-      }
-      return matchesDriver && matchesPlate && matchesMonth;
+      const dateObj = new Date(log.logDate);
+      const matchesMonth =
+        tsFilterMonth === "all"
+          ? true
+          : dateObj.getMonth() + 1 === tsFilterMonth;
+
+      return matchesPlate && matchesMonth;
     });
-  }, [driverLogs, tsFilterDriver, tsFilterPlate, tsFilterMonth]);
+  }, [driverLogs, tsFilterDriver, tsFilterDriverDropdown, tsFilterPlate, tsFilterMonth]);
 
   const handleViewDetail = (id: string, initialTab: "summary" | "pdf" = "summary") => {
     const rec = records.find((r) => r.inspectionId === id);
@@ -119,6 +133,44 @@ export default function AdminDashboard() {
   const handleViewTsDetail = (log: DriverLogEntry) => {
     setSelectedLog(log);
     setTsDetailOpen(true);
+  };
+
+  const handleDownloadTimesheetPDF = async (logToPrint?: DriverLogEntry) => {
+    const targetLog = logToPrint || selectedLog;
+    const name = targetLog
+      ? targetLog.driverName
+      : tsFilterDriverDropdown || tsFilterDriver || "Driver";
+    const nik = targetLog
+      ? targetLog.driverNik
+      : registeredDrivers.find((d) => d.name === tsFilterDriverDropdown)?.nik || "";
+    const m = tsFilterMonth === "all" ? new Date().getMonth() + 1 : tsFilterMonth;
+    const y = new Date().getFullYear();
+
+    const logsForDriver = driverLogs.filter((l) => {
+      const isMatch = targetLog
+        ? l.driverNik === targetLog.driverNik || l.driverName === targetLog.driverName
+        : tsFilterDriverDropdown
+        ? l.driverName === tsFilterDriverDropdown
+        : tsFilterDriver
+        ? l.driverName.toLowerCase().includes(tsFilterDriver.toLowerCase()) ||
+          l.driverNik.toLowerCase().includes(tsFilterDriver.toLowerCase())
+        : true;
+      const dateObj = new Date(l.logDate);
+      return isMatch && dateObj.getMonth() + 1 === m && dateObj.getFullYear() === y;
+    });
+
+    try {
+      setIsDownloadingTsPdf(true);
+      await downloadTimesheetPDFDirect(
+        logsForDriver.length > 0 ? logsForDriver : (filteredLogs.length > 0 ? filteredLogs : driverLogs),
+        name,
+        nik,
+        m,
+        y
+      );
+    } finally {
+      setIsDownloadingTsPdf(false);
+    }
   };
 
   const handlePrintTimesheetPDF = (logToPrint?: DriverLogEntry) => {
@@ -146,7 +198,7 @@ export default function AdminDashboard() {
     });
 
     const markup = prepareTimesheetPrintMarkup(
-      logsForDriver.length > 0 ? logsForDriver : filteredLogs,
+      logsForDriver.length > 0 ? logsForDriver : (filteredLogs.length > 0 ? filteredLogs : driverLogs),
       name,
       nik,
       m,
@@ -597,42 +649,65 @@ ${markup}
               <div className="flex items-center gap-2 flex-wrap">
                 <button
                   type="button"
+                  disabled={isDownloadingTsPdf}
                   className={`px-4 py-2 rounded-[10px] font-extrabold cursor-pointer shadow-2xs transition-all inline-flex items-center gap-1.5 text-xs ${
-                    tsFilterDriverDropdown
-                      ? "bg-primary-blue text-white hover:bg-blue-700"
+                    tsFilterDriverDropdown || filteredLogs.length > 0
+                      ? "bg-primary-blue text-white hover:bg-blue-700 disabled:opacity-50"
                       : "bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed"
                   }`}
                   onClick={() => {
-                    if (!tsFilterDriverDropdown) {
+                    if (!tsFilterDriverDropdown && filteredLogs.length === 0) {
                       alert(
-                        "⚠️ Harap pilih driver dari dropdown 'Pilih Driver Cetak PDF' sebelum melakukan ekspor."
+                        "⚠️ Tidak ada data timesheet untuk diunduh. Harap pilih driver atau filter data terlebih dahulu."
+                      );
+                      return;
+                    }
+                    handleDownloadTimesheetPDF();
+                  }}
+                >
+                  <span>{isDownloadingTsPdf ? "⏳" : "📥"}</span> {isDownloadingTsPdf ? "Mengunduh..." : "Unduh PDF Timesheet"}
+                </button>
+
+                <button
+                  type="button"
+                  className={`px-3.5 py-2 rounded-[10px] font-bold cursor-pointer shadow-2xs transition-all inline-flex items-center gap-1.5 text-xs ${
+                    filteredLogs.length > 0
+                      ? "bg-emerald-600 text-white hover:bg-emerald-700"
+                      : "bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed"
+                  }`}
+                  onClick={() => {
+                    if (filteredLogs.length === 0) {
+                      alert(
+                        "⚠️ Tidak ada data timesheet yang sesuai filter untuk diekspor ke Excel."
+                      );
+                      return;
+                    }
+                    const driverPart = tsFilterDriverDropdown ? `_${tsFilterDriverDropdown.replace(/\s+/g, "_")}` : "";
+                    const monthPart = tsFilterMonth !== "all" ? `_${String(tsFilterMonth).padStart(2, "0")}` : "";
+                    exportMonthlyLogExcel(filteredLogs, `PTK_Timesheet${driverPart}${monthPart}.xlsx`);
+                  }}
+                >
+                  <span>📊</span> Unduh Excel Timesheet
+                </button>
+
+                <button
+                  type="button"
+                  className={`px-3.5 py-2 rounded-[10px] font-bold cursor-pointer shadow-2xs transition-all inline-flex items-center gap-1.5 text-xs ${
+                    tsFilterDriverDropdown || filteredLogs.length > 0
+                      ? "bg-bg-sidebar text-text-muted hover:text-text-main border border-border hover:bg-border"
+                      : "bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed"
+                  }`}
+                  onClick={() => {
+                    if (!tsFilterDriverDropdown && filteredLogs.length === 0) {
+                      alert(
+                        "⚠️ Harap pilih driver atau pastikan ada data timesheet untuk dicetak."
                       );
                       return;
                     }
                     handlePrintTimesheetPDF();
                   }}
                 >
-                  <span>📄</span> Cetak / PDF Official Timesheet
-                </button>
-
-                <button
-                  type="button"
-                  className={`px-3.5 py-2 rounded-[10px] font-bold cursor-pointer shadow-2xs transition-all inline-flex items-center gap-1.5 text-xs ${
-                    tsFilterDriverDropdown
-                      ? "bg-emerald-600 text-white hover:bg-emerald-700"
-                      : "bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed"
-                  }`}
-                  onClick={() => {
-                    if (!tsFilterDriverDropdown) {
-                      alert(
-                        "⚠️ Harap pilih driver dari dropdown 'Pilih Driver Cetak PDF' sebelum melakukan ekspor Excel."
-                      );
-                      return;
-                    }
-                    exportMonthlyLogExcel(filteredLogs);
-                  }}
-                >
-                  <span>📊</span> Ekspor Excel Timesheet
+                  <span>🖨️</span> Cetak
                 </button>
               </div>
 
@@ -764,6 +839,15 @@ ${markup}
 
                           <td className="px-4 py-3.5 text-center whitespace-nowrap">
                             <div className="flex items-center justify-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => handleDownloadTimesheetPDF(l)}
+                                title="Unduh PDF Timesheet Driver Ini"
+                                className="bg-primary-blue/10 text-primary-blue hover:bg-primary-blue hover:text-white border border-primary-blue/20 px-2 py-1.5 rounded-[8px] font-semibold text-xs transition-all cursor-pointer inline-flex items-center gap-1"
+                              >
+                                <span>📥</span> Unduh
+                              </button>
+
                               <button
                                 type="button"
                                 onClick={() => handleViewTsDetail(l)}
@@ -1126,13 +1210,21 @@ ${markup}
               )}
             </div>
 
-            <div className="flex justify-end gap-2 pt-3 border-t border-border">
+            <div className="flex justify-end gap-2 pt-3 border-t border-border flex-wrap">
               <button
                 type="button"
-                className="bg-primary-blue text-white px-4 py-2 rounded-[10px] font-bold text-xs cursor-pointer shadow-2xs hover:bg-blue-700 transition-all inline-flex items-center gap-1.5"
+                disabled={isDownloadingTsPdf}
+                className="bg-primary-blue text-white px-4 py-2 rounded-[10px] font-bold text-xs cursor-pointer shadow-2xs hover:bg-blue-700 transition-all inline-flex items-center gap-1.5 disabled:opacity-50"
+                onClick={() => handleDownloadTimesheetPDF(selectedLog)}
+              >
+                <span>{isDownloadingTsPdf ? "⏳" : "📥"}</span> {isDownloadingTsPdf ? "Mengunduh..." : "Unduh PDF"}
+              </button>
+              <button
+                type="button"
+                className="bg-bg-sidebar text-text-muted hover:text-text-main border border-border px-3.5 py-2 rounded-[10px] font-bold text-xs cursor-pointer hover:bg-border transition-all inline-flex items-center gap-1.5"
                 onClick={() => handlePrintTimesheetPDF(selectedLog)}
               >
-                <span>📄</span> Cetak PDF Timesheet
+                <span>🖨️</span> Cetak
               </button>
               <button
                 type="button"

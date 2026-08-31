@@ -7,7 +7,11 @@ import { useAuth } from "@/context/AuthContext";
 import { getStoredNik, getStoredDriverName } from "@/lib/storage";
 import { escapeHtml, formatDateShort } from "@/lib/utils";
 import type { DriverLogEntry, InspectionRecord } from "@/types";
-import { prepareTimesheetPrintMarkup } from "@/lib/export";
+import {
+  prepareTimesheetPrintMarkup,
+  downloadTimesheetPDFDirect,
+  exportMonthlyLogExcel,
+} from "@/lib/export";
 import Modal from "../ui/Modal";
 
 const INDO_DAYS = [
@@ -51,6 +55,7 @@ export default function DriverProgress() {
   const [filterMonth, setFilterMonth] = useState(new Date().getMonth() + 1);
   const [filterYear, setFilterYear] = useState(new Date().getFullYear());
   const [activeSubtab, setActiveSubtab] = useState<"log" | "checklist">("log");
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
 
   // Modal Signature State
   const [showSignatureModal, setShowSignatureModal] = useState(false);
@@ -267,11 +272,32 @@ ${markup}
       setTimeout(function() { window.close(); }, 2000);
     }, 400);
   };
-<\/script>
+</script>
 </body>
 </html>`);
       win.document.close();
     }
+  };
+
+  const handleDownloadTimesheetPDF = async () => {
+    try {
+      setIsDownloadingPdf(true);
+      await downloadTimesheetPDFDirect(
+        driverLogs,
+        displayName,
+        activeNik,
+        filterMonth,
+        filterYear
+      );
+    } finally {
+      setIsDownloadingPdf(false);
+    }
+  };
+
+  const handleDownloadTimesheetExcel = () => {
+    const safeDriver = (displayName || "Driver").replace(/\s+/g, "_");
+    const fileName = `Timesheet_${safeDriver}_${String(filterMonth).padStart(2, "0")}_${filterYear}.xlsx`;
+    exportMonthlyLogExcel(driverLogs, fileName);
   };
 
 
@@ -433,17 +459,36 @@ ${markup}
       {/* Log Sheet / Timesheet Table (Full 1 to End Month Grid) */}
       {activeSubtab === "log" && (
         <div className="bg-white rounded-[16px] shadow-md p-6 border border-border">
-          <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
+          <div className="flex justify-between items-center mb-4 flex-wrap gap-3">
             <h3 className="text-base font-bold text-text-main">
               Rekapitulasi Timesheet Harian Driver
             </h3>
-            <button
-              type="button"
-              className="bg-primary-blue text-white px-4 py-2 rounded-[10px] font-semibold text-xs cursor-pointer shadow-sm hover:bg-primary-blue-hover transition-all inline-flex items-center gap-1.5"
-              onClick={handlePrintTimesheetPDF}
-            >
-              <span>📄</span> Cetak / PDF Timesheet
-            </button>
+            <div className="flex items-center gap-2 flex-wrap">
+              <button
+                type="button"
+                disabled={isDownloadingPdf}
+                className="bg-primary-blue text-white px-3.5 py-2 rounded-[10px] font-semibold text-xs cursor-pointer shadow-sm hover:bg-primary-blue-hover transition-all inline-flex items-center gap-1.5 disabled:opacity-50"
+                onClick={handleDownloadTimesheetPDF}
+              >
+                <span>{isDownloadingPdf ? "⏳" : "📥"}</span> {isDownloadingPdf ? "Mengunduh..." : "Unduh PDF Timesheet"}
+              </button>
+
+              <button
+                type="button"
+                className="bg-emerald-600 text-white px-3.5 py-2 rounded-[10px] font-semibold text-xs cursor-pointer shadow-sm hover:bg-emerald-700 transition-all inline-flex items-center gap-1.5"
+                onClick={handleDownloadTimesheetExcel}
+              >
+                <span>📊</span> Unduh Excel
+              </button>
+
+              <button
+                type="button"
+                className="bg-bg-sidebar text-text-muted hover:text-text-main border border-border px-3 py-2 rounded-[10px] font-semibold text-xs cursor-pointer hover:bg-border transition-all inline-flex items-center gap-1.5"
+                onClick={handlePrintTimesheetPDF}
+              >
+                <span>🖨️</span> Cetak
+              </button>
+            </div>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
