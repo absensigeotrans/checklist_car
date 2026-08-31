@@ -445,43 +445,43 @@ export function prepareTimesheetPrintMarkup(
     const userName = matchedLog ? escapeHtml(matchedLog.userName) : "";
     const userSig =
       matchedLog && matchedLog.userSignature
-        ? `<img src="${matchedLog.userSignature}" alt="TTD" style="max-height:16px; max-width:52px; object-fit:contain; display:block; margin:0 auto;"/>`
+        ? `<img src="${matchedLog.userSignature}" alt="TTD" style="max-height:18px; max-width:56px; object-fit:contain; display:block; margin:0 auto;"/>`
         : "";
     const remark = matchedLog ? escapeHtml(matchedLog.remark) : "";
 
     tableRowsHtml += `
-      <div style="display:flex; width:100%; border-bottom:1px solid #000000; height:19px; font-size:8px; line-height:1.2; box-sizing:border-box; background-color:${d % 2 === 0 ? "#fafafa" : "#ffffff"};">
-        <div style="width:4.0%; border-right:1px solid #000000; display:flex; align-items:center; justify-content:center; font-weight:bold; box-sizing:border-box;">${d}</div>
-        <div style="width:8.0%; border-right:1px solid #000000; display:flex; align-items:center; justify-content:center; box-sizing:border-box;">${dayName}</div>
-        <div style="width:11.0%; border-right:1px solid #000000; display:flex; align-items:center; justify-content:center; font-size:7.5px; box-sizing:border-box;">${plate}</div>
-        <div style="width:7.5%; border-right:1px solid #000000; display:flex; align-items:center; justify-content:center; box-sizing:border-box;">${workStart}</div>
-        <div style="width:7.5%; border-right:1px solid #000000; display:flex; align-items:center; justify-content:center; box-sizing:border-box;">${workEnd}</div>
-        <div style="width:8.5%; border-right:1px solid #000000; display:flex; align-items:center; justify-content:center; box-sizing:border-box;">${kmStartStr}</div>
-        <div style="width:8.5%; border-right:1px solid #000000; display:flex; align-items:center; justify-content:center; box-sizing:border-box;">${kmEndStr}</div>
-        <div style="width:7.5%; border-right:1px solid #000000; display:flex; align-items:center; justify-content:center; font-weight:bold; box-sizing:border-box;">${kmTotalStr}</div>
-        <div style="width:14.5%; border-right:1px solid #000000; display:flex; align-items:center; justify-content:center; padding:0 2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:7.5px; box-sizing:border-box;">${userName}</div>
+      <div style="display:flex; width:100%; border-bottom:1px solid #000000; height:22px; font-size:8.5px; line-height:1.2; box-sizing:border-box; background-color:${d % 2 === 0 ? "#fafafa" : "#ffffff"};">
+        <div style="width:3.5%; border-right:1px solid #000000; display:flex; align-items:center; justify-content:center; font-weight:bold; box-sizing:border-box;">${d}</div>
+        <div style="width:7.5%; border-right:1px solid #000000; display:flex; align-items:center; justify-content:center; box-sizing:border-box;">${dayName}</div>
+        <div style="width:11.0%; border-right:1px solid #000000; display:flex; align-items:center; justify-content:center; font-size:8px; box-sizing:border-box;">${plate}</div>
+        <div style="width:7.0%; border-right:1px solid #000000; display:flex; align-items:center; justify-content:center; box-sizing:border-box;">${workStart}</div>
+        <div style="width:7.0%; border-right:1px solid #000000; display:flex; align-items:center; justify-content:center; box-sizing:border-box;">${workEnd}</div>
+        <div style="width:8.0%; border-right:1px solid #000000; display:flex; align-items:center; justify-content:center; box-sizing:border-box;">${kmStartStr}</div>
+        <div style="width:8.0%; border-right:1px solid #000000; display:flex; align-items:center; justify-content:center; box-sizing:border-box;">${kmEndStr}</div>
+        <div style="width:8.0%; border-right:1px solid #000000; display:flex; align-items:center; justify-content:center; font-weight:bold; box-sizing:border-box;">${kmTotalStr}</div>
+        <div style="width:14.0%; border-right:1px solid #000000; display:flex; align-items:center; justify-content:center; padding:0 3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:8px; box-sizing:border-box;">${userName}</div>
         <div style="width:10.0%; border-right:1px solid #000000; display:flex; align-items:center; justify-content:center; padding:1px; box-sizing:border-box;">${userSig}</div>
-        <div style="width:13.0%; display:flex; align-items:center; justify-content:flex-start; padding:0 3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:7.5px; box-sizing:border-box;">${remark}</div>
+        <div style="width:16.0%; display:flex; align-items:center; justify-content:flex-start; padding:0 4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:7.5px; box-sizing:border-box;">${remark}</div>
       </div>`;
   }
 
   return `
-    <div class="official-timesheet-print" style="width:780px; margin:0 auto; background-color:#ffffff; color:#000000; padding:6px 10px; font-family:Arial,Helvetica,sans-serif; box-sizing:border-box;">
+    <div class="official-timesheet-print" style="width:790px; margin:0 auto; background-color:#ffffff; color:#000000; padding:6px 12px; font-family:Arial,Helvetica,sans-serif; box-sizing:border-box;">
       
       <!-- Top Header -->
-      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #000000; padding-bottom:4px; margin-bottom:5px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #000000; padding-bottom:4px; margin-bottom:6px;">
         <div style="display:flex; align-items:center; gap:8px;">
-          <img src="${origin}/logo_pertamina_tk.png" alt="PTK" style="height:26px; width:auto; object-fit:contain; display:block;">
-          <span style="font-size:12px; font-weight:bold; text-transform:uppercase; letter-spacing:0.5px; line-height:1.2;">DRIVER DAILY TIMESHEET / REKAP HARIAN</span>
+          <img src="${origin}/logo_pertamina_tk.png" alt="PTK" style="height:28px; width:auto; object-fit:contain; display:block;">
+          <span style="font-size:12.5px; font-weight:bold; text-transform:uppercase; letter-spacing:0.5px; line-height:1.2;">DRIVER DAILY TIMESHEET / REKAP HARIAN</span>
         </div>
-        <div style="font-size:9.5px; font-weight:bold; display:flex; align-items:center; gap:12px; white-space:nowrap;">
+        <div style="font-size:10px; font-weight:bold; display:flex; align-items:center; gap:14px; white-space:nowrap; flex-shrink:0; padding-right:4px;">
           <div>Tahun: <u>${year}</u></div>
           <div>Bulan: <u>${MONTH_NAMES[month - 1]}</u></div>
         </div>
       </div>
 
       <!-- Driver Metadata -->
-      <div style="display:flex; justify-content:space-between; font-size:9.5px; font-weight:bold; margin-bottom:5px;">
+      <div style="display:flex; justify-content:space-between; font-size:9.5px; font-weight:bold; margin-bottom:6px;">
         <div style="width:48%; display:flex; align-items:center;">
           <span>Nama Driver (Driver's Name):&nbsp;</span>
           <span style="font-weight:normal;"><u>${escapeHtml(driverName)}</u></span>
@@ -498,86 +498,86 @@ export function prepareTimesheetPrintMarkup(
         <!-- Header Tier 1 & 2 -->
         <div style="display:flex; width:100%; background-color:#f1f5f9; border-bottom:1px solid #000000; font-weight:bold; text-align:center; box-sizing:border-box;">
           
-          <!-- Tgl (4%) -->
-          <div style="width:4.0%; border-right:1px solid #000000; display:flex; flex-direction:column; align-items:center; justify-content:center; height:32px; box-sizing:border-box;">
-            <span style="font-size:7.5px; line-height:1.1;">Tgl</span>
-            <span style="font-size:6px; font-weight:normal; line-height:1;">(Date)</span>
+          <!-- Tgl (3.5%) -->
+          <div style="width:3.5%; border-right:1px solid #000000; display:flex; flex-direction:column; align-items:center; justify-content:center; height:36px; box-sizing:border-box; padding:2px 0;">
+            <span style="font-size:8px; line-height:1.1;">Tgl</span>
+            <span style="font-size:6.5px; font-weight:normal; line-height:1;">(Date)</span>
           </div>
 
-          <!-- Hari (8%) -->
-          <div style="width:8.0%; border-right:1px solid #000000; display:flex; flex-direction:column; align-items:center; justify-content:center; height:32px; box-sizing:border-box;">
-            <span style="font-size:7.5px; line-height:1.1;">Hari</span>
-            <span style="font-size:6px; font-weight:normal; line-height:1;">(Day)</span>
+          <!-- Hari (7.5%) -->
+          <div style="width:7.5%; border-right:1px solid #000000; display:flex; flex-direction:column; align-items:center; justify-content:center; height:36px; box-sizing:border-box; padding:2px 0;">
+            <span style="font-size:8px; line-height:1.1;">Hari</span>
+            <span style="font-size:6.5px; font-weight:normal; line-height:1;">(Day)</span>
           </div>
 
           <!-- No Polisi (11%) -->
-          <div style="width:11.0%; border-right:1px solid #000000; display:flex; flex-direction:column; align-items:center; justify-content:center; height:32px; box-sizing:border-box;">
-            <span style="font-size:7.5px; line-height:1.1;">No Polisi</span>
-            <span style="font-size:6px; font-weight:normal; line-height:1;">(Plate No)</span>
+          <div style="width:11.0%; border-right:1px solid #000000; display:flex; flex-direction:column; align-items:center; justify-content:center; height:36px; box-sizing:border-box; padding:2px 0;">
+            <span style="font-size:8px; line-height:1.1;">No Polisi</span>
+            <span style="font-size:6.5px; font-weight:normal; line-height:1;">(Plate No)</span>
           </div>
 
-          <!-- Jam Kerja (15%) -->
-          <div style="width:15.0%; border-right:1px solid #000000; display:flex; flex-direction:column; height:32px; box-sizing:border-box;">
-            <div style="height:16px; border-bottom:1px solid #000000; display:flex; flex-direction:column; align-items:center; justify-content:center; box-sizing:border-box;">
-              <span style="font-size:7.5px; line-height:1.1;">Jam Kerja</span>
-              <span style="font-size:6px; font-weight:normal; line-height:1;">(Working Hour)</span>
+          <!-- Jam Kerja (14%) -->
+          <div style="width:14.0%; border-right:1px solid #000000; display:flex; flex-direction:column; height:36px; box-sizing:border-box;">
+            <div style="height:18px; border-bottom:1px solid #000000; display:flex; align-items:center; justify-content:center; gap:2px; box-sizing:border-box;">
+              <span style="font-size:8px;">Jam Kerja</span>
+              <span style="font-size:6.5px; font-weight:normal;">(Hour)</span>
             </div>
-            <div style="height:16px; display:flex; width:100%; box-sizing:border-box;">
+            <div style="height:18px; display:flex; width:100%; box-sizing:border-box;">
               <div style="width:50%; border-right:1px solid #000000; display:flex; flex-direction:column; align-items:center; justify-content:center; box-sizing:border-box;">
-                <span style="font-size:7px; line-height:1.1;">Awal</span>
+                <span style="font-size:7.5px; line-height:1;">Awal</span>
                 <span style="font-size:6px; font-weight:normal; line-height:1;">(Start)</span>
               </div>
               <div style="width:50%; display:flex; flex-direction:column; align-items:center; justify-content:center; box-sizing:border-box;">
-                <span style="font-size:7px; line-height:1.1;">Akhir</span>
+                <span style="font-size:7.5px; line-height:1;">Akhir</span>
                 <span style="font-size:6px; font-weight:normal; line-height:1;">(Finish)</span>
               </div>
             </div>
           </div>
 
-          <!-- Kilometer (24.5%) -->
-          <div style="width:24.5%; border-right:1px solid #000000; display:flex; flex-direction:column; height:32px; box-sizing:border-box;">
-            <div style="height:16px; border-bottom:1px solid #000000; display:flex; flex-direction:column; align-items:center; justify-content:center; box-sizing:border-box;">
-              <span style="font-size:7.5px; line-height:1.1;">Kilometer</span>
-              <span style="font-size:6px; font-weight:normal; line-height:1;">(KM)</span>
+          <!-- Kilometer (24%) -->
+          <div style="width:24.0%; border-right:1px solid #000000; display:flex; flex-direction:column; height:36px; box-sizing:border-box;">
+            <div style="height:18px; border-bottom:1px solid #000000; display:flex; align-items:center; justify-content:center; gap:2px; box-sizing:border-box;">
+              <span style="font-size:8px;">Kilometer</span>
+              <span style="font-size:6.5px; font-weight:normal;">(KM)</span>
             </div>
-            <div style="height:16px; display:flex; width:100%; box-sizing:border-box;">
-              <div style="width:34.7%; border-right:1px solid #000000; display:flex; flex-direction:column; align-items:center; justify-content:center; box-sizing:border-box;">
-                <span style="font-size:7px; line-height:1.1;">Awal</span>
+            <div style="height:18px; display:flex; width:100%; box-sizing:border-box;">
+              <div style="width:33.33%; border-right:1px solid #000000; display:flex; flex-direction:column; align-items:center; justify-content:center; box-sizing:border-box;">
+                <span style="font-size:7.5px; line-height:1;">Awal</span>
                 <span style="font-size:6px; font-weight:normal; line-height:1;">(Start)</span>
               </div>
-              <div style="width:34.7%; border-right:1px solid #000000; display:flex; flex-direction:column; align-items:center; justify-content:center; box-sizing:border-box;">
-                <span style="font-size:7px; line-height:1.1;">Akhir</span>
+              <div style="width:33.33%; border-right:1px solid #000000; display:flex; flex-direction:column; align-items:center; justify-content:center; box-sizing:border-box;">
+                <span style="font-size:7.5px; line-height:1;">Akhir</span>
                 <span style="font-size:6px; font-weight:normal; line-height:1;">(Finish)</span>
               </div>
-              <div style="width:30.6%; display:flex; flex-direction:column; align-items:center; justify-content:center; box-sizing:border-box;">
-                <span style="font-size:7px; line-height:1.1;">Jumlah</span>
+              <div style="width:33.34%; display:flex; flex-direction:column; align-items:center; justify-content:center; box-sizing:border-box;">
+                <span style="font-size:7.5px; line-height:1;">Jumlah</span>
                 <span style="font-size:6px; font-weight:normal; line-height:1;">(Total)</span>
               </div>
             </div>
           </div>
 
-          <!-- Pemakai (24.5%) -->
-          <div style="width:24.5%; border-right:1px solid #000000; display:flex; flex-direction:column; height:32px; box-sizing:border-box;">
-            <div style="height:16px; border-bottom:1px solid #000000; display:flex; flex-direction:column; align-items:center; justify-content:center; box-sizing:border-box;">
-              <span style="font-size:7.5px; line-height:1.1;">Pemakai</span>
-              <span style="font-size:6px; font-weight:normal; line-height:1;">(User)</span>
+          <!-- Pemakai (24%) -->
+          <div style="width:24.0%; border-right:1px solid #000000; display:flex; flex-direction:column; height:36px; box-sizing:border-box;">
+            <div style="height:18px; border-bottom:1px solid #000000; display:flex; align-items:center; justify-content:center; gap:2px; box-sizing:border-box;">
+              <span style="font-size:8px;">Pemakai</span>
+              <span style="font-size:6.5px; font-weight:normal;">(User)</span>
             </div>
-            <div style="height:16px; display:flex; width:100%; box-sizing:border-box;">
-              <div style="width:59.2%; border-right:1px solid #000000; display:flex; flex-direction:column; align-items:center; justify-content:center; box-sizing:border-box;">
-                <span style="font-size:7px; line-height:1.1;">Nama</span>
+            <div style="height:18px; display:flex; width:100%; box-sizing:border-box;">
+              <div style="width:58.3%; border-right:1px solid #000000; display:flex; flex-direction:column; align-items:center; justify-content:center; box-sizing:border-box;">
+                <span style="font-size:7.5px; line-height:1;">Nama</span>
                 <span style="font-size:6px; font-weight:normal; line-height:1;">(Name)</span>
               </div>
-              <div style="width:40.8%; display:flex; flex-direction:column; align-items:center; justify-content:center; box-sizing:border-box;">
-                <span style="font-size:7px; line-height:1.1;">Tanda Tangan</span>
+              <div style="width:41.7%; display:flex; flex-direction:column; align-items:center; justify-content:center; box-sizing:border-box;">
+                <span style="font-size:7.5px; line-height:1;">Tanda Tangan</span>
                 <span style="font-size:6px; font-weight:normal; line-height:1;">(Signature)</span>
               </div>
             </div>
           </div>
 
-          <!-- Keterangan (13%) -->
-          <div style="width:13.0%; display:flex; flex-direction:column; align-items:center; justify-content:center; height:32px; box-sizing:border-box;">
-            <span style="font-size:7.5px; line-height:1.1;">Keterangan</span>
-            <span style="font-size:6px; font-weight:normal; line-height:1;">(Remark)</span>
+          <!-- Keterangan (16%) -->
+          <div style="width:16.0%; display:flex; flex-direction:column; align-items:center; justify-content:center; height:36px; box-sizing:border-box; padding:2px 0;">
+            <span style="font-size:8px; line-height:1.1;">Keterangan</span>
+            <span style="font-size:6.5px; font-weight:normal; line-height:1;">(Remark)</span>
           </div>
 
         </div>
@@ -588,18 +588,18 @@ export function prepareTimesheetPrintMarkup(
       </div>
 
       <!-- Bottom 3 Sign-off Boxes -->
-      <div style="display:flex; width:100%; border:1px solid #000000; margin-top:6px; font-size:8.5px; box-sizing:border-box;">
-        <div style="width:33.33%; border-right:1px solid #000000; display:flex; flex-direction:column; justify-content:space-between; padding:4px 6px; height:52px; box-sizing:border-box;">
+      <div style="display:flex; width:100%; border:1px solid #000000; margin-top:8px; font-size:8.5px; box-sizing:border-box;">
+        <div style="width:33.33%; border-right:1px solid #000000; display:flex; flex-direction:column; justify-content:space-between; padding:5px 8px; height:68px; box-sizing:border-box;">
           <strong style="font-size:8.5px;">Dibuat Oleh:</strong>
-          <div>Nama: <strong>${escapeHtml(driverName)}</strong></div>
+          <div style="margin-top:auto;">Nama: <strong>${escapeHtml(driverName)}</strong></div>
         </div>
-        <div style="width:33.33%; border-right:1px solid #000000; display:flex; flex-direction:column; justify-content:space-between; padding:4px 6px; height:52px; box-sizing:border-box;">
+        <div style="width:33.33%; border-right:1px solid #000000; display:flex; flex-direction:column; justify-content:space-between; padding:5px 8px; height:68px; box-sizing:border-box;">
           <strong style="font-size:8.5px;">Disetujui Oleh:</strong>
-          <div>Nama: _________________</div>
+          <div style="margin-top:auto;">Nama: _________________</div>
         </div>
-        <div style="width:33.34%; display:flex; flex-direction:column; justify-content:space-between; padding:4px 6px; height:52px; box-sizing:border-box;">
+        <div style="width:33.34%; display:flex; flex-direction:column; justify-content:space-between; padding:5px 8px; height:68px; box-sizing:border-box;">
           <strong style="font-size:8.5px;">Diterima Oleh:</strong>
-          <div>Nama: _________________</div>
+          <div style="margin-top:auto;">Nama: _________________</div>
         </div>
       </div>
 
@@ -742,7 +742,7 @@ export async function downloadTimesheetPDFDirect(
     tempContainer.style.position = "fixed";
     tempContainer.style.left = "0";
     tempContainer.style.top = "0";
-    tempContainer.style.width = "780px";
+    tempContainer.style.width = "790px";
     tempContainer.style.zIndex = "999999";
     tempContainer.style.backgroundColor = "#ffffff";
     tempContainer.style.opacity = "1";
@@ -771,7 +771,7 @@ export async function downloadTimesheetPDFDirect(
     const fileName = `Timesheet_${safeDriver}_${String(month).padStart(2, "0")}_${year}.pdf`;
 
     const opt = {
-      margin: [5, 5, 5, 5],
+      margin: [4, 4, 4, 4],
       filename: fileName,
       image: { type: "jpeg", quality: 1.0 },
       html2canvas: {
@@ -780,7 +780,7 @@ export async function downloadTimesheetPDFDirect(
         allowTaint: true,
         logging: false,
         backgroundColor: "#ffffff",
-        windowWidth: 780,
+        windowWidth: 790,
         scrollY: 0,
         scrollX: 0,
       },
@@ -812,7 +812,7 @@ export async function downloadTimesheetPDFDirect(
     const fileName = `Timesheet_${driverName.replace(/\s+/g, "_")}_${String(month).padStart(2, "0")}_${year}`;
     const win = window.open("", "_blank");
     if (win) {
-      win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>${fileName}</title><style>* { box-sizing: border-box; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } body { margin: 0; padding: 0; background: white; } @media print { @page { size: A4 portrait; margin: 5mm; } body { margin: 0; } }</style></head><body>${markup}<script>window.onload=function(){window.focus();setTimeout(function(){window.print();window.onafterprint=function(){window.close();};setTimeout(function(){window.close();},2000);},400);};<\/script></body></html>`);
+      win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>${fileName}</title><style>* { box-sizing: border-box; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } body { margin: 0; padding: 0; background: white; } @media print { @page { size: A4 portrait; margin: 4mm; } body { margin: 0; } }</style></head><body>${markup}<script>window.onload=function(){window.focus();setTimeout(function(){window.print();window.onafterprint=function(){window.close();};setTimeout(function(){window.close();},2000);},400);};<\/script></body></html>`);
       win.document.close();
     }
   }
