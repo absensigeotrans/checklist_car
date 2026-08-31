@@ -499,83 +499,83 @@ export function prepareTimesheetPrintMarkup(
         <div style="display:flex; width:100%; background-color:#f1f5f9; border-bottom:1px solid #000000; font-weight:bold; text-align:center; box-sizing:border-box;">
           
           <!-- Tgl (3.5%) -->
-          <div style="width:3.5%; border-right:1px solid #000000; display:flex; flex-direction:column; align-items:center; justify-content:center; height:36px; box-sizing:border-box; padding:2px 0;">
+          <div style="width:3.5%; border-right:1px solid #000000; display:flex; flex-direction:column; align-items:center; justify-content:center; height:44px; box-sizing:border-box; padding:2px 0;">
             <span style="font-size:8px; line-height:1.1;">Tgl</span>
             <span style="font-size:6.5px; font-weight:normal; line-height:1;">(Date)</span>
           </div>
 
           <!-- Hari (7.5%) -->
-          <div style="width:7.5%; border-right:1px solid #000000; display:flex; flex-direction:column; align-items:center; justify-content:center; height:36px; box-sizing:border-box; padding:2px 0;">
+          <div style="width:7.5%; border-right:1px solid #000000; display:flex; flex-direction:column; align-items:center; justify-content:center; height:44px; box-sizing:border-box; padding:2px 0;">
             <span style="font-size:8px; line-height:1.1;">Hari</span>
             <span style="font-size:6.5px; font-weight:normal; line-height:1;">(Day)</span>
           </div>
 
           <!-- No Polisi (11%) -->
-          <div style="width:11.0%; border-right:1px solid #000000; display:flex; flex-direction:column; align-items:center; justify-content:center; height:36px; box-sizing:border-box; padding:2px 0;">
+          <div style="width:11.0%; border-right:1px solid #000000; display:flex; flex-direction:column; align-items:center; justify-content:center; height:44px; box-sizing:border-box; padding:2px 0;">
             <span style="font-size:8px; line-height:1.1;">No Polisi</span>
             <span style="font-size:6.5px; font-weight:normal; line-height:1;">(Plate No)</span>
           </div>
 
           <!-- Jam Kerja (14%) -->
-          <div style="width:14.0%; border-right:1px solid #000000; display:flex; flex-direction:column; height:36px; box-sizing:border-box;">
+          <div style="width:14.0%; border-right:1px solid #000000; display:flex; flex-direction:column; height:44px; box-sizing:border-box;">
             <div style="height:18px; border-bottom:1px solid #000000; display:flex; align-items:center; justify-content:center; gap:2px; box-sizing:border-box;">
               <span style="font-size:8px;">Jam Kerja</span>
               <span style="font-size:6.5px; font-weight:normal;">(Hour)</span>
             </div>
-            <div style="height:18px; display:flex; width:100%; box-sizing:border-box;">
-              <div style="width:50%; border-right:1px solid #000000; display:flex; flex-direction:column; align-items:center; justify-content:center; box-sizing:border-box;">
-                <span style="font-size:7.5px; line-height:1;">Awal</span>
+            <div style="height:26px; display:flex; width:100%; box-sizing:border-box;">
+              <div style="width:50%; border-right:1px solid #000000; display:flex; flex-direction:column; align-items:center; justify-content:center; height:26px; box-sizing:border-box;">
+                <span style="font-size:7.5px; line-height:1.1;">Awal</span>
                 <span style="font-size:6px; font-weight:normal; line-height:1;">(Start)</span>
               </div>
-              <div style="width:50%; display:flex; flex-direction:column; align-items:center; justify-content:center; box-sizing:border-box;">
-                <span style="font-size:7.5px; line-height:1;">Akhir</span>
+              <div style="width:50%; display:flex; flex-direction:column; align-items:center; justify-content:center; height:26px; box-sizing:border-box;">
+                <span style="font-size:7.5px; line-height:1.1;">Akhir</span>
                 <span style="font-size:6px; font-weight:normal; line-height:1;">(Finish)</span>
               </div>
             </div>
           </div>
 
           <!-- Kilometer (24%) -->
-          <div style="width:24.0%; border-right:1px solid #000000; display:flex; flex-direction:column; height:36px; box-sizing:border-box;">
+          <div style="width:24.0%; border-right:1px solid #000000; display:flex; flex-direction:column; height:44px; box-sizing:border-box;">
             <div style="height:18px; border-bottom:1px solid #000000; display:flex; align-items:center; justify-content:center; gap:2px; box-sizing:border-box;">
               <span style="font-size:8px;">Kilometer</span>
               <span style="font-size:6.5px; font-weight:normal;">(KM)</span>
             </div>
-            <div style="height:18px; display:flex; width:100%; box-sizing:border-box;">
-              <div style="width:33.33%; border-right:1px solid #000000; display:flex; flex-direction:column; align-items:center; justify-content:center; box-sizing:border-box;">
-                <span style="font-size:7.5px; line-height:1;">Awal</span>
+            <div style="height:26px; display:flex; width:100%; box-sizing:border-box;">
+              <div style="width:33.33%; border-right:1px solid #000000; display:flex; flex-direction:column; align-items:center; justify-content:center; height:26px; box-sizing:border-box;">
+                <span style="font-size:7.5px; line-height:1.1;">Awal</span>
                 <span style="font-size:6px; font-weight:normal; line-height:1;">(Start)</span>
               </div>
-              <div style="width:33.33%; border-right:1px solid #000000; display:flex; flex-direction:column; align-items:center; justify-content:center; box-sizing:border-box;">
-                <span style="font-size:7.5px; line-height:1;">Akhir</span>
+              <div style="width:33.33%; border-right:1px solid #000000; display:flex; flex-direction:column; align-items:center; justify-content:center; height:26px; box-sizing:border-box;">
+                <span style="font-size:7.5px; line-height:1.1;">Akhir</span>
                 <span style="font-size:6px; font-weight:normal; line-height:1;">(Finish)</span>
               </div>
-              <div style="width:33.34%; display:flex; flex-direction:column; align-items:center; justify-content:center; box-sizing:border-box;">
-                <span style="font-size:7.5px; line-height:1;">Jumlah</span>
+              <div style="width:33.34%; display:flex; flex-direction:column; align-items:center; justify-content:center; height:26px; box-sizing:border-box;">
+                <span style="font-size:7.5px; line-height:1.1;">Jumlah</span>
                 <span style="font-size:6px; font-weight:normal; line-height:1;">(Total)</span>
               </div>
             </div>
           </div>
 
           <!-- Pemakai (24%) -->
-          <div style="width:24.0%; border-right:1px solid #000000; display:flex; flex-direction:column; height:36px; box-sizing:border-box;">
+          <div style="width:24.0%; border-right:1px solid #000000; display:flex; flex-direction:column; height:44px; box-sizing:border-box;">
             <div style="height:18px; border-bottom:1px solid #000000; display:flex; align-items:center; justify-content:center; gap:2px; box-sizing:border-box;">
               <span style="font-size:8px;">Pemakai</span>
               <span style="font-size:6.5px; font-weight:normal;">(User)</span>
             </div>
-            <div style="height:18px; display:flex; width:100%; box-sizing:border-box;">
-              <div style="width:58.3%; border-right:1px solid #000000; display:flex; flex-direction:column; align-items:center; justify-content:center; box-sizing:border-box;">
-                <span style="font-size:7.5px; line-height:1;">Nama</span>
+            <div style="height:26px; display:flex; width:100%; box-sizing:border-box;">
+              <div style="width:58.3%; border-right:1px solid #000000; display:flex; flex-direction:column; align-items:center; justify-content:center; height:26px; box-sizing:border-box;">
+                <span style="font-size:7.5px; line-height:1.1;">Nama</span>
                 <span style="font-size:6px; font-weight:normal; line-height:1;">(Name)</span>
               </div>
-              <div style="width:41.7%; display:flex; flex-direction:column; align-items:center; justify-content:center; box-sizing:border-box;">
-                <span style="font-size:7.5px; line-height:1;">Tanda Tangan</span>
+              <div style="width:41.7%; display:flex; flex-direction:column; align-items:center; justify-content:center; height:26px; box-sizing:border-box;">
+                <span style="font-size:7.5px; line-height:1.1;">Tanda Tangan</span>
                 <span style="font-size:6px; font-weight:normal; line-height:1;">(Signature)</span>
               </div>
             </div>
           </div>
 
           <!-- Keterangan (16%) -->
-          <div style="width:16.0%; display:flex; flex-direction:column; align-items:center; justify-content:center; height:36px; box-sizing:border-box; padding:2px 0;">
+          <div style="width:16.0%; display:flex; flex-direction:column; align-items:center; justify-content:center; height:44px; box-sizing:border-box; padding:2px 0;">
             <span style="font-size:8px; line-height:1.1;">Keterangan</span>
             <span style="font-size:6.5px; font-weight:normal; line-height:1;">(Remark)</span>
           </div>
