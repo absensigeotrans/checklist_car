@@ -466,7 +466,7 @@ export function prepareTimesheetPrintMarkup(
   }
 
   return `
-    <div class="official-timesheet-print" style="width:790px; margin:0 auto; background-color:#ffffff; color:#000000; padding:6px 12px; font-family:Arial,Helvetica,sans-serif; box-sizing:border-box;">
+    <div class="official-timesheet-print" style="width:750px; margin:0 auto; background-color:#ffffff; color:#000000; padding:6px 12px; font-family:Arial,Helvetica,sans-serif; box-sizing:border-box;">
       
       <!-- Top Header -->
       <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #000000; padding-bottom:4px; margin-bottom:6px;">
@@ -742,7 +742,7 @@ export async function downloadTimesheetPDFDirect(
     tempContainer.style.position = "fixed";
     tempContainer.style.left = "0";
     tempContainer.style.top = "0";
-    tempContainer.style.width = "790px";
+    tempContainer.style.width = "750px";
     tempContainer.style.zIndex = "999999";
     tempContainer.style.backgroundColor = "#ffffff";
     tempContainer.style.opacity = "1";
@@ -771,7 +771,7 @@ export async function downloadTimesheetPDFDirect(
     const fileName = `Timesheet_${safeDriver}_${String(month).padStart(2, "0")}_${year}.pdf`;
 
     const opt = {
-      margin: [4, 4, 4, 4],
+      margin: [5, 5, 5, 5],
       filename: fileName,
       image: { type: "jpeg", quality: 1.0 },
       html2canvas: {
@@ -780,7 +780,7 @@ export async function downloadTimesheetPDFDirect(
         allowTaint: true,
         logging: false,
         backgroundColor: "#ffffff",
-        windowWidth: 790,
+        windowWidth: 750,
         scrollY: 0,
         scrollX: 0,
       },
