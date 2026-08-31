@@ -436,82 +436,83 @@ export function prepareTimesheetPrintMarkup(
         matchedLog.kmEnd !== undefined &&
         !isNaN(endNum);
 
-      if (hasStart) kmStartStr = startNum.toLocaleString();
-      if (hasEnd) kmEndStr = endNum.toLocaleString();
+      if (hasStart) kmStartStr = startNum.toLocaleString("id-ID");
+      if (hasEnd) kmEndStr = endNum.toLocaleString("id-ID");
       if (hasStart && hasEnd) {
-        kmTotalStr = Math.max(0, endNum - startNum).toLocaleString();
+        kmTotalStr = Math.max(0, endNum - startNum).toLocaleString("id-ID");
       }
     }
     const userName = matchedLog ? escapeHtml(matchedLog.userName) : "";
     const userSig =
       matchedLog && matchedLog.userSignature
-        ? `<img src="${matchedLog.userSignature}" alt="TTD" style="max-height:20px; max-width:60px; object-fit:contain; display:block; margin:0 auto;"/>`
+        ? `<img src="${matchedLog.userSignature}" alt="TTD" style="max-height:14px; max-width:50px; object-fit:contain; display:block; margin:0 auto;"/>`
         : "";
     const remark = matchedLog ? escapeHtml(matchedLog.remark) : "";
 
     tableRowsHtml += `
       <tr style="height:14px;">
-        <td style="border:1px solid #000; padding:0px 2px; text-align:center; font-weight:bold;">${d}</td>
-        <td style="border:1px solid #000; padding:0px 2px; text-align:center;">${dayName}</td>
-        <td style="border:1px solid #000; padding:0px 2px; text-align:center;">${plate}</td>
-        <td style="border:1px solid #000; padding:0px 2px; text-align:center;">${workStart}</td>
-        <td style="border:1px solid #000; padding:0px 2px; text-align:center;">${workEnd}</td>
-        <td style="border:1px solid #000; padding:0px 2px; text-align:center;">${kmStartStr}</td>
-        <td style="border:1px solid #000; padding:0px 2px; text-align:center;">${kmEndStr}</td>
-        <td style="border:1px solid #000; padding:0px 2px; text-align:center; font-weight:bold;">${kmTotalStr}</td>
-        <td style="border:1px solid #000; padding:0px 2px; text-align:center;">${userName}</td>
-        <td style="border:1px solid #000; padding:0px 2px; text-align:center; vertical-align:middle;">${userSig}</td>
-        <td style="border:1px solid #000; padding:0px 2px; text-align:left;">${remark}</td>
+        <td style="border:1px solid #000; padding:0 2px; text-align:center; font-weight:bold; font-size:8px;">${d}</td>
+        <td style="border:1px solid #000; padding:0 2px; text-align:center; font-size:8px;">${dayName}</td>
+        <td style="border:1px solid #000; padding:0 2px; text-align:center; font-size:8px;">${plate}</td>
+        <td style="border:1px solid #000; padding:0 2px; text-align:center; font-size:8px;">${workStart}</td>
+        <td style="border:1px solid #000; padding:0 2px; text-align:center; font-size:8px;">${workEnd}</td>
+        <td style="border:1px solid #000; padding:0 2px; text-align:center; font-size:8px;">${kmStartStr}</td>
+        <td style="border:1px solid #000; padding:0 2px; text-align:center; font-size:8px;">${kmEndStr}</td>
+        <td style="border:1px solid #000; padding:0 2px; text-align:center; font-weight:bold; font-size:8px;">${kmTotalStr}</td>
+        <td style="border:1px solid #000; padding:0 3px; text-align:center; font-size:8px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${userName}</td>
+        <td style="border:1px solid #000; padding:0 2px; text-align:center; vertical-align:middle;">${userSig}</td>
+        <td style="border:1px solid #000; padding:0 3px; text-align:left; font-size:8px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${remark}</td>
       </tr>`;
   }
 
   return `
-    <div class="official-timesheet-print" style="width:100%; max-width:960px; margin:0 auto; background-color:white; color:black; padding:4px 8px; font-family:Arial,sans-serif; box-sizing:border-box;">
+    <div class="official-timesheet-print" style="width:1040px; margin:0 auto; background-color:#ffffff; color:#000000; padding:6px 10px; font-family:Arial,Helvetica,sans-serif; box-sizing:border-box;">
       
       <!-- Top Header -->
-      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px;">
-        <div style="display:flex; align-items:center; gap:8px;">
-          <img src="${origin}/logo_pertamina_tk.png" alt="Pertamina Trans Kontinental" style="height:28px; width:auto; object-fit:contain;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; padding-bottom:2px; border-bottom:1.5px solid #000000;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <img src="${origin}/logo_pertamina_tk.png" alt="Pertamina Trans Kontinental" style="height:26px; width:auto; object-fit:contain;">
+          <div style="font-size:12px; font-weight:bold; text-transform:uppercase; letter-spacing:0.5px;">DRIVER DAILY TIMESHEET / REKAP HARIAN</div>
         </div>
-        <div style="font-size:0.7rem; font-weight:bold; text-align:right;">
-          Tahun (Year): <span style="border-bottom:1px solid #000; padding:0 8px; display:inline-block;">${year}</span>
+        <div style="font-size:10px; font-weight:bold; text-align:right;">
+          Tahun: <span style="border-bottom:1px solid #000; padding:0 6px; display:inline-block;">${year}</span>
           &nbsp;&nbsp;&nbsp;&nbsp;
-          Bulan (Month): <span style="border-bottom:1px solid #000; padding:0 8px; display:inline-block;">${MONTH_NAMES[month - 1]}</span>
+          Bulan: <span style="border-bottom:1px solid #000; padding:0 6px; display:inline-block;">${MONTH_NAMES[month - 1]}</span>
         </div>
       </div>
 
       <!-- Driver Metadata -->
-      <div style="display:flex; justify-content:space-between; font-size:0.7rem; font-weight:bold; margin-bottom:5px;">
-        <div style="width:48%;">
-          Nama Driver (Driver's Name): 
-          <div style="border-bottom:1px solid #000; min-height:14px; width:100%; font-weight:normal; margin-top:1px;">${escapeHtml(driverName)}</div>
+      <div style="display:flex; justify-content:space-between; font-size:9.5px; font-weight:bold; margin-bottom:4px;">
+        <div style="width:48%; display:flex; align-items:center; gap:4px;">
+          <span>Nama Driver (Driver's Name):</span>
+          <span style="border-bottom:1px solid #000; flex:1; font-weight:normal; padding-left:4px;">${escapeHtml(driverName)}</span>
         </div>
-        <div style="width:48%;">
-          NIP Driver (Driver's NIP): 
-          <div style="border-bottom:1px solid #000; min-height:14px; width:100%; font-weight:normal; margin-top:1px;">${escapeHtml(driverNik)}</div>
+        <div style="width:48%; display:flex; align-items:center; gap:4px;">
+          <span>NIP Driver (Driver's NIP):</span>
+          <span style="border-bottom:1px solid #000; flex:1; font-weight:normal; padding-left:4px;">${escapeHtml(driverNik || "-")}</span>
         </div>
       </div>
 
       <!-- Timesheet Grid Table -->
-      <table style="width:100%; border-collapse:collapse; border:1px solid #000; font-size:0.53rem; table-layout:fixed; line-height:1.1;">
+      <table style="width:100%; border-collapse:collapse; border:1px solid #000000; font-size:8px; table-layout:fixed; line-height:1.15;">
         <thead>
-          <tr style="background-color:#ffffff; text-align:center; font-weight:bold;">
-            <th rowspan="2" style="border:1px solid #000; width:4.5%; padding:1px 1px;">Tanggal<br/><span style="font-weight:normal;font-size:0.48rem;">(Date)</span></th>
-            <th rowspan="2" style="border:1px solid #000; width:6.5%; padding:1px 1px;">Hari<br/><span style="font-weight:normal;font-size:0.48rem;">(Day)</span></th>
-            <th rowspan="2" style="border:1px solid #000; width:10%; padding:1px 1px;">Nomer Polisi<br/><span style="font-weight:normal;font-size:0.48rem;">(Vehicle Number)</span></th>
-            <th colspan="2" style="border:1px solid #000; padding:1px 1px;">Jam Kerja<br/><span style="font-weight:normal;font-size:0.48rem;">(Working Hour)</span></th>
-            <th colspan="3" style="border:1px solid #000; padding:1px 1px;">KM<br/><span style="font-weight:normal;font-size:0.48rem;">(Kilometer)</span></th>
-            <th colspan="2" style="border:1px solid #000; padding:1px 1px;">Pemakai<br/><span style="font-weight:normal;font-size:0.48rem;">(User)</span></th>
-            <th rowspan="2" style="border:1px solid #000; width:13.5%; padding:1px 1px;">Keterangan<br/><span style="font-weight:normal;font-size:0.48rem;">(Remark)</span></th>
+          <tr style="background-color:#f1f5f9; text-align:center; font-weight:bold; font-size:7.5px;">
+            <th rowspan="2" style="border:1px solid #000; width:3.5%; padding:1px 0;">Tgl<br/><span style="font-weight:normal;font-size:6.5px;">(Date)</span></th>
+            <th rowspan="2" style="border:1px solid #000; width:5.5%; padding:1px 0;">Hari<br/><span style="font-weight:normal;font-size:6.5px;">(Day)</span></th>
+            <th rowspan="2" style="border:1px solid #000; width:9.0%; padding:1px 0;">No Polisi<br/><span style="font-weight:normal;font-size:6.5px;">(Plate No)</span></th>
+            <th colspan="2" style="border:1px solid #000; width:11.0%; padding:1px 0;">Jam Kerja<br/><span style="font-weight:normal;font-size:6.5px;">(Working Hour)</span></th>
+            <th colspan="3" style="border:1px solid #000; width:20.5%; padding:1px 0;">Kilometer<br/><span style="font-weight:normal;font-size:6.5px;">(KM)</span></th>
+            <th colspan="2" style="border:1px solid #000; width:28.5%; padding:1px 0;">Pemakai<br/><span style="font-weight:normal;font-size:6.5px;">(User)</span></th>
+            <th rowspan="2" style="border:1px solid #000; width:22.0%; padding:1px 2px;">Keterangan<br/><span style="font-weight:normal;font-size:6.5px;">(Remark)</span></th>
           </tr>
-          <tr style="background-color:#ffffff; text-align:center; font-weight:bold;">
-            <th style="border:1px solid #000; width:6.5%; padding:1px 1px;">Awal<br/><span style="font-weight:normal;font-size:0.48rem;">(Start)</span></th>
-            <th style="border:1px solid #000; width:6.5%; padding:1px 1px;">Akhir<br/><span style="font-weight:normal;font-size:0.48rem;">(Finish)</span></th>
-            <th style="border:1px solid #000; width:7.5%; padding:1px 1px;">Awal<br/><span style="font-weight:normal;font-size:0.48rem;">(Start)</span></th>
-            <th style="border:1px solid #000; width:7.5%; padding:1px 1px;">Akhir<br/><span style="font-weight:normal;font-size:0.48rem;">(Finish)</span></th>
-            <th style="border:1px solid #000; width:7.5%; padding:1px 1px;">Jumlah<br/><span style="font-weight:normal;font-size:0.48rem;">(Total)</span></th>
-            <th style="border:1px solid #000; width:14%; padding:1px 1px;">Nama<br/><span style="font-weight:normal;font-size:0.48rem;">(Name)</span></th>
-            <th style="border:1px solid #000; width:14%; padding:1px 1px;">Tanda Tangan<br/><span style="font-weight:normal;font-size:0.48rem;">(Signature)</span></th>
+          <tr style="background-color:#f1f5f9; text-align:center; font-weight:bold; font-size:7.5px;">
+            <th style="border:1px solid #000; width:5.5%; padding:1px 0;">Awal<br/><span style="font-weight:normal;font-size:6.5px;">(Start)</span></th>
+            <th style="border:1px solid #000; width:5.5%; padding:1px 0;">Akhir<br/><span style="font-weight:normal;font-size:6.5px;">(Finish)</span></th>
+            <th style="border:1px solid #000; width:7.0%; padding:1px 0;">Awal<br/><span style="font-weight:normal;font-size:6.5px;">(Start)</span></th>
+            <th style="border:1px solid #000; width:7.0%; padding:1px 0;">Akhir<br/><span style="font-weight:normal;font-size:6.5px;">(Finish)</span></th>
+            <th style="border:1px solid #000; width:6.5%; padding:1px 0;">Jumlah<br/><span style="font-weight:normal;font-size:6.5px;">(Total)</span></th>
+            <th style="border:1px solid #000; width:14.5%; padding:1px 0;">Nama<br/><span style="font-weight:normal;font-size:6.5px;">(Name)</span></th>
+            <th style="border:1px solid #000; width:14.0%; padding:1px 0;">Tanda Tangan<br/><span style="font-weight:normal;font-size:6.5px;">(Signature)</span></th>
           </tr>
         </thead>
         <tbody>
@@ -520,26 +521,26 @@ export function prepareTimesheetPrintMarkup(
       </table>
 
       <!-- Bottom 3 Sign-off Boxes -->
-      <table style="width:100%; border-collapse:collapse; margin-top:6px; border:1px solid #000; font-size:0.65rem; text-align:center; table-layout:fixed;">
+      <table style="width:100%; border-collapse:collapse; margin-top:4px; border:1px solid #000; font-size:8px; text-align:center; table-layout:fixed;">
         <tr>
-          <td style="border:1px solid #000; width:33.33%; padding:4px 6px; height:52px; vertical-align:top;">
-            <strong style="display:block; margin-bottom:2px;">Dibuat Oleh</strong>
+          <td style="border:1px solid #000; width:33.33%; padding:3px 6px; height:45px; vertical-align:top;">
+            <strong style="display:block; font-size:8.5px; margin-bottom:1px;">Dibuat Oleh:</strong>
           </td>
-          <td style="border:1px solid #000; width:33.33%; padding:4px 6px; height:52px; vertical-align:top;">
-            <strong style="display:block; margin-bottom:2px;">Disetujui Oleh</strong>
+          <td style="border:1px solid #000; width:33.33%; padding:3px 6px; height:45px; vertical-align:top;">
+            <strong style="display:block; font-size:8.5px; margin-bottom:1px;">Disetujui Oleh:</strong>
           </td>
-          <td style="border:1px solid #000; width:33.33%; padding:4px 6px; height:52px; vertical-align:top;">
-            <strong style="display:block; margin-bottom:2px;">Diterima Oleh</strong>
+          <td style="border:1px solid #000; width:33.33%; padding:3px 6px; height:45px; vertical-align:top;">
+            <strong style="display:block; font-size:8.5px; margin-bottom:1px;">Diterima Oleh:</strong>
           </td>
         </tr>
         <tr>
-          <td style="border:1px solid #000; padding:3px 6px; text-align:left;">
-            Nama: ${escapeHtml(driverName)}
+          <td style="border:1px solid #000; padding:2px 6px; text-align:left; font-size:8px; height:15px;">
+            Nama: <strong>${escapeHtml(driverName)}</strong>
           </td>
-          <td style="border:1px solid #000; padding:3px 6px; text-align:left;">
+          <td style="border:1px solid #000; padding:2px 6px; text-align:left; font-size:8px; height:15px;">
             Nama:
           </td>
-          <td style="border:1px solid #000; padding:3px 6px; text-align:left;">
+          <td style="border:1px solid #000; padding:2px 6px; text-align:left; font-size:8px; height:15px;">
             Nama:
           </td>
         </tr>
@@ -672,7 +673,7 @@ export async function downloadTimesheetPDFDirect(
     tempContainer.style.position = "fixed";
     tempContainer.style.left = "0";
     tempContainer.style.top = "0";
-    tempContainer.style.width = "1050px";
+    tempContainer.style.width = "1040px";
     tempContainer.style.zIndex = "-9999";
     tempContainer.style.opacity = "0.01";
     tempContainer.style.pointerEvents = "none";
@@ -707,9 +708,12 @@ export async function downloadTimesheetPDFDirect(
         allowTaint: true,
         logging: false,
         letterRendering: true,
-        windowWidth: 1100,
+        windowWidth: 1040,
+        scrollY: 0,
+        scrollX: 0,
       },
       jsPDF: { unit: "mm", format: "a4", orientation: "landscape" },
+      pagebreak: { mode: "avoid-all" },
     };
 
     await html2pdf().set(opt).from(target).save();
