@@ -156,16 +156,16 @@ export default function ChecklistLogsTable({
                       <div className="flex items-center justify-center gap-1.5 flex-wrap">
                         <button
                           type="button"
-                          title="Cetak Laporan PDF"
+                          title="Unduh File PDF Checklist"
                           className="bg-primary-blue text-white hover:bg-blue-700 px-2.5 py-1.5 rounded-[8px] font-semibold text-xs transition-all cursor-pointer shadow-xs inline-flex items-center gap-1"
-                          onClick={() => onExportPDF(rec.inspectionId)}
+                          onClick={() => onDownloadPDF(rec.inspectionId)}
                         >
-                          <span>📄</span> PDF
+                          <span>📥</span> Unduh
                         </button>
 
                         <button
                           type="button"
-                          title="Lihat Detail Inspeksi"
+                          title="Lihat Detail Inspeksi & Cetak"
                           className="bg-bg-sidebar text-text-muted hover:bg-border hover:text-text-main border border-border px-2.5 py-1.5 rounded-[8px] font-semibold text-xs transition-all cursor-pointer inline-flex items-center gap-1"
                           onClick={() => onViewDetail(rec.inspectionId)}
                         >

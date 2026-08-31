@@ -11,6 +11,9 @@ import {
   prepareTimesheetPrintMarkup,
   downloadTimesheetPDFDirect,
   exportMonthlyLogExcel,
+  downloadChecklistPDFDirect,
+  exportAllToExcel,
+  preparePrintMarkup,
 } from "@/lib/export";
 import Modal from "../ui/Modal";
 
@@ -56,6 +59,7 @@ export default function DriverProgress() {
   const [filterYear, setFilterYear] = useState(new Date().getFullYear());
   const [activeSubtab, setActiveSubtab] = useState<"log" | "checklist">("log");
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
+  const [downloadingChecklistId, setDownloadingChecklistId] = useState<string | null>(null);
 
   // Modal Signature State
   const [showSignatureModal, setShowSignatureModal] = useState(false);
@@ -298,6 +302,35 @@ ${markup}
     const safeDriver = (displayName || "Driver").replace(/\s+/g, "_");
     const fileName = `Timesheet_${safeDriver}_${String(filterMonth).padStart(2, "0")}_${filterYear}.xlsx`;
     exportMonthlyLogExcel(driverLogs, fileName);
+  };
+
+  const handleDownloadChecklistPDF = async (rec: InspectionRecord) => {
+    try {
+      setDownloadingChecklistId(rec.inspectionId);
+      await downloadChecklistPDFDirect(rec);
+    } finally {
+      setDownloadingChecklistId(null);
+    }
+  };
+
+  const handleDownloadChecklistExcel = () => {
+    if (driverInspections.length === 0) {
+      alert("Belum ada data checklist untuk diunduh.");
+      return;
+    }
+    exportAllToExcel(driverInspections);
+  };
+
+  const handlePrintChecklist = (rec: InspectionRecord) => {
+    const markup = preparePrintMarkup(rec, false);
+    const safeDriver = (rec.driver?.name || "Driver").replace(/\s+/g, "_");
+    const safePlate = (rec.vehicle?.licensePlate || "NoPol").replace(/\s+/g, "_");
+    const fileName = `Checklist_${safeDriver}_${safePlate}`;
+    const win = window.open("", "_blank");
+    if (win) {
+      win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>${fileName}</title><style>* { box-sizing: border-box; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } body { margin: 0; padding: 0; background: white; } @media print { @page { size: A4 portrait; margin: 5mm; } body { margin: 0; } }</style></head><body>${markup}<script>window.onload=function(){window.focus();setTimeout(function(){window.print();window.onafterprint=function(){window.close();};setTimeout(function(){window.close();},2000);},400);};<\/script></body></html>`);
+      win.document.close();
+    }
   };
 
 
@@ -615,6 +648,18 @@ ${markup}
       {/* Checklist Table */}
       {activeSubtab === "checklist" && (
         <div className="bg-white rounded-[16px] shadow-md p-6 border border-border">
+          <div className="flex justify-between items-center mb-4 flex-wrap gap-3">
+            <h3 className="text-base font-bold text-text-main">
+              Rekapitulasi Checklist Pemeriksaan Kendaraan
+            </h3>
+            <button
+              type="button"
+              className="bg-emerald-600 text-white px-3.5 py-2 rounded-[10px] font-semibold text-xs cursor-pointer shadow-sm hover:bg-emerald-700 transition-all inline-flex items-center gap-1.5"
+              onClick={handleDownloadChecklistExcel}
+            >
+              <span>📊</span> Unduh Excel Rekap
+            </button>
+          </div>
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
@@ -637,13 +682,16 @@ ${markup}
                   <th className="bg-bg-sidebar text-text-muted font-bold uppercase text-xs px-3 py-3 border-b border-border">
                     Temuan
                   </th>
+                  <th className="bg-bg-sidebar text-text-muted font-bold uppercase text-xs px-3 py-3 border-b border-border text-center">
+                    Aksi
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {driverInspections.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={6}
+                      colSpan={7}
                       className="text-center text-text-muted px-3 py-8"
                     >
                       Belum ada checklist untuk bulan ini.
@@ -655,6 +703,8 @@ ${markup}
                       r.checklist || {}
                     ).filter((i) => i?.status === "TDK ADA").length;
                     const damageCount = (r.condition?.damages || []).length;
+                    const isDownloading = downloadingChecklistId === r.inspectionId;
+
                     return (
                       <tr key={r.inspectionId} className="hover:bg-bg-main">
                         <td className="px-3 py-3 border-b border-border text-xs">
@@ -683,6 +733,27 @@ ${markup}
                           {r.attentionNeeded
                             ? `${missingCount} Absen, ${damageCount} Rusak`
                             : "Normal"}
+                        </td>
+                        <td className="px-3 py-3 border-b border-border text-xs text-center">
+                          <div className="flex items-center justify-center gap-1.5">
+                            <button
+                              type="button"
+                              disabled={isDownloading}
+                              onClick={() => handleDownloadChecklistPDF(r)}
+                              title="Unduh PDF Lembar Checklist"
+                              className="bg-primary-blue text-white hover:bg-blue-700 disabled:opacity-50 px-2.5 py-1.5 rounded-[8px] font-semibold text-xs transition-all cursor-pointer shadow-xs inline-flex items-center gap-1"
+                            >
+                              <span>{isDownloading ? "⏳" : "📥"}</span> {isDownloading ? "Mengunduh..." : "Unduh PDF"}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handlePrintChecklist(r)}
+                              title="Cetak Lembar Checklist"
+                              className="bg-bg-sidebar text-text-muted hover:text-text-main hover:bg-border border border-border px-2 py-1.5 rounded-[8px] font-semibold text-xs transition-all cursor-pointer inline-flex items-center gap-1"
+                            >
+                              <span>🖨️</span>
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );

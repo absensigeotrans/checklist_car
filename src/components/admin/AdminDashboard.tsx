@@ -242,51 +242,20 @@ ${markup}
     }
   };
 
-  const handleDownloadPDF = () => {
+  const handleDownloadPDF = async () => {
     if (!selectedRecord) return;
-    const markup = preparePrintMarkup(selectedRecord);
-    const fileName = `Checklist_${selectedRecord.driver.name.replace(
-      /\s+/g,
-      "_"
-    )}_${selectedRecord.vehicle.licensePlate.replace(/\s+/g, "_")}`;
-    const win = window.open("", "_blank");
-    if (win) {
-      win.document.write(`
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8"/>
-  <title>${fileName}</title>
-  <style>
-    * { box-sizing: border-box; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-    body { margin: 0; padding: 0; background: white; }
-    @media print {
-      @page { size: A4 portrait; margin: 5mm; }
-      body { margin: 0; }
-    }
-  </style>
-</head>
-<body>
-${markup}
-<script>
-  window.onload = function() {
-    window.focus();
-    setTimeout(function() {
-      window.print();
-      window.onafterprint = function() { window.close(); };
-      setTimeout(function() { window.close(); }, 2000);
-    }, 400);
-  };
-<\/script>
-</body>
-</html>`);
-      win.document.close();
-    }
+    await downloadChecklistPDFDirect(selectedRecord);
   };
 
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
     if (!selectedRecord) return;
-    handleDownloadPDF();
+    await downloadChecklistPDFDirect(selectedRecord);
+  };
+
+  const handleDirectDownloadInspectionPDF = async (id: string) => {
+    const rec = records.find((r) => r.inspectionId === id);
+    if (!rec) return;
+    await downloadChecklistPDFDirect(rec);
   };
 
   const resetChecklistFilters = () => {
@@ -537,7 +506,7 @@ ${markup}
             onDelete={(id) => {
               if (confirm("Hapus data pemeriksaan ini?")) deleteRecord(id);
             }}
-            onDownloadPDF={(id) => handleViewDetail(id, "pdf")}
+            onDownloadPDF={handleDirectDownloadInspectionPDF}
             onExportPDF={(id) => handleViewDetail(id, "pdf")}
           />
         </div>
